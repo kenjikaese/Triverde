@@ -1,6 +1,6 @@
 <mxfile host="Electron">
   <diagram name="Página-1" id="_Jh4lXOVBu-_ak5NpJwG">
-    <mxGraphModel dx="4250" dy="3171" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="3091" dy="2486" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -43,7 +43,7 @@
         <mxCell id="CHgc7iF5Ajr-kNgOCSm6-12" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.5;dx=15;direction=north;notch=0;rounded=0;strokeWidth=1;fontSize=20;rotation=155;" value="" vertex="1">
           <mxGeometry height="630" width="26.31" x="753.6799999999998" y="-220.40480176211452" as="geometry" />
         </mxCell>
-        <mxCell id="CHgc7iF5Ajr-kNgOCSm6-13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;shadow=1;strokeWidth=2;fontSize=20;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;font style=&quot;font-size: 26px;&quot;&gt;Inrformación&lt;/font&gt;" vertex="1">
+        <mxCell id="CHgc7iF5Ajr-kNgOCSm6-13" parent="1" style="rounded=1;whiteSpace=wrap;html=1;shadow=1;strokeWidth=2;fontSize=20;fillColor=#d5e8d4;strokeColor=#82b366;" value="&lt;font style=&quot;font-size: 26px;&quot;&gt;Información&lt;/font&gt;" vertex="1">
           <mxGeometry height="52.86343612334802" width="197.2972972972973" x="539.7054054054051" y="-241" as="geometry" />
         </mxCell>
         <mxCell id="CHgc7iF5Ajr-kNgOCSm6-14" parent="1" style="html=1;shadow=0;dashed=0;align=center;verticalAlign=middle;shape=mxgraph.arrows2.arrow;dy=0.5;dx=15;direction=north;notch=0;rounded=0;strokeWidth=1;fontSize=20;rotation=90;horizontal=0;labelPosition=left;verticalLabelPosition=middle;" value="" vertex="1">
