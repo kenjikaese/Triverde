@@ -1,0 +1,79 @@
+Creating test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...
+Found 30 test(s).
+Operations to perform:
+  Synchronize unmigrated apps: common, corsheaders, messages, rest_framework, staticfiles
+  Apply all migrations: acceso, admin, auth, authtoken, configuracion, contenttypes, mantenedores, recepcion, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying acceso.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying authtoken.0001_initial... OK
+  Applying authtoken.0002_auto_20160226_1747... OK
+  Applying authtoken.0003_tokenproxy... OK
+  Applying authtoken.0004_alter_tokenproxy_options... OK
+  Applying configuracion.0001_initial... OK
+  Applying mantenedores.0001_initial... OK
+  Applying recepcion.0001_initial... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+test_login_devuelve_token_y_perfil_responde (acceso.tests.AutenticacionTests.test_login_devuelve_token_y_perfil_responde) ... ok
+test_login_rechaza_usuario_inactivo (acceso.tests.AutenticacionTests.test_login_rechaza_usuario_inactivo) ... ok
+test_logout_invalida_token (acceso.tests.AutenticacionTests.test_logout_invalida_token) ... ok
+test_sin_token_da_401 (acceso.tests.AutenticacionTests.test_sin_token_da_401) ... ok
+test_admin_crea_usuario_y_audita (acceso.tests.PermisosTests.test_admin_crea_usuario_y_audita) ... ok
+test_baja_logica_de_usuario (acceso.tests.PermisosTests.test_baja_logica_de_usuario) ... ok
+test_operador_no_puede_crear_usuario (acceso.tests.PermisosTests.test_operador_no_puede_crear_usuario) ... ok
+test_transportista_sin_acceso_a_auditoria (acceso.tests.PermisosTests.test_transportista_sin_acceso_a_auditoria) ... ok
+test_transportista_sin_acceso_a_usuarios (acceso.tests.PermisosTests.test_transportista_sin_acceso_a_usuarios) ... ok
+test_cambio_parametro_genera_historial_y_auditoria (configuracion.tests.ParametroTests.test_cambio_parametro_genera_historial_y_auditoria) ... ok
+test_operador_lee_pero_no_escribe_parametros (configuracion.tests.ParametroTests.test_operador_lee_pero_no_escribe_parametros) ... ok
+test_crud_y_baja_logica_cliente (mantenedores.tests.ClienteTests.test_crud_y_baja_logica_cliente) ... ok
+test_operador_lee_pero_no_escribe (mantenedores.tests.ClienteTests.test_operador_lee_pero_no_escribe) ... ok
+test_transportista_sin_acceso_a_mantenedores (mantenedores.tests.ClienteTests.test_transportista_sin_acceso_a_mantenedores) ... ok
+test_delete_recepcion_no_permitido (recepcion.tests.DerivacionTests.test_delete_recepcion_no_permitido) ... ok
+test_derivacion_al_crear_recepcion (recepcion.tests.DerivacionTests.test_derivacion_al_crear_recepcion) ... ok
+test_material_sin_densidad_rechazado (recepcion.tests.DerivacionTests.test_material_sin_densidad_rechazado) ... ok
+test_aplicar_multa_a_recepcion (recepcion.tests.MultaYRechazoTests.test_aplicar_multa_a_recepcion)
+CU-30: el operador aplica una multa por material contaminado y queda auditada. ... ok
+test_rechazo_de_recepcion (recepcion.tests.MultaYRechazoTests.test_rechazo_de_recepcion)
+CU-31: el operador rechaza una carga registrando el motivo, y queda auditado. ... ok
+test_transportista_crea_con_su_propio_transportista (recepcion.tests.PermisosTransportistaTests.test_transportista_crea_con_su_propio_transportista) ... ok
+test_transportista_no_puede_editar (recepcion.tests.PermisosTransportistaTests.test_transportista_no_puede_editar) ... ok
+test_transportista_no_puede_sincronizar (recepcion.tests.PermisosTransportistaTests.test_transportista_no_puede_sincronizar) ... ok
+test_transportista_solo_ve_sus_recepciones (recepcion.tests.PermisosTransportistaTests.test_transportista_solo_ve_sus_recepciones) ... ok
+test_sincronizacion_con_foto_base64 (recepcion.tests.SincronizacionTests.test_sincronizacion_con_foto_base64)
+La foto viaja embebida en base64 y la recepcion sincroniza (CU-33). ... ok
+test_sincronizacion_conflicto (recepcion.tests.SincronizacionTests.test_sincronizacion_conflicto)
+Objeto ya existente en estado incompatible: queda en conflicto. ... ok
+test_sincronizacion_foto_base64_invalida_rechaza (recepcion.tests.SincronizacionTests.test_sincronizacion_foto_base64_invalida_rechaza)
+Una foto base64 corrupta rechaza la operacion completa (Excepcion 3). ... ok
+test_sincronizacion_idempotente (recepcion.tests.SincronizacionTests.test_sincronizacion_idempotente)
+Enviar el mismo lote dos veces crea una sola Recepcion. ... ok
+test_sincronizacion_ordena_por_capturado_en (recepcion.tests.SincronizacionTests.test_sincronizacion_ordena_por_capturado_en) ... ok
+test_sincronizacion_rechaza_y_continua (recepcion.tests.SincronizacionTests.test_sincronizacion_rechaza_y_continua)
+Una operacion invalida no bloquea a las demas (CU-33 Excepcion 3). ... ok
+test_sincronizacion_sin_autenticacion_da_401 (recepcion.tests.SincronizacionTests.test_sincronizacion_sin_autenticacion_da_401) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 6.074s
+
+OK
+Destroying test database for alias 'default' ('file:memorydb_default?mode=memory&cache=shared')...

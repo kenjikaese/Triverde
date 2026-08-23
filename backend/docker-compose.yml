@@ -1,0 +1,44 @@
+# Docker Compose - backend de Triverde (Incremento 1)
+# Levanta PostgreSQL + el servidor Django. Al arrancar migra y siembra los datos
+# minimos. La PWA (frontend) se integrara a este compose en un incremento posterior.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: triverde
+      POSTGRES_USER: triverde
+      POSTGRES_PASSWORD: triverde
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U triverde"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py seed_inicial &&
+             python manage.py collectstatic --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000"
+    environment:
+      DATABASE_URL: postgres://triverde:triverde@db:5432/triverde
+      DJANGO_SECRET_KEY: dev-insecure-key-cambiar-en-produccion
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,web"
+    volumes:
+      - .:/app
+      - media:/app/media
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  media:
