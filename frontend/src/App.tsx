@@ -21,8 +21,11 @@ import { Alertas } from "@/pages/operacion/Alertas";
 import { ListaMaquinaria } from "@/pages/mantenimiento/ListaMaquinaria";
 import { EstadoFlota } from "@/pages/mantenimiento/EstadoFlota";
 import { Cotizador } from "@/pages/comercial/Cotizador";
+import { ListaCotizaciones } from "@/pages/comercial/ListaCotizaciones";
+import { RegistroVenta } from "@/pages/comercial/RegistroVenta";
 import { ListaVentas } from "@/pages/comercial/ListaVentas";
 import { Cobros } from "@/pages/comercial/Cobros";
+import { CuentaCorriente } from "@/pages/comercial/CuentaCorriente";
 import { Certificados } from "@/pages/trazabilidad/Certificados";
 import { ExportacionSinader } from "@/pages/trazabilidad/ExportacionSinader";
 import { IndicadorAmbiental } from "@/pages/trazabilidad/IndicadorAmbiental";
@@ -58,6 +61,14 @@ export function App() {
         <Route path="/usuarios" element={<ListaUsuarios />} />
         <Route path="/auditoria" element={<BitacoraAuditoria />} />
 
+        {/* Modulo 8 - Comercial (Inc 2), cableadas a la API */}
+        <Route path="/cotizador" element={<Cotizador />} />
+        <Route path="/cotizaciones" element={<ListaCotizaciones />} />
+        <Route path="/ventas" element={<ListaVentas />} />
+        <Route path="/ventas/nueva" element={<RegistroVenta />} />
+        <Route path="/cobros" element={<Cobros />} />
+        <Route path="/cuenta-corriente" element={<CuentaCorriente />} />
+
         {/* Mockups visuales (modulos posteriores, sin backend) */}
         <Route path="/inventario" element={<Inventario />} />
         <Route path="/pilas" element={<ListaPilas />} />
@@ -65,9 +76,6 @@ export function App() {
         <Route path="/alertas" element={<Alertas />} />
         <Route path="/maquinaria" element={<ListaMaquinaria />} />
         <Route path="/flota" element={<EstadoFlota />} />
-        <Route path="/cotizador" element={<Cotizador />} />
-        <Route path="/ventas" element={<ListaVentas />} />
-        <Route path="/cobros" element={<Cobros />} />
         <Route path="/certificados" element={<Certificados />} />
         <Route path="/sinader" element={<ExportacionSinader />} />
         <Route path="/ambiental" element={<IndicadorAmbiental />} />
