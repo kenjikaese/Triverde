@@ -239,7 +239,7 @@ export function RegistroVenta() {
                           onClick={() =>
                             setLineas(lineas.filter((_, i) => i !== indice))
                           }
-                          aria-label="Quitar producto"
+                          aria-label="Quitar de la venta"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

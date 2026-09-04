@@ -17,6 +17,7 @@ from rest_framework.views import APIView
 
 from common.auditoria import registrar_auditoria
 from common.permissions import IsAdministrador, IsOperadorOAdministrador
+from common.trazas import traza
 from mantenedores.models import Cliente
 
 from .models import Cobro, Cotizacion, DocumentoTributario, Venta
@@ -172,6 +173,15 @@ class VentaViewSet(RangoFechaMixin, viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         respuesta = super().create(request, *args, **kwargs)
+        traza(
+            "CU-58",
+            "venta.creada",
+            venta=respuesta.data.get("id"),
+            cliente=respuesta.data.get("cliente"),
+            lineas=len(respuesta.data.get("detalles", [])),
+            total=respuesta.data.get("total"),
+            estado=respuesta.data.get("estado"),
+        )
         registrar_auditoria(
             request.user,
             "Registro de venta",
@@ -206,6 +216,7 @@ class VentaViewSet(RangoFechaMixin, viewsets.ModelViewSet):
         """
         venta = self.get_object()
         if hasattr(venta, "despacho"):
+            traza("CU-60", "despacho.duplicado_rechazado", venta=venta.pk)
             return Response(
                 {"detalle": "Esa venta ya fue despachada."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -213,8 +224,21 @@ class VentaViewSet(RangoFechaMixin, viewsets.ModelViewSet):
         serializer = DespachoSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(venta=venta)
+        estado_anterior = venta.estado
         venta.estado = Venta.DESPACHADA
         venta.save(update_fields=["estado"])
+        traza(
+            "CU-60",
+            "despacho.creado",
+            venta=venta.pk,
+            receptor=serializer.data.get("receptor"),
+        )
+        traza(
+            "CU-60",
+            "venta.estado",
+            venta=venta.pk,
+            transicion=f"{estado_anterior}->{venta.estado}",
+        )
         registrar_auditoria(
             request.user,
             "Registro de despacho",
@@ -246,11 +270,20 @@ class CobroViewSet(RangoFechaMixin, viewsets.ModelViewSet):
         # CU-61, Excepcion 3: la recepcion ya tiene cobro registrado.
         recepcion = request.data.get("recepcion")
         if recepcion and Cobro.objects.filter(recepcion_id=recepcion).exists():
+            traza("CU-61", "cobro.duplicado_rechazado", recepcion=recepcion)
             return Response(
                 {"detalle": "Esa recepcion ya fue cobrada."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
         respuesta = super().create(request, *args, **kwargs)
+        traza(
+            "CU-61",
+            "cobro.creado",
+            cobro=respuesta.data.get("id"),
+            recepcion=respuesta.data.get("recepcion"),
+            venta=respuesta.data.get("venta"),
+            monto=respuesta.data.get("monto"),
+        )
         registrar_auditoria(
             request.user,
             "Registro de cobro",
@@ -298,6 +331,18 @@ class DocumentoTributarioViewSet(RangoFechaMixin, viewsets.ModelViewSet):
     search_fields = ["cliente__razon_social", "folio"]
     ordering_fields = ["fecha", "monto"]
     ordering = ["-fecha", "-id"]
+
+    def create(self, request, *args, **kwargs):
+        respuesta = super().create(request, *args, **kwargs)
+        traza(
+            "CU-63",
+            "documento.registrado",
+            documento=respuesta.data.get("id"),
+            tipo=respuesta.data.get("tipo"),
+            origen="venta" if respuesta.data.get("venta") else "cobro",
+            estado=respuesta.data.get("estado"),
+        )
+        return respuesta
 
 
 class CuentaCorrienteView(APIView):
@@ -349,6 +394,12 @@ class CuentaCorrienteView(APIView):
         anterior = cliente.estado_pago
         cliente.estado_pago = estado_pago
         cliente.save(update_fields=["estado_pago"])
+        traza(
+            "CU-62",
+            "estado_pago.actualizado",
+            cliente=cliente.pk,
+            transicion=f"{anterior}->{estado_pago}",
+        )
         registrar_auditoria(
             request.user,
             "Cambio de estado de pago",

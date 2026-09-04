@@ -126,3 +126,47 @@ REST_FRAMEWORK = {
 
 # --- CORS (la PWA consumira la API desde otro origen) -----------------------
 CORS_ALLOW_ALL_ORIGINS = env("CORS_ALLOW_ALL")
+
+# --- Trazas de seguimiento por caso de uso ----------------------------------
+# El logger `triverde.cu` registra el paso por los puntos de negocio (ver
+# common/trazas.py). Con TRIVERDE_TRAZAS=1 escribe ademas a logs/trazas-cu.log,
+# que es lo que leen las pruebas end-to-end para verificar que la operacion
+# paso por el servidor. Apagado por defecto: en produccion no se crea archivo.
+TRAZAS_ACTIVAS = env.bool("TRIVERDE_TRAZAS", default=False)
+TRAZAS_ARCHIVO = BASE_DIR / "logs" / "trazas-cu.log"
+
+if TRAZAS_ACTIVAS:
+    TRAZAS_ARCHIVO.parent.mkdir(parents=True, exist_ok=True)
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "traza": {"format": "%(asctime)s %(message)s"},
+    },
+    "handlers": {
+        "consola": {
+            "class": "logging.StreamHandler",
+            "formatter": "traza",
+        },
+        **(
+            {
+                "archivo_trazas": {
+                    "class": "logging.FileHandler",
+                    "filename": str(TRAZAS_ARCHIVO),
+                    "encoding": "utf-8",
+                    "formatter": "traza",
+                }
+            }
+            if TRAZAS_ACTIVAS
+            else {}
+        ),
+    },
+    "loggers": {
+        "triverde.cu": {
+            "handlers": ["consola"] + (["archivo_trazas"] if TRAZAS_ACTIVAS else []),
+            "level": "INFO",
+            "propagate": False,
+        },
+    },
+}
