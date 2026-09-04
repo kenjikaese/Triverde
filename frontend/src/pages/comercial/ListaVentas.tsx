@@ -16,6 +16,7 @@ import {
   fecha as formatoFecha,
   periodoVigente,
 } from "@/lib/formato";
+import { mensajeDeError } from "@/lib/errores";
 
 // CU-59: listado y total de las ventas del periodo (por defecto, el mes en
 // curso). CU-60: el despacho se registra desde la fila de una venta pendiente.
@@ -66,11 +67,11 @@ export function ListaVentas() {
     api
       .get<Cliente[]>("/clientes/")
       .then((res) => setClientes(res.data))
-      .catch(() => undefined);
+      .catch(() => setError("No se pudieron cargar los filtros."));
     api
       .get<Producto[]>("/productos/")
       .then((res) => setProductos(res.data))
-      .catch(() => undefined);
+      .catch(() => setError("No se pudieron cargar los filtros."));
   }, []);
 
   useEffect(cargar, [cargar]);
@@ -95,14 +96,7 @@ export function ListaVentas() {
       setDespachando(null);
       cargar();
     } catch (err: unknown) {
-      const datos = (
-        err as { response?: { data?: { detalle?: string; receptor?: string[] } } }
-      ).response?.data;
-      setErrorDespacho(
-        datos?.detalle ??
-          datos?.receptor?.[0] ??
-          "No se pudo registrar el despacho.",
-      );
+      setErrorDespacho(mensajeDeError(err, "No se pudo registrar el despacho."));
     } finally {
       setGuardando(false);
     }

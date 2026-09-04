@@ -7,6 +7,7 @@ import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Campo, Input, Select } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { clp } from "@/lib/formato";
+import { mensajeDeError } from "@/lib/errores";
 
 // CU-55: el costo lo calcula el servidor (distancia x 2 x costo por km). Esta
 // vista solo envia el formulario y muestra lo que devuelve la API; no replica
@@ -25,11 +26,23 @@ export function Cotizador() {
     api
       .get<Cliente[]>("/clientes/", { params: { estado: "activo" } })
       .then((res) => setClientes(res.data))
-      .catch(() => setError("No se pudo cargar la lista de clientes."));
+      .catch((err) =>
+        setError(mensajeDeError(err, "No se pudo cargar la lista de clientes.")),
+      );
     api
       .get<CostoKm>("/cotizaciones/costo-km/")
       .then((res) => setCostoKm(res.data))
-      .catch(() => setCostoKm(null));
+      // Si la consulta falla no se asume "sin costo configurado": eso seria
+      // un aviso enganoso. Se deja el estado sin resolver y se informa.
+      .catch((err) => {
+        setCostoKm(null);
+        setError(
+          mensajeDeError(
+            err,
+            "No se pudo verificar el costo por kilómetro configurado.",
+          ),
+        );
+      });
   }, []);
 
   async function cotizar(e: FormEvent) {
@@ -45,11 +58,11 @@ export function Cotizador() {
       });
       setResultado(res.data);
     } catch (err: unknown) {
-      const detalle = (err as { response?: { data?: Record<string, string[]> } })
-        .response?.data;
       setError(
-        detalle?.distancia_km?.[0] ??
+        mensajeDeError(
+          err,
           "No se pudo generar la cotización. Revisa los datos ingresados.",
+        ),
       );
     } finally {
       setGuardando(false);

@@ -9,6 +9,7 @@ import { Badge, tonoEstado } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Campo, Input, Select } from "@/components/ui/Field";
 import { clp, fecha as formatoFecha } from "@/lib/formato";
+import { mensajeDeError } from "@/lib/errores";
 
 // CU-64: el saldo lo calcula el servidor (ventas - cobros); esta vista no
 // suma nada. CU-62: el estado de pago es el indicador manual que el
@@ -28,7 +29,9 @@ export function CuentaCorriente() {
     api
       .get<Cliente[]>("/clientes/")
       .then((res) => setClientes(res.data))
-      .catch(() => setError("No se pudo cargar la lista de clientes."));
+      .catch((err) =>
+        setError(mensajeDeError(err, "No se pudo cargar la lista de clientes.")),
+      );
   }, []);
 
   const cargar = useCallback(() => {
@@ -47,7 +50,9 @@ export function CuentaCorriente() {
         setCuenta(res.data);
         setEstadoPago(res.data.estado_pago);
       })
-      .catch(() => setError("No se pudo cargar la cuenta corriente."))
+      .catch((err) =>
+        setError(mensajeDeError(err, "No se pudo cargar la cuenta corriente.")),
+      )
       .finally(() => setCargando(false));
   }, [clienteSel, rango]);
 
@@ -65,16 +70,7 @@ export function CuentaCorriente() {
       setAviso("Estado de pago actualizado.");
       cargar();
     } catch (err: unknown) {
-      const datos = (
-        err as {
-          response?: { data?: { detalle?: string; estado_pago?: string } };
-        }
-      ).response?.data;
-      setError(
-        datos?.detalle ??
-          datos?.estado_pago ??
-          "No se pudo actualizar el estado de pago.",
-      );
+      setError(mensajeDeError(err, "No se pudo actualizar el estado de pago."));
     } finally {
       setGuardando(false);
     }

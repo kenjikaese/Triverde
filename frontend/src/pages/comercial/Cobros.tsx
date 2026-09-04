@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { Campo, Input, Select } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 import { clp, fecha as formatoFecha } from "@/lib/formato";
+import { mensajeDeError } from "@/lib/errores";
 
 // CU-61: el cobro de una recepcion se apoya en la tarifa configurada para el
 // tramo del camion. El monto sugerido lo calcula el servidor
@@ -61,7 +62,7 @@ export function Cobros() {
         setCobros(listaCobros.data);
         setRecepciones(listaRecepciones.data);
       })
-      .catch(() => setError("No se pudieron cargar los cobros."))
+      .catch((err) => setError(mensajeDeError(err, "No se pudieron cargar los cobros.")))
       .finally(() => setCargando(false));
   }, []);
 
@@ -69,7 +70,9 @@ export function Cobros() {
     api
       .get<Cliente[]>("/clientes/")
       .then((res) => setClientes(res.data))
-      .catch(() => undefined);
+      .catch((err) =>
+        setError(mensajeDeError(err, "No se pudo cargar la lista de clientes.")),
+      );
   }, []);
 
   useEffect(cargar, [cargar]);
@@ -115,12 +118,7 @@ export function Cobros() {
       setCobrando(null);
       cargar();
     } catch (err: unknown) {
-      const datos = (
-        err as { response?: { data?: { detalle?: string; monto?: string[] } } }
-      ).response?.data;
-      setErrorCobro(
-        datos?.detalle ?? datos?.monto?.[0] ?? "No se pudo registrar el cobro.",
-      );
+      setErrorCobro(mensajeDeError(err, "No se pudo registrar el cobro."));
     } finally {
       setGuardando(false);
     }
@@ -142,11 +140,8 @@ export function Cobros() {
       });
       setDocumentando(null);
     } catch (err: unknown) {
-      const datos = (err as { response?: { data?: unknown } }).response?.data;
       setErrorDocumento(
-        typeof datos === "object" && datos !== null
-          ? JSON.stringify(datos)
-          : "No se pudo registrar el documento tributario.",
+        mensajeDeError(err, "No se pudo registrar el documento tributario."),
       );
     } finally {
       setGuardando(false);

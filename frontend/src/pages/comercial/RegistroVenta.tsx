@@ -9,6 +9,7 @@ import { Table, TBody, Td, Th, EmptyRow } from "@/components/ui/Table";
 import { Campo, Input, Select } from "@/components/ui/Field";
 import { Button } from "@/components/ui/Button";
 import { cantidad as formatoCantidad, clp } from "@/lib/formato";
+import { mensajeDeError } from "@/lib/errores";
 
 interface Linea {
   producto: Producto;
@@ -33,11 +34,15 @@ export function RegistroVenta() {
     api
       .get<Cliente[]>("/clientes/", { params: { estado: "activo" } })
       .then((res) => setClientes(res.data))
-      .catch(() => setError("No se pudo cargar la lista de clientes."));
+      .catch((err) =>
+        setError(mensajeDeError(err, "No se pudo cargar la lista de clientes.")),
+      );
     api
       .get<Producto[]>("/productos/", { params: { estado: "activo" } })
       .then((res) => setProductos(res.data))
-      .catch(() => setError("No se pudo cargar el catálogo de productos."));
+      .catch((err) =>
+        setError(mensajeDeError(err, "No se pudo cargar el catálogo de productos.")),
+      );
   }, []);
 
   const total = useMemo(
@@ -94,12 +99,7 @@ export function RegistroVenta() {
       });
       navegar(`/ventas?registrada=${res.data.id}`);
     } catch (err: unknown) {
-      const datos = (err as { response?: { data?: unknown } }).response?.data;
-      setError(
-        typeof datos === "object" && datos !== null
-          ? JSON.stringify(datos)
-          : "No se pudo registrar la venta.",
-      );
+      setError(mensajeDeError(err, "No se pudo registrar la venta."));
     } finally {
       setGuardando(false);
     }

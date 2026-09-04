@@ -42,7 +42,7 @@ export function ListaCotizaciones() {
     api
       .get<Cliente[]>("/clientes/")
       .then((res) => setClientes(res.data))
-      .catch(() => undefined);
+      .catch(() => setError("No se pudieron cargar los filtros."));
   }, []);
 
   useEffect(cargar, [cargar]);

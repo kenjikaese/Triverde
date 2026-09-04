@@ -32,3 +32,6 @@ test-results/
 e2e-reporte/
 e2e-evidencias/
 playwright-report/
+
+# Capturas de revision manual
+revision-local/

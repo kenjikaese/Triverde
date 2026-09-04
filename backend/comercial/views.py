@@ -18,6 +18,7 @@ from rest_framework.views import APIView
 from common.auditoria import registrar_auditoria
 from common.permissions import IsAdministrador, IsOperadorOAdministrador
 from common.trazas import traza
+from common.views import entero_o_none, fecha_o_none
 from mantenedores.models import Cliente
 
 from .models import Cobro, Cotizacion, DocumentoTributario, Venta
@@ -41,8 +42,8 @@ class RangoFechaMixin:
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        desde = self.request.query_params.get("desde")
-        hasta = self.request.query_params.get("hasta")
+        desde = fecha_o_none(self.request.query_params.get("desde"))
+        hasta = fecha_o_none(self.request.query_params.get("hasta"))
         if desde:
             queryset = queryset.filter(fecha__gte=desde)
         if hasta:
@@ -65,7 +66,7 @@ class CotizacionViewSet(RangoFechaMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        cliente = self.request.query_params.get("cliente")
+        cliente = entero_o_none(self.request.query_params.get("cliente"))
         if cliente:
             queryset = queryset.filter(cliente_id=cliente)
         return queryset
@@ -160,8 +161,8 @@ class VentaViewSet(RangoFechaMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        cliente = self.request.query_params.get("cliente")
-        producto = self.request.query_params.get("producto")
+        cliente = entero_o_none(self.request.query_params.get("cliente"))
+        producto = entero_o_none(self.request.query_params.get("producto"))
         estado = self.request.query_params.get("estado")
         if cliente:
             queryset = queryset.filter(cliente_id=cliente)
@@ -261,7 +262,7 @@ class CobroViewSet(RangoFechaMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = super().get_queryset()
-        cliente = self.request.query_params.get("cliente")
+        cliente = entero_o_none(self.request.query_params.get("cliente"))
         if cliente:
             queryset = queryset.filter(cliente_id=cliente)
         return queryset
@@ -302,7 +303,7 @@ class CobroViewSet(RangoFechaMixin, viewsets.ModelViewSet):
         """
         from recepcion.models import Recepcion
 
-        recepcion_id = request.query_params.get("recepcion")
+        recepcion_id = entero_o_none(request.query_params.get("recepcion"))
         if not recepcion_id:
             return Response(
                 {"detalle": "Indique la recepcion a cobrar."},
@@ -358,8 +359,8 @@ class CuentaCorrienteView(APIView):
         cliente = get_object_or_404(Cliente, pk=cliente_id)
         datos = cuenta_corriente(
             cliente,
-            desde=request.query_params.get("desde"),
-            hasta=request.query_params.get("hasta"),
+            desde=fecha_o_none(request.query_params.get("desde")),
+            hasta=fecha_o_none(request.query_params.get("hasta")),
         )
         return Response(CuentaCorrienteSerializer(datos).data)
 

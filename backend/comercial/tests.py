@@ -484,6 +484,159 @@ class DocumentoTributarioTests(ComercialTestBase):
         self.assertIn("tipo", respuesta.data)
 
 
+class ConsultasVaciasTests(ComercialTestBase):
+    """Excepciones de consulta: listados vacios y filtros sin coincidencias.
+
+    CU-57 exc. 1, CU-59 exc. 1 y 2, CU-64 exc. 2. Ninguna debe romper: el
+    sistema muestra el listado vacio conservando el filtro aplicado.
+    """
+
+    def test_historial_sin_cotizaciones(self):
+        self.autenticar(self.admin)
+        respuesta = self.client.get(reverse("cotizacion-list"))
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(respuesta.data), 0)
+
+    def test_periodo_sin_ventas_da_total_cero(self):
+        self.autenticar(self.admin)
+        rango = {"desde": "2020-01-01", "hasta": "2020-12-31"}
+        respuesta = self.client.get(reverse("venta-list"), rango)
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(respuesta.data), 0)
+
+        respuesta = self.client.get(reverse("venta-totales"), rango)
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(respuesta.data["cantidad"], 0)
+        self.assertEqual(Decimal(respuesta.data["total"]), Decimal("0"))
+
+    def test_filtro_por_producto_sin_coincidencias(self):
+        self.crear_venta()
+        otro = Producto.objects.create(
+            nombre="Chip decorativo", tipo=Producto.CHIP,
+            precio=Decimal("52000.00"), unidad_de_venta=Producto.M3,
+        )
+        self.autenticar(self.admin)
+        respuesta = self.client.get(reverse("venta-list"), {"producto": otro.pk})
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(respuesta.data), 0)
+
+    def test_cuenta_corriente_con_rango_sin_movimientos(self):
+        self.crear_venta()
+        self.autenticar(self.admin)
+        respuesta = self.client.get(
+            reverse("cuenta-corriente", args=[self.cliente.pk]),
+            {"desde": "2020-01-01", "hasta": "2020-12-31"},
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(Decimal(respuesta.data["saldo"]), Decimal("0.00"))
+        self.assertEqual(respuesta.data["movimientos"], [])
+
+
+class ParametrosInvalidosTests(ComercialTestBase):
+    """Un parametro de consulta con basura no puede terminar en un 500.
+
+    Los filtros por clave foranea y por fecha llegan como texto desde la URL.
+    Sin validarlos, `?cliente=abc` levanta ValueError en el ORM y `?desde=hola`
+    falla en PostgreSQL. Se descarta el filtro invalido y la consulta responde.
+    """
+
+    def test_filtros_con_valores_no_numericos_no_rompen(self):
+        self.autenticar(self.admin)
+        casos = [
+            (reverse("venta-list"), {"cliente": "abc"}),
+            (reverse("venta-list"), {"producto": "xyz"}),
+            (reverse("cotizacion-list"), {"cliente": "abc"}),
+            (reverse("cobro-list"), {"cliente": "nada"}),
+            (reverse("cobro-sugerencia"), {"recepcion": "abc"}),
+        ]
+        for url, params in casos:
+            respuesta = self.client.get(url, params)
+            self.assertIn(
+                respuesta.status_code,
+                (status.HTTP_200_OK, status.HTTP_400_BAD_REQUEST),
+                f"{url} con {params} devolvio {respuesta.status_code}",
+            )
+
+    def test_fechas_invalidas_no_rompen(self):
+        self.autenticar(self.admin)
+        casos = [
+            (reverse("venta-list"), {"desde": "hola"}),
+            (reverse("venta-totales"), {"hasta": "2026-13-45"}),
+            (reverse("cotizacion-list"), {"desde": "///"}),
+            (
+                reverse("cuenta-corriente", args=[self.cliente.pk]),
+                {"desde": "hola", "hasta": "chao"},
+            ),
+        ]
+        for url, params in casos:
+            respuesta = self.client.get(url, params)
+            self.assertEqual(
+                respuesta.status_code,
+                status.HTTP_200_OK,
+                f"{url} con {params} devolvio {respuesta.status_code}",
+            )
+
+
+class CatalogoVacioTests(ComercialTestBase):
+    """CU-58 exc. 2: no hay productos activos para vender."""
+
+    def test_venta_con_producto_inexistente_es_rechazada(self):
+        self.autenticar(self.admin)
+        respuesta = self.client.post(
+            reverse("venta-list"),
+            {"cliente": self.cliente.pk, "detalles": [{"producto": 9999, "cantidad": "1"}]},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_venta_sin_lineas_es_rechazada(self):
+        self.autenticar(self.admin)
+        respuesta = self.client.post(
+            reverse("venta-list"),
+            {"cliente": self.cliente.pk, "detalles": []},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_venta_sin_cliente_es_rechazada(self):
+        self.autenticar(self.admin)
+        respuesta = self.client.post(
+            reverse("venta-list"),
+            {"detalles": [{"producto": self.producto.pk, "cantidad": "1"}]},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("cliente", respuesta.data)
+
+    def test_cotizacion_sin_cliente_es_rechazada(self):
+        self.autenticar(self.admin)
+        respuesta = self.client.post(
+            reverse("cotizacion-list"),
+            {"servicio": "Triturado in situ", "distancia_km": "10"},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("cliente", respuesta.data)
+
+    def test_documento_con_monto_no_positivo_es_rechazado(self):
+        """CU-63 exc. 1: el origen sin monto obliga a ingresarlo a mano."""
+        venta = self.crear_venta()
+        self.autenticar(self.admin)
+        respuesta = self.client.post(
+            reverse("documento-tributario-list"),
+            {
+                "venta": venta["id"],
+                "cliente": self.cliente.pk,
+                "tipo": DocumentoTributario.BOLETA,
+                "monto": "0",
+                "fecha": "2026-09-05",
+            },
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("monto", respuesta.data)
+
+
 class PermisosTests(ComercialTestBase):
     """Criterio de aceptacion 5: el operador no cotiza ni ve cuenta corriente."""
 
