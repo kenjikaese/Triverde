@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "configuracion",   # Modulo 2 - Configuracion
     "mantenedores",    # Modulo 3 - Mantenedores
     "recepcion",       # Modulo 4 - Recepcion
+    # Modulos del sistema (Incremento 2)
+    "comercial",       # Modulo 8 - Comercial
 ]
 
 MIDDLEWARE = [
