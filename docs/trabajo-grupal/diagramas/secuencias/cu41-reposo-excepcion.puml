@@ -1,0 +1,47 @@
+@startuml cu41-reposo-excepcion
+' CU-41 Registrando el reposo y curado de una pila - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-41 Registrando el reposo (excepcion: sin harneado o pila ya en reposo)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":Pila" as P
+participant ":ProcesoPila" as PP
+participant ":Inventario" as I
+
+Operador -> V : presiona "Iniciar reposo" sobre una pila
+V -> C : registrarProceso(tipo="reposo", pila, fecha)
+C -> P : obtener(pila)
+alt la pila ya esta "en reposo" o "cerrada"
+  P --> C : estado incompatible
+  C --> V : error(registro duplicado, estado actual de la pila)
+  V --> Operador : rechaza el registro y indica el estado
+else la pila no tiene ningun harneado registrado
+  P --> C : pila en proceso
+  C -> PP : existeHarneado(pila)
+  PP --> C : sin harneado previo
+  C --> V : error(la pila debe harnearse primero)
+  V --> Operador : impide iniciar el reposo
+else pila en proceso y con harneado previo
+  P --> C : pila en proceso
+  C -> PP : crear(tipo="reposo", pila, fecha)
+  PP --> C : reposo registrado
+  C -> I : trasladar(material, "pila en proceso", "curado", volumen)
+  I --> C : saldos actualizados
+  C -> P : actualizar(estado="en reposo")
+  P --> C : pila en reposo
+  C --> V : proceso registrado
+end
+
+@enduml

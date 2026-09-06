@@ -1,0 +1,40 @@
+@startuml cu44-inventario-actualizar-normal
+' CU-44 Actualizando el inventario tras un proceso - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-44 Actualizando el inventario tras un proceso (flujo normal)
+
+actor Sistema
+participant "C_ProcesosPila" as C
+participant ":ComposicionPila" as CP
+participant ":ProcesoPila" as PP
+participant ":Inventario" as I
+
+Sistema -> C : detecta que se creo una ComposicionPila o un ProcesoPila que traslada material
+alt el disparador es una composicion de pila
+  C -> CP : obtener(composicion)
+  CP --> C : material y cantidad incorporada
+else el disparador es un proceso
+  C -> PP : obtener(proceso)
+  PP --> C : tipo, material y cantidad involucrada
+end
+C -> C : determinarEtapas(tipo de movimiento)
+note right of C : triturado: por triturar -> chip\ncomposicion: chip o verde -> pila en proceso\nreposo: pila en proceso -> curado\nensacado: curado -> ensacado
+C -> I : obtenerSaldo(material, etapa de origen)
+I --> C : cantidad disponible
+C -> C : validarSaldoSuficiente(cantidad)
+C -> I : descontar(etapa de origen, cantidad)
+C -> I : incorporar(etapa de destino, cantidad)
+I --> C : saldos actualizados
+C --> Sistema : inventario consistente y disponible de inmediato para su consulta
+
+@enduml

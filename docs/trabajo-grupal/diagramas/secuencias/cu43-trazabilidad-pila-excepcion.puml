@@ -1,0 +1,47 @@
+@startuml cu43-trazabilidad-pila-excepcion
+' CU-43 Consultando la trazabilidad interna de una pila - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-43 Consultando la trazabilidad (excepcion: sin pilas o pila sin procesos)
+
+actor Operador
+participant "V_ListaPilas" as VL
+participant "V_TrazabilidadPila" as V
+participant "C_Pilas" as C
+participant ":Pila" as P
+participant ":ProcesoPila" as PP
+
+Operador -> VL : abre el listado de pilas
+VL -> C : listarPilas()
+C -> P : obtenerPilas()
+alt todavia no existe ninguna pila
+  P --> C : listado vacio
+  C --> VL : sin pilas registradas
+  VL --> Operador : muestra el listado vacio e invita a crear la primera pila
+else existen pilas
+  P --> C : listado de pilas
+  C --> VL : listado
+  Operador -> V : selecciona una pila
+  V -> C : obtenerTrazabilidad(pila)
+  C -> PP : obtenerProcesos(pila)
+  alt la pila aun no tiene procesos registrados
+    PP --> C : sin procesos
+    C --> V : ficha solo con la composicion
+    V --> Operador : muestra la ficha sin historial, sin tratarlo como error
+  else la pila tiene procesos
+    PP --> C : linea de tiempo de procesos
+    C --> V : ficha completa
+    V --> Operador : muestra composicion e historial
+  end
+end
+
+@enduml

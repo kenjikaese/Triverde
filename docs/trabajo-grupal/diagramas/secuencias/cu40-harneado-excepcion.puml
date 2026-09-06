@@ -1,0 +1,40 @@
+@startuml cu40-harneado-excepcion
+' CU-40 Registrando el harneado de una pila - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-40 Registrando el harneado (excepcion: fecha futura o estado incorrecto)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":Pila" as P
+participant ":ProcesoPila" as PP
+
+Operador -> V : confirma el harneado de la pila
+V -> C : registrarProceso(tipo="harneado", pila, fecha)
+C -> C : validarFechaNoFutura(fecha)
+alt fecha posterior al momento actual
+  C --> V : error de validacion(fecha)
+  V --> Operador : solicita una fecha valida antes de confirmar
+else la pila no esta "en proceso"
+  C -> P : obtener(pila)
+  P --> C : pila en reposo o cerrada
+  C --> V : error(el harneado no corresponde al estado actual)
+  V --> Operador : impide el registro y indica el estado de la pila
+else pila en proceso y fecha valida
+  C -> PP : crear(tipo="harneado", pila, fecha)
+  PP --> C : harneado registrado
+  C --> V : proceso registrado
+  V --> Operador : confirma el harneado
+end
+
+@enduml
