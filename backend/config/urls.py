@@ -13,8 +13,10 @@ from rest_framework.routers import DefaultRouter
 
 from acceso.urls import router as acceso_router
 from configuracion.urls import router as configuracion_router
+from inventario.urls import router as inventario_router
 from mantenedores.urls import router as mantenedores_router
 from recepcion.urls import router as recepcion_router
+from proyecciones.urls import router as proyecciones_router
 
 router = DefaultRouter()
 for app_router in (
@@ -22,6 +24,8 @@ for app_router in (
     configuracion_router,
     mantenedores_router,
     recepcion_router,
+    inventario_router,
+    proyecciones_router,
 ):
     router.registry.extend(app_router.registry)
 
