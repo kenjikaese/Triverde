@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "configuracion",   # Modulo 2 - Configuracion
     "mantenedores",    # Modulo 3 - Mantenedores
     "recepcion",       # Modulo 4 - Recepcion
+    "proyecciones",
 ]
 
 MIDDLEWARE = [

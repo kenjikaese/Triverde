@@ -15,6 +15,7 @@ from acceso.urls import router as acceso_router
 from configuracion.urls import router as configuracion_router
 from mantenedores.urls import router as mantenedores_router
 from recepcion.urls import router as recepcion_router
+from proyecciones.urls import router as proyecciones_router
 
 router = DefaultRouter()
 for app_router in (
@@ -22,6 +23,7 @@ for app_router in (
     configuracion_router,
     mantenedores_router,
     recepcion_router,
+    proyecciones_router,
 ):
     router.registry.extend(app_router.registry)
 
@@ -30,6 +32,7 @@ urlpatterns = [
     path("api/v1/", include(router.urls)),
     path("api/v1/", include("acceso.urls")),
     path("api/v1/", include("recepcion.urls")),
+    path("api/v1/", include("proyecciones.urls")),
 ]
 
 if settings.DEBUG:
