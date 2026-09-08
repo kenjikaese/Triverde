@@ -1,0 +1,44 @@
+@startuml cu38-volteo-excepcion
+' CU-38 Registrando un volteo de la pila - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-38 Registrando un volteo (excepcion: sin temperatura o sobre el techo)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":ParametroConversion" as PC
+participant ":ProcesoPila" as PP
+
+Operador -> V : confirma el volteo de la pila
+V -> C : registrarProceso(tipo="volteo", pila, temperatura)
+alt no se ingreso la temperatura
+  C --> V : error de validacion(temperatura obligatoria)
+  V --> Operador : indica el campo y no crea el proceso
+else temperatura informada
+  C -> PC : obtenerTechoDeTemperatura()
+  PC --> C : temperatura maxima recomendada
+  alt temperatura sobre el techo recomendado
+    C -> PP : crear(tipo="volteo", temperatura, advertencia)
+    PP --> C : volteo registrado con advertencia
+    note right of C : Excepcion 2: se registra igual;\nel exceso sostenido afecta\nla calidad del compost
+    C --> V : proceso registrado con advertencia
+    V --> Operador : confirma el volteo y muestra el aviso
+  else temperatura dentro del rango
+    C -> PP : crear(tipo="volteo", temperatura)
+    PP --> C : volteo registrado
+    C --> V : proceso registrado
+    V --> Operador : confirma el volteo
+  end
+end
+
+@enduml

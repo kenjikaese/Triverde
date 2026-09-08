@@ -1,0 +1,40 @@
+@startuml cu39-riego-excepcion
+' CU-39 Registrando el riego de la pila - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-39 Registrando el riego (excepcion: sin humedad o fecha futura)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":ProcesoPila" as PP
+
+Operador -> V : confirma el riego de la pila
+V -> C : registrarProceso(tipo="riego", pila, fecha, humedad)
+C -> C : validarFechaNoFutura(fecha)
+alt fecha posterior al momento actual
+  C --> V : error de validacion(fecha)
+  V --> Operador : solicita una fecha valida antes de confirmar
+else no se ingreso la humedad estimada
+  C -> PP : crear(tipo="riego", pila, fecha, humedad=nulo)
+  PP --> C : riego registrado
+  note right of C : Excepcion 1: la humedad es\ninformativa, no obligatoria
+  C --> V : proceso registrado
+  V --> Operador : confirma el riego
+else datos completos
+  C -> PP : crear(tipo="riego", pila, fecha, humedad)
+  PP --> C : riego registrado
+  C --> V : proceso registrado
+  V --> Operador : confirma el riego
+end
+
+@enduml

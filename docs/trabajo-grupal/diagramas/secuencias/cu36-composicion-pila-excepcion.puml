@@ -1,0 +1,58 @@
+@startuml cu36-composicion-pila-excepcion
+' CU-36 Registrando la composicion inicial de una pila - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-36 Registrando la composicion (excepcion: cantidad, repetido o sin material)
+
+actor Operador
+participant "V_ComposicionPila" as V
+participant "C_Pilas" as C
+participant ":Inventario" as I
+participant ":ComposicionPila" as CP
+participant ":Pila" as P
+
+Operador -> V : agrega un material a la pila
+V -> C : agregarComposicion(pila, material, volumen)
+C -> I : verificarDisponible(material, etapa de origen)
+alt volumen mayor al disponible o igual a cero
+  I --> C : disponible insuficiente
+  C --> V : error de validacion(maximo disponible)
+  V --> Operador : rechaza el valor y indica la cantidad maxima
+else el material ya estaba declarado en la pila
+  C -> CP : buscar(pila, material)
+  CP --> C : composicion existente
+  C -> CP : sumarVolumen(composicion, volumen)
+  CP --> C : composicion actualizada
+  note right of C : Excepcion 2: se suma,\nno se duplica el registro
+  C --> V : composicion actualizada
+else material y cantidad validos
+  C -> CP : crear(pila, material, volumen)
+  CP --> C : composicion registrada
+  C --> V : composicion agregada
+end
+Operador -> V : presiona "Confirmar composicion"
+V -> C : confirmarComposicion(pila)
+C -> CP : obtenerComposiciones(pila)
+alt la pila no tiene ningun material
+  CP --> C : sin composiciones
+  C --> V : error(la pila necesita al menos un material)
+  V --> Operador : indica el error y la pila sigue "en formacion"
+else tiene al menos un material
+  CP --> C : materiales declarados
+  C -> I : trasladar(material, origen, "pila en proceso", volumen)
+  I --> C : saldos actualizados
+  C -> P : actualizar(estado="en proceso")
+  P --> C : pila en proceso
+  C --> V : composicion confirmada
+end
+
+@enduml

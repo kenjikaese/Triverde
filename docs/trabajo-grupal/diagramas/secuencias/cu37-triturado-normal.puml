@@ -1,0 +1,42 @@
+@startuml cu37-triturado-normal
+' CU-37 Registrando el triturado de un ingreso - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-37 Registrando el triturado de un ingreso (flujo normal)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":Material" as M
+participant ":Inventario" as I
+participant ":ProcesoPila" as PP
+
+Operador -> V : presiona "Registrar triturado"
+V -> C : listarMaterialesPorTriturar()
+C -> I : obtenerSaldos(etapa="por triturar")
+I --> C : materiales con cantidad disponible
+C --> V : catalogo con disponibilidad
+Operador -> V : selecciona el material e ingresa el volumen procesado
+V -> C : registrarProceso(tipo="triturado", material, volumen)
+C -> I : verificarDisponible(material, "por triturar")
+I --> C : cantidad suficiente
+C -> M : obtenerFactorReduccionChip(material)
+M --> C : factor de reduccion configurado
+C -> C : derivarChip(volumen, factor)
+C -> PP : crear(tipo="triturado", fecha, volumen, id_local)
+PP --> C : proceso registrado
+C -> I : trasladar(material, "por triturar", "chip", volumen, chip derivado)
+I --> C : saldos actualizados
+C --> V : proceso registrado y chip disponible
+V --> Operador : confirma el triturado
+
+@enduml

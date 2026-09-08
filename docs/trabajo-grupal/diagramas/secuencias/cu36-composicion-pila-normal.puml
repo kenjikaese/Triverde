@@ -1,0 +1,50 @@
+@startuml cu36-composicion-pila-normal
+' CU-36 Registrando la composicion inicial de una pila - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-36 Registrando la composicion inicial de una pila (flujo normal)
+
+actor Operador
+participant "V_ComposicionPila" as V
+participant "C_Pilas" as C
+participant ":Inventario" as I
+participant ":ComposicionPila" as CP
+participant ":Pila" as P
+
+Operador -> V : abre la pila en formacion y presiona "Agregar material"
+V -> C : listarMaterialesDisponibles()
+C -> I : obtenerSaldos(etapa de origen)
+I --> C : materiales con su cantidad disponible
+C --> V : catalogo con disponibilidad
+loop por cada material que compone la pila
+  Operador -> V : selecciona material e ingresa el volumen
+  V -> C : agregarComposicion(pila, material, volumen)
+  C -> I : verificarDisponible(material, etapa de origen)
+  I --> C : cantidad disponible suficiente
+  C -> CP : crearOSumar(pila, material, volumen)
+  CP --> C : composicion registrada
+  C --> V : composicion actualizada
+end
+Operador -> V : presiona "Confirmar composicion"
+V -> C : confirmarComposicion(pila)
+C -> CP : obtenerComposiciones(pila)
+CP --> C : materiales y volumenes declarados
+loop por cada material de la composicion
+  C -> I : trasladar(material, origen, "pila en proceso", volumen)
+  I --> C : saldos actualizados
+end
+C -> P : actualizar(estado="en proceso")
+P --> C : pila en proceso
+C --> V : pila con su composicion confirmada
+V --> Operador : confirma y deja la pila en marcha
+
+@enduml
