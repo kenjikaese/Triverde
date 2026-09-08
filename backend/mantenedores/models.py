@@ -3,6 +3,8 @@
 Todos los mantenedores usan baja logica (`estado = inactivo`, docs/11 Decision 3):
 no se borran, se desactivan; por eso las FK hacia ellos usan PROTECT o SET_NULL.
 """
+from decimal import Decimal
+
 from django.db import models
 
 from acceso.models import Usuario
@@ -139,6 +141,22 @@ class Material(models.Model):
 
     def __str__(self):
         return self.nombre
+
+    def derivar_chip(self, volumen_m3):
+        """Chip resultante de triturar `volumen_m3` de este material (CU-37).
+
+        Misma conversion que usa la recepcion en el Incremento 1
+        (`recepcion/serializers.py::derivar_peso_y_chip`): el chip sale de
+        dividir el volumen por el factor de reduccion configurado.
+
+        Devuelve `None` cuando el material no tiene factor: el triturado se
+        registra igual y el chip queda pendiente de conversion, sin inventar
+        un valor (CU-37 Excepcion 3).
+        """
+        if not self.factor_reduccion_chip or self.factor_reduccion_chip <= 0:
+            return None
+        chip = Decimal(str(volumen_m3)) / self.factor_reduccion_chip
+        return chip.quantize(Decimal("0.01"))
 
 
 class Producto(models.Model):

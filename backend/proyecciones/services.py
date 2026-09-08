@@ -1,230 +1,165 @@
-from django.utils import timezone
-from datetime import timedelta
-from recepcion.models import Recepcion
-from mantenedores.models import Vehiculo
-from .models import ProyeccionSemanal, ProyeccionMensual
-import logging
+"""Servicio de calculo del Modulo 7 - Proyecciones.
 
-logger = logging.getLogger(__name__)
+Los calculos son de servidor y usan los parametros vigentes del sistema
+(campos del `Material`) mas los supuestos que acompanan la proyeccion. Si falta
+un parametro requerido se senala cual y NO se calcula: no se inventan valores
+(spec M07, regla de negocio 1). Ningun calculo modifica la configuracion global;
+los supuestos son una copia propia de cada proyeccion (CU-54).
+"""
+from decimal import Decimal, InvalidOperation
+
+from django.utils import timezone
+
+from .models import Proyeccion
+
+
+class ParametroFaltante(Exception):
+    """Falta un parametro requerido para el calculo (no se inventan valores)."""
+
+
+def _dec(valor, nombre):
+    if valor is None or valor == "":
+        raise ParametroFaltante(nombre)
+    try:
+        return Decimal(str(valor))
+    except (InvalidOperation, TypeError, ValueError):
+        raise ParametroFaltante(nombre)
+
 
 class ProyeccionService:
-    """
-    Servicio de proyecciones - Módulo 7
-    Casos de uso: CU-50 a CU-54
-    """
-    
-    # Factores de conversión (se pueden obtener de configuracion luego)
-    DENSIDAD_CHIP = 250  # kg/m³
-    FACTOR_COMPOST = 0.6  # 60% del chip se convierte en compost
-    PRECIO_CHIP = 150     # $ por kg
-    PRECIO_COMPOST = 200  # $ por kg
-    COSTO_KM = 500        # $ por km
-    KM_POR_VIAJE = 10     # km promedio por viaje
-    
     @classmethod
-    def proyectar_semanal(cls, semanas=4):
-        """
-        CU-50: Proyección de producción semanal
-        Calcula la estimación de chip y compost para las próximas N semanas
-        """
-        resultados = []
-        
-        # Obtener recepciones de las últimas 8 semanas
-        fecha_limite = timezone.now() - timedelta(weeks=8)
-        recepciones = Recepcion.objects.filter(
-            fecha__gte=fecha_limite,
-            estado='sincronizado'
-        )
-        
-        # Si no hay datos históricos, usar valores por defecto
-        if not recepciones.exists():
-            return cls._generar_defecto_semanal(semanas)
-        
-        # Agrupar recepciones por semana
-        datos_por_semana = {}
-        for recepcion in recepciones:
-            semana = recepcion.fecha.isocalendar()[1]
-            anio = recepcion.fecha.year
-            clave = f"{anio}-W{semana:02d}"
-            
-            if clave not in datos_por_semana:
-                datos_por_semana[clave] = {'chip': 0, 'compost': 0}
-            
-            # Calcular por cada línea de recepción
-            for linea in recepcion.lineas.all():
-                chip_kg = linea.chip_m3 * cls.DENSIDAD_CHIP
-                compost_kg = chip_kg * cls.FACTOR_COMPOST
-                datos_por_semana[clave]['chip'] += chip_kg
-                datos_por_semana[clave]['compost'] += compost_kg
-        
-        if not datos_por_semana:
-            return cls._generar_defecto_semanal(semanas)
-        
-        # Calcular promedios semanales
-        total_semanas = len(datos_por_semana)
-        prom_chip = sum(d['chip'] for d in datos_por_semana.values()) / total_semanas
-        prom_compost = sum(d['compost'] for d in datos_por_semana.values()) / total_semanas
-        
-        # Generar proyecciones para las próximas N semanas
-        fecha_actual = timezone.now()
-        for i in range(semanas):
-            fecha_semana = fecha_actual + timedelta(weeks=i)
-            semana_str = f"{fecha_semana.year}-W{fecha_semana.isocalendar()[1]:02d}"
-            
-            # Factor estacional
-            mes = fecha_semana.month
-            if mes in [12, 1, 2]:
-                factor = 1.2  # Verano: +20%
-            elif mes in [6, 7, 8]:
-                factor = 0.8  # Invierno: -20%
-            else:
-                factor = 1.0
-            
-            # Crear o actualizar la proyección (evita duplicados)
-            proyeccion, created = ProyeccionSemanal.objects.update_or_create(
-                semana=semana_str,
-                defaults={
-                    'fecha_inicio': (fecha_semana - timedelta(days=fecha_semana.weekday())).date(),
-                    'fecha_fin': (fecha_semana - timedelta(days=fecha_semana.weekday()) + timedelta(days=6)).date(),
-                    'chip_estimado_kg': round(prom_chip * factor, 2),
-                    'compost_estimado_kg': round(prom_compost * factor, 2)
-                }
-            )
-            resultados.append(proyeccion)
-        
-        return resultados
-    
+    def _resolver_supuestos(cls, material, supuestos):
+        """Completa los supuestos con los parametros que el sistema si almacena
+        (densidad y factor del material). Devuelve una copia nueva."""
+        resueltos = dict(supuestos or {})
+        if material is not None:
+            if material.densidad_kg_m3 is not None:
+                resueltos.setdefault("densidad_kg_m3", str(material.densidad_kg_m3))
+            if material.factor_reduccion_chip is not None:
+                resueltos.setdefault("factor_reduccion", str(material.factor_reduccion_chip))
+        return resueltos
+
     @classmethod
-    def proyectar_mensual(cls, meses=6):
-        """
-        CU-51: Proyección de producción mensual
-        Calcula la estimación de chip y compost para los próximos N meses
-        """
-        resultados = []
-        
-        # Obtener proyecciones semanales
-        proyecciones_semanales = ProyeccionSemanal.objects.all().order_by('semana')[:meses*4]
-        
-        # Agrupar por mes
-        datos_por_mes = {}
-        for proy in proyecciones_semanales:
-            mes_key = proy.semana[:7]  # YYYY-MM
-            if mes_key not in datos_por_mes:
-                datos_por_mes[mes_key] = {'chip': 0, 'compost': 0}
-            datos_por_mes[mes_key]['chip'] += proy.chip_estimado_kg
-            datos_por_mes[mes_key]['compost'] += proy.compost_estimado_kg
-        
-        # Crear o actualizar proyecciones mensuales
-        for mes_key, datos in datos_por_mes.items():
-            proyeccion, created = ProyeccionMensual.objects.update_or_create(
-                mes=mes_key,
-                defaults={
-                    'chip_estimado_kg': round(datos['chip'], 2),
-                    'compost_estimado_kg': round(datos['compost'], 2)
-                }
-            )
-            resultados.append(proyeccion)
-        
-        return resultados
-    
+    def calcular(cls, tipo, material=None, supuestos=None):
+        """Devuelve (supuestos_resueltos, valor_proyectado)."""
+        supuestos = cls._resolver_supuestos(material, supuestos)
+        volumen = _dec(supuestos.get("volumen_entrada_m3"), "volumen_entrada_m3")
+        if volumen <= 0:
+            raise ParametroFaltante("volumen_entrada_m3 (debe ser mayor a 0)")
+
+        if tipo == Proyeccion.MENSUAL:
+            valor = cls._mensual(volumen, supuestos)
+        elif tipo == Proyeccion.SEMANAL:
+            valor = cls._semanal(volumen, supuestos)
+        elif tipo == Proyeccion.COMERCIAL:
+            valor = cls._comercial(volumen, supuestos)
+        else:
+            raise ValueError(f"Tipo de proyeccion desconocido: {tipo}")
+        return supuestos, valor
+
+    # --- CU-50: mensual de compost (toneladas, m3, sacos) ---
     @classmethod
-    def rendimiento_camion(cls, camion_id, meses=3):
-        """
-        CU-52: Rendimiento comercial de un camión
-        Calcula ventas, costos y utilidad generada por un camión
-        """
-        try:
-            camion = Vehiculo.objects.get(id=camion_id)
-        except Vehiculo.DoesNotExist:
-            return None
-        
-        # Obtener recepciones del camión en los últimos N meses
-        fecha_limite = timezone.now() - timedelta(days=meses*30)
-        recepciones = Recepcion.objects.filter(
-            vehiculo_id=camion_id,
-            fecha__gte=fecha_limite,
-            estado='sincronizado'
-        )
-        
-        # Si no hay recepciones, retornar datos vacíos
-        if not recepciones.exists():
-            return {
-                'camion_id': camion.id,
-                'patente': camion.patente,
-                'periodo': timezone.now().strftime('%Y-%m'),
-                'viajes_realizados': 0,
-                'total_m3_recibidos': 0,
-                'total_kg_recibidos': 0,
-                'total_chip_producido_kg': 0,
-                'ventas_totales': 0,
-                'costos_operativos': 0,
-                'utilidad_neta': 0,
-                'rendimiento_por_kg': 0,
-                'margen_porcentual': 0
-            }
-        
-        # Calcular métricas
-        viajes = recepciones.count()
-        total_m3 = 0
-        total_kg = 0
-        total_chip = 0
-        
-        for recepcion in recepciones:
-            for linea in recepcion.lineas.all():
-                total_m3 += linea.volumen_m3
-                total_kg += linea.peso_kg
-                total_chip += linea.chip_m3 * cls.DENSIDAD_CHIP
-        
-        # Calcular ventas estimadas
-        ventas_chip = total_chip * cls.PRECIO_CHIP
-        ventas_compost = (total_chip * cls.FACTOR_COMPOST) * cls.PRECIO_COMPOST
-        ventas_totales = ventas_chip + ventas_compost
-        
-        # Calcular costos operativos
-        km_totales = viajes * cls.KM_POR_VIAJE
-        costos_operativos = km_totales * cls.COSTO_KM
-        
-        # Calcular rendimiento
-        utilidad = ventas_totales - costos_operativos
-        rendimiento = utilidad / total_kg if total_kg > 0 else 0
-        margen = (utilidad / ventas_totales * 100) if ventas_totales > 0 else 0
-        
+    def _mensual(cls, volumen, s):
+        densidad = _dec(s.get("densidad_kg_m3"), "densidad_kg_m3")
+        rendimiento = _dec(s.get("rendimiento_compost"), "rendimiento_compost")
+        sacos_por_m3 = _dec(s.get("sacos_por_m3"), "sacos_por_m3")
+        m3_compost = volumen * rendimiento
         return {
-            'camion_id': camion.id,
-            'patente': camion.patente,
-            'periodo': timezone.now().strftime('%Y-%m'),
-            'viajes_realizados': viajes,
-            'total_m3_recibidos': round(total_m3, 2),
-            'total_kg_recibidos': round(total_kg, 2),
-            'total_chip_producido_kg': round(total_chip, 2),
-            'ventas_totales': round(ventas_totales, 0),
-            'costos_operativos': round(costos_operativos, 0),
-            'utilidad_neta': round(utilidad, 0),
-            'rendimiento_por_kg': round(rendimiento, 2),
-            'margen_porcentual': round(margen, 2)
+            "toneladas_entrada": float(round(volumen * densidad / Decimal(1000), 2)),
+            "m3_compost": float(round(m3_compost, 2)),
+            "sacos": int((m3_compost * sacos_por_m3).to_integral_value()),
         }
-    
+
+    # --- CU-51: semanal por material (aplica densidad y factor propios) ---
     @classmethod
-    def _generar_defecto_semanal(cls, semanas):
-        """
-        Genera proyecciones por defecto cuando no hay datos históricos
-        """
-        resultados = []
-        fecha_actual = timezone.now()
-        
-        for i in range(semanas):
-            fecha_semana = fecha_actual + timedelta(weeks=i)
-            semana_str = f"{fecha_semana.year}-W{fecha_semana.isocalendar()[1]:02d}"
-            
-            proyeccion, created = ProyeccionSemanal.objects.update_or_create(
-                semana=semana_str,
-                defaults={
-                    'fecha_inicio': (fecha_semana - timedelta(days=fecha_semana.weekday())).date(),
-                    'fecha_fin': (fecha_semana - timedelta(days=fecha_semana.weekday()) + timedelta(days=6)).date(),
-                    'chip_estimado_kg': 5000.0,
-                    'compost_estimado_kg': 3000.0
-                }
-            )
-            resultados.append(proyeccion)
-        
-        return resultados
+    def _semanal(cls, volumen, s):
+        densidad = _dec(s.get("densidad_kg_m3"), "densidad_kg_m3")
+        factor = _dec(s.get("factor_reduccion"), "factor_reduccion")
+        if factor <= 0:
+            raise ParametroFaltante("factor_reduccion (debe ser mayor a 0)")
+        return {
+            "m3_procesado": float(round(volumen, 2)),
+            "toneladas": float(round(volumen * densidad / Decimal(1000), 2)),
+            "chip_m3": float(round(volumen / factor, 2)),
+        }
+
+    # --- CU-52: rendimiento comercial (sacos, m3, ingreso) ---
+    @classmethod
+    def _comercial(cls, volumen, s):
+        sacos_por_m3 = _dec(s.get("sacos_por_m3"), "sacos_por_m3")
+        precio_saco = _dec(s.get("precio_saco"), "precio_saco")
+        sacos = (volumen * sacos_por_m3).to_integral_value()
+        return {
+            "m3": float(round(volumen, 2)),
+            "sacos": int(sacos),
+            "ingreso_estimado": float(round(Decimal(sacos) * precio_saco, 0)),
+        }
+
+    # --- CU-53: comparar proyectado vs real (solo lectura) ---
+    @classmethod
+    def comparar(cls, proyeccion):
+        from recepcion.models import DetalleRecepcion
+
+        parcial = proyeccion.periodo_fin > timezone.localdate()
+        detalles = DetalleRecepcion.objects.filter(
+            recepcion__fecha__gte=proyeccion.periodo_inicio,
+            recepcion__fecha__lte=proyeccion.periodo_fin,
+        ).exclude(recepcion__estado="rechazada")
+        if proyeccion.material_id:
+            detalles = detalles.filter(material_id=proyeccion.material_id)
+
+        tiene_real = detalles.exists()
+        real_volumen = sum((d.volumen_m3 for d in detalles), Decimal(0))
+        proyectado = _dec(proyeccion.supuestos.get("volumen_entrada_m3"), "volumen_entrada_m3")
+
+        resultado = {
+            "parcial": parcial,
+            "proyectado_m3": float(round(proyectado, 2)),
+            "real_m3": float(round(real_volumen, 2)) if tiene_real else None,
+            "desviacion_m3": None,
+            "desviacion_pct": None,
+        }
+        if tiene_real:
+            desviacion = real_volumen - proyectado
+            resultado["desviacion_m3"] = float(round(desviacion, 2))
+            if proyectado:
+                resultado["desviacion_pct"] = float(round(desviacion / proyectado * 100, 1))
+        if proyeccion.tipo == Proyeccion.COMERCIAL:
+            resultado["ingreso_real"] = cls._ingreso_real(proyeccion)
+        return resultado
+
+    @staticmethod
+    def _ingreso_real(proyeccion):
+        """Ingreso real del periodo si el Modulo 8 (comercial) esta instalado.
+        Mientras M8 no este integrado devuelve None (comparacion no disponible)."""
+        from django.apps import apps
+
+        try:
+            Venta = apps.get_model("comercial", "Venta")
+        except LookupError:
+            return None
+        ventas = Venta.objects.filter(
+            fecha__gte=proyeccion.periodo_inicio,
+            fecha__lte=proyeccion.periodo_fin,
+        )
+        if not ventas.exists():
+            return None
+        total = sum((getattr(v, "total", None) or Decimal(0) for v in ventas), Decimal(0))
+        return float(round(total, 0))
+
+    # --- CU-54: ajustar supuestos y recalcular (sin tocar config global) ---
+    @classmethod
+    def ajustar(cls, proyeccion, nuevos_supuestos):
+        supuestos = dict(proyeccion.supuestos)
+        if "_escenario_base" not in supuestos:
+            supuestos["_escenario_base"] = {
+                "supuestos": {k: v for k, v in proyeccion.supuestos.items()
+                              if not k.startswith("_")},
+                "valor_proyectado": proyeccion.valor_proyectado,
+            }
+        supuestos.update(nuevos_supuestos or {})
+        supuestos, valor = cls.calcular(proyeccion.tipo, proyeccion.material, supuestos)
+        proyeccion.supuestos = supuestos
+        proyeccion.valor_proyectado = valor
+        proyeccion.save(update_fields=["supuestos", "valor_proyectado"])
+        return proyeccion
