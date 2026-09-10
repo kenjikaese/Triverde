@@ -1,0 +1,13 @@
+@startuml
+title CU-79 - Editar o dar de baja - Excepcion
+actor Administrador
+boundary V_FormularioMaquinaria as Vista
+control C_Maquinaria as Controlador
+database PostgreSQL as DB
+Administrador -> Vista: Solicita baja
+Vista -> Controlador: DELETE /maquinaria/{id}/
+Controlador -> DB: Buscar mantenciones pendientes
+DB --> Controlador: Existe pendiente o esta en mantencion
+Controlador --> Vista: 409 requiere confirmacion
+Vista --> Administrador: Advertir la situacion
+@enduml

@@ -1,0 +1,13 @@
+@startuml
+title CU-83 - Consultar historial - Flujo normal
+actor Usuario as "Administrador u Operador"
+boundary V_HistorialMantenimiento as Vista
+control C_Mantenimiento as Controlador
+database PostgreSQL as DB
+Usuario -> Vista: Selecciona activo y filtros
+Vista -> Controlador: GET /mantenciones/ y /registros-uso/
+Controlador -> DB: Consultar por activo, tipo y fechas
+DB --> Controlador: Mantenciones y lecturas ordenadas
+Controlador --> Vista: 200 con historial
+Vista --> Usuario: Presentar historial unificado
+@enduml

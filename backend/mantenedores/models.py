@@ -93,6 +93,9 @@ class Vehiculo(models.Model):
     )
     tramo = models.CharField(max_length=20, null=True, blank=True)
     descripcion = models.CharField(max_length=120, null=True, blank=True)
+    es_mantenible = models.BooleanField(default=False)
+    datos_tecnicos = models.JSONField(default=dict, blank=True)
+    horometro = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     estado_operativo = models.CharField(
         max_length=17, choices=ESTADO_OPERATIVO_CHOICES, default=OPERATIVA
     )

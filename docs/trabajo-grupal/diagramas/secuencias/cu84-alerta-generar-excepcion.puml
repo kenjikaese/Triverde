@@ -1,0 +1,11 @@
+@startuml
+title CU-84 - Generar alerta de mantencion - Excepcion
+actor Sistema
+control C_Mantenimiento as Controlador
+database PostgreSQL as DB
+Sistema -> Controlador: Repetir revision
+Controlador -> DB: Buscar alerta activa por clave
+DB --> Controlador: Alerta ya existente
+Controlador -> DB: Actualizar nivel y mensaje
+DB --> Controlador: Una sola alerta activa
+@enduml

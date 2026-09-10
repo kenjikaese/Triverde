@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     "configuracion",   # Modulo 2 - Configuracion
     "mantenedores",    # Modulo 3 - Mantenedores
     "recepcion",       # Modulo 4 - Recepcion
+    "mezcla",          # Modulo 6 - Alertas genericas compartidas
+    "mantenimiento",   # Modulo 11 - Mantenimiento
 ]
 
 MIDDLEWARE = [

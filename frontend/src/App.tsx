@@ -58,7 +58,7 @@ export function App() {
         <Route path="/usuarios" element={<ListaUsuarios />} />
         <Route path="/auditoria" element={<BitacoraAuditoria />} />
 
-        {/* Mockups visuales (modulos posteriores, sin backend) */}
+        {/* Modulos del Incremento 2 */}
         <Route path="/inventario" element={<Inventario />} />
         <Route path="/pilas" element={<ListaPilas />} />
         <Route path="/mezcla" element={<MezclaObjetivo />} />

@@ -1,0 +1,11 @@
+@startuml
+title CU-78 - Registrar activo mantenible - Excepcion
+actor Administrador
+boundary V_FormularioMaquinaria as Vista
+control C_Maquinaria as Controlador
+Administrador -> Vista: Omite un dato o ingresa horometro negativo
+Vista -> Controlador: Enviar formulario
+Controlador -> Controlador: Detectar dato invalido
+Controlador --> Vista: 400 con campos observados
+Vista --> Administrador: Solicitar correccion
+@enduml

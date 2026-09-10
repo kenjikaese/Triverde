@@ -15,6 +15,8 @@ from acceso.urls import router as acceso_router
 from configuracion.urls import router as configuracion_router
 from mantenedores.urls import router as mantenedores_router
 from recepcion.urls import router as recepcion_router
+from mezcla.urls import router as mezcla_router
+from mantenimiento.urls import router as mantenimiento_router
 
 router = DefaultRouter()
 for app_router in (
@@ -22,6 +24,8 @@ for app_router in (
     configuracion_router,
     mantenedores_router,
     recepcion_router,
+    mezcla_router,
+    mantenimiento_router,
 ):
     router.registry.extend(app_router.registry)
 
