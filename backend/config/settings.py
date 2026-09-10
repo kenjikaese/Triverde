@@ -40,7 +40,10 @@ INSTALLED_APPS = [
     "configuracion",   # Modulo 2 - Configuracion
     "mantenedores",    # Modulo 3 - Mantenedores
     "recepcion",       # Modulo 4 - Recepcion
+    # Modulos del sistema (Incremento 2)
+    "inventario",      # Modulo 5 - Inventario, pilas y procesos
     "mezcla",          # Modulo 6 - Alertas genericas compartidas
+    "proyecciones",    # Modulo 7 - Proyecciones
     "mantenimiento",   # Modulo 11 - Mantenimiento
 ]
 

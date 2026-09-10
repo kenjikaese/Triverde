@@ -15,5 +15,8 @@ router.register(
     views.HistorialCambioParametroViewSet,
     basename="historial-parametro",
 )
+router.register("recetas", views.RecetaMezclaViewSet, basename="receta")
+router.register("costo-transporte", views.CostoTransporteViewSet, basename="costo-transporte")
+router.register("costos-operativos", views.CostoOperativoViewSet, basename="costo-operativo")
 
 urlpatterns = []

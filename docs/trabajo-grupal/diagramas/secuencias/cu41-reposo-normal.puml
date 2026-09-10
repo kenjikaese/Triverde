@@ -1,0 +1,45 @@
+@startuml cu41-reposo-normal
+' CU-41 Registrando el reposo y curado de una pila - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-41 Registrando el reposo y curado de una pila (flujo normal)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":Pila" as P
+participant ":ComposicionPila" as CP
+participant ":ProcesoPila" as PP
+participant ":Inventario" as I
+
+Operador -> V : abre la pila harneada y presiona "Iniciar reposo"
+V --> Operador : muestra el formulario con la fecha actual
+Operador -> V : confirma el inicio del reposo
+V -> C : registrarProceso(tipo="reposo", pila, fecha)
+C -> P : obtener(pila)
+P --> C : pila con estado "en proceso"
+C -> PP : existeHarneado(pila)
+PP --> C : harneado previo registrado
+C -> PP : crear(tipo="reposo", pila, fecha, id_local)
+PP --> C : reposo registrado
+C -> CP : obtenerComposiciones(pila)
+CP --> C : materiales y volumenes de la pila
+loop por cada material de la pila
+  C -> I : trasladar(material, "pila en proceso", "curado", volumen)
+  I --> C : saldos actualizados
+end
+C -> P : actualizar(estado="en reposo")
+P --> C : pila en reposo
+C --> V : proceso registrado
+V --> Operador : confirma y deja la pila en reposo hasta el ensacado
+
+@enduml

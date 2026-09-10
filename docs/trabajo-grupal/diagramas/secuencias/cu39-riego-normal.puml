@@ -1,0 +1,35 @@
+@startuml cu39-riego-normal
+' CU-39 Registrando el riego de la pila - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-39 Registrando el riego de la pila (flujo normal)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":Pila" as P
+participant ":ProcesoPila" as PP
+
+Operador -> V : riega la pila y presiona "Registrar riego"
+V --> Operador : muestra el formulario con la fecha actual
+Operador -> V : ajusta la fecha e ingresa la humedad estimada
+V -> C : registrarProceso(tipo="riego", pila, fecha, humedad)
+C -> P : obtener(pila)
+P --> C : pila con estado "en proceso"
+C -> C : validarEstado(pila, "en proceso")
+C -> C : validarFechaNoFutura(fecha)
+C -> PP : crear(tipo="riego", pila, fecha, humedad, id_local)
+PP --> C : riego registrado
+C --> V : proceso registrado
+V --> Operador : confirma el riego y lo agrega al historial
+
+@enduml

@@ -1,0 +1,34 @@
+@startuml cu43-trazabilidad-pila-normal
+' CU-43 Consultando la trazabilidad interna de una pila - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-43 Consultando la trazabilidad interna de una pila (flujo normal)
+
+actor Operador
+participant "V_TrazabilidadPila" as V
+participant "C_Pilas" as C
+participant ":Pila" as P
+participant ":ComposicionPila" as CP
+participant ":ProcesoPila" as PP
+
+Operador -> V : selecciona una pila del listado
+V -> C : obtenerTrazabilidad(pila)
+C -> P : obtener(pila)
+P --> C : codigo, fecha de inicio y estado actual
+C -> CP : obtenerComposiciones(pila)
+CP --> C : materiales incorporados con su cantidad
+C -> PP : obtenerProcesos(pila, orden cronologico)
+PP --> C : linea de tiempo con tipo, fecha y mediciones
+C --> V : ficha de la pila con composicion e historial
+V --> Operador : muestra la trazabilidad interna completa
+
+@enduml

@@ -1,0 +1,49 @@
+@startuml cu42-ensacado-normal
+' CU-42 Registrando el ensacado del producto - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-42 Registrando el ensacado del producto (flujo normal)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":Pila" as P
+participant ":ProcesoPila" as PP
+participant ":Inventario" as I
+
+Operador -> V : ensaca el material y presiona "Registrar ensacado"
+V --> Operador : muestra el formulario con la fecha actual
+Operador -> V : ingresa la cantidad ensacada y confirma
+V -> C : registrarProceso(tipo="ensacado", pila, volumen)
+C -> P : obtener(pila)
+P --> C : pila con estado "en reposo"
+C -> P : obtenerCuradoDisponible(pila)
+P --> C : cantidad curada aun no ensacada
+C -> C : validarCantidad(volumen <= curado disponible)
+C -> PP : crear(tipo="ensacado", pila, fecha, volumen, id_local)
+PP --> C : ensacado registrado
+C -> C : repartirPorComposicion(volumen)
+loop por cada material de la pila
+  C -> I : trasladar(material, "curado", "ensacado", parte)
+  I --> C : saldos actualizados
+end
+alt se agoto el material curado de la pila
+  C -> P : actualizar(estado="cerrada")
+  P --> C : pila cerrada
+else queda material curado por ensacar
+  C -> P : conservar(estado="en reposo")
+  P --> C : pila en reposo
+end
+C --> V : proceso registrado
+V --> Operador : confirma el ensacado y deja el producto disponible para la venta
+
+@enduml
