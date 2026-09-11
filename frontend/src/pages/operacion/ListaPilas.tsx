@@ -1,28 +1,66 @@
-import { CalendarDays, Layers, Plus } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Layers, CalendarDays, Sprout } from "lucide-react";
+import { api } from "@/lib/api";
+import type { PilaResumen } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Table, TBody, Td, Th } from "@/components/ui/Table";
 import { Badge, tonoEstado } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 
-// MOCK: datos de ejemplo, sin backend (modulo 6).
-const pilas = [
-  { codigo: "P-024", inicio: "05-08-2026", etapa: "Termofílica", volumen: 54.2, dias: 17, temperatura: 61 },
-  { codigo: "P-023", inicio: "18-07-2026", etapa: "En maduración", volumen: 47.8, dias: 35, temperatura: 43 },
-  { codigo: "P-022", inicio: "02-06-2026", etapa: "Curado", volumen: 39.5, dias: 81, temperatura: 27 },
-  { codigo: "P-021", inicio: "12-05-2026", etapa: "Lista para cosecha", volumen: 32.1, dias: 102, temperatura: 22 },
-];
+const num = (valor: string | number) => Number(valor) || 0;
+
+function fecha(iso: string) {
+  const d = new Date(iso + "T00:00:00");
+  return isNaN(d.getTime()) ? iso : d.toLocaleDateString("es-CL");
+}
 
 export function ListaPilas() {
+  const [pilas, setPilas] = useState<PilaResumen[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .get<PilaResumen[]>("/pilas/")
+      .then((r) => setPilas(r.data))
+      .catch(() => setError("No se pudieron cargar las pilas."))
+      .finally(() => setCargando(false));
+  }, []);
+
+  const activas = pilas.filter((p) => p.estado !== "cerrada");
+  const enFormacion = pilas.filter((p) => p.estado === "en formacion").length;
+  const volumenProceso = activas.reduce((t, p) => t + num(p.volumen_total_m3), 0);
+
   return (
     <div>
-      <PageHeader titulo="Pilas de compostaje" descripcion="Seguimiento de ciclos activos, volumen y madurez del compost." accion={<Button><Plus className="h-4 w-4" /> Nueva pila</Button>} />
+      <PageHeader titulo="Pilas de compostaje" descripcion="Seguimiento de los lotes de compostaje: estado del ciclo y volumen incorporado." />
+      {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Card><CardBody className="flex items-center gap-4"><Layers className="h-8 w-8 text-brand-700" /><div><p className="text-2xl font-semibold text-slate-900">4</p><p className="text-sm text-slate-500">Pilas activas</p></div></CardBody></Card>
-        <Card><CardBody><p className="text-2xl font-semibold text-slate-900">173,6 m³</p><p className="text-sm text-slate-500">Volumen en proceso</p></CardBody></Card>
-        <Card><CardBody className="flex items-center gap-4"><CalendarDays className="h-8 w-8 text-amber-700" /><div><p className="text-2xl font-semibold text-slate-900">1</p><p className="text-sm text-slate-500">Lista para cosecha</p></div></CardBody></Card>
+        <Card><CardBody className="flex items-center gap-4"><Layers className="h-8 w-8 text-brand-700" /><div><p className="text-2xl font-semibold text-slate-900">{activas.length}</p><p className="text-sm text-slate-500">Pilas activas</p></div></CardBody></Card>
+        <Card><CardBody className="flex items-center gap-4"><CalendarDays className="h-8 w-8 text-sky-700" /><div><p className="text-2xl font-semibold text-slate-900">{volumenProceso.toLocaleString("es-CL", { maximumFractionDigits: 2 })} m³</p><p className="text-sm text-slate-500">Volumen en proceso</p></div></CardBody></Card>
+        <Card><CardBody className="flex items-center gap-4"><Sprout className="h-8 w-8 text-amber-700" /><div><p className="text-2xl font-semibold text-slate-900">{enFormacion}</p><p className="text-sm text-slate-500">En formación</p></div></CardBody></Card>
       </div>
-      <Card><Table><thead><tr><Th>Código</Th><Th>Fecha inicio</Th><Th>Etapa</Th><Th>Volumen</Th><Th>Días</Th><Th>Temperatura</Th></tr></thead><TBody>{pilas.map((pila) => <tr key={pila.codigo} className="hover:bg-slate-50"><Td className="font-medium text-slate-800">{pila.codigo}</Td><Td>{pila.inicio}</Td><Td><Badge tono={tonoEstado(pila.etapa)}>{pila.etapa}</Badge></Td><Td>{pila.volumen.toLocaleString("es-CL")} m³</Td><Td>{pila.dias}</Td><Td>{pila.temperatura} °C</Td></tr>)}</TBody></Table></Card>
+      <Card>
+        {cargando ? (
+          <CardBody className="py-10 text-center text-slate-500">Cargando pilas...</CardBody>
+        ) : pilas.length === 0 ? (
+          <CardBody className="py-10 text-center text-slate-500">No hay pilas registradas.</CardBody>
+        ) : (
+          <Table>
+            <thead><tr><Th>Código</Th><Th>Fecha inicio</Th><Th>Estado</Th><Th>Volumen incorporado</Th></tr></thead>
+            <TBody>
+              {pilas.map((p) => (
+                <tr key={p.id} className="hover:bg-slate-50">
+                  <Td className="font-medium text-slate-800">{p.codigo}</Td>
+                  <Td>{fecha(p.fecha_inicio)}</Td>
+                  <Td><Badge tono={tonoEstado(p.estado)}>{p.estado}</Badge></Td>
+                  <Td>{num(p.volumen_total_m3).toLocaleString("es-CL", { maximumFractionDigits: 2 })} m³</Td>
+                </tr>
+              ))}
+            </TBody>
+          </Table>
+        )}
+      </Card>
     </div>
   );
 }

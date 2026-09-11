@@ -367,6 +367,16 @@ export interface PilaResumen {
   volumen_total_m3: string;
 }
 
+export interface Existencia {
+  id: number;
+  material: number;
+  material_nombre: string;
+  material_categoria: "seca" | "verde" | null;
+  etapa: string;
+  volumen_m3: string;
+  actualizado: string;
+}
+
 export interface MezclaCategoria {
   categoria: "seca" | "verde";
   volumen_m3: string;
