@@ -59,6 +59,10 @@ class Command(BaseCommand):
              "Tronco ~2:1 (docs/02). Confirmar con Javier."),
             ("factor_multa", "Factor de multa por material contaminado", Decimal("1.00"), ":1",
              "Multa 1:1 sobre el volumen contaminado (docs/02)."),
+            ("alerta_mantenimiento_dias", "Anticipacion de mantenimiento por fecha", Decimal("7"), "dias",
+             "Valor predeterminado acordado para M11; editable por el administrador."),
+            ("alerta_mantenimiento_horas", "Anticipacion de mantenimiento por horometro", Decimal("50"), "horas",
+             "Valor predeterminado acordado para M11; editable por el administrador."),
         ]
         for clave, nombre, valor, unidad, desc in parametros:
             ParametroConversion.objects.get_or_create(

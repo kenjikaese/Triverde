@@ -36,9 +36,19 @@ class VehiculoSerializer(serializers.ModelSerializer):
             "capacidad_m3",
             "tramo",
             "descripcion",
+            "es_mantenible",
+            "datos_tecnicos",
+            "horometro",
             "estado_operativo",
             "estado",
         ]
+
+    def validate_horometro(self, value):
+        if value < 0:
+            raise serializers.ValidationError("El horometro no puede ser negativo.")
+        if self.instance and value < self.instance.horometro:
+            raise serializers.ValidationError("El horometro no puede retroceder.")
+        return value
 
 
 class MaterialSerializer(serializers.ModelSerializer):

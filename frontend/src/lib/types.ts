@@ -54,8 +54,80 @@ export interface Vehiculo {
   capacidad_m3: string | null;
   tramo: string | null;
   descripcion: string | null;
+  es_mantenible: boolean;
+  datos_tecnicos: Record<string, string>;
+  horometro: string;
   estado_operativo: "operativa" | "en mantencion" | "fuera de servicio";
   estado: EstadoActivo;
+}
+
+export type EstadoOperativo = "operativa" | "en mantencion" | "fuera de servicio";
+export type ClaseActivo = "maquinaria" | "vehiculo";
+
+export interface Maquinaria {
+  id: number;
+  codigo: string;
+  clase_activo: "maquinaria";
+  nombre: string;
+  tipo: string;
+  datos_tecnicos: Record<string, string>;
+  horometro: string;
+  estado_operativo: EstadoOperativo;
+  estado: EstadoActivo;
+}
+
+export interface RegistroUso {
+  id: number;
+  maquinaria: number | null;
+  vehiculo: number | null;
+  activo_nombre: string;
+  horas: string;
+  fecha: string;
+  operador: number;
+  operador_nombre: string;
+  horas_transcurridas: string;
+}
+
+export interface Mantencion {
+  id: number;
+  maquinaria: number | null;
+  vehiculo: number | null;
+  activo_nombre: string;
+  tipo: "preventiva" | "correctiva";
+  criterio: "fecha" | "horas" | null;
+  umbral_horas: string | null;
+  fecha_programada: string | null;
+  fecha_realizada: string | null;
+  costo: string | null;
+  descripcion: string;
+  falla: string;
+  reparacion: string;
+  estado: "programada" | "realizada";
+}
+
+export interface EstadoFlotaItem {
+  id: number;
+  clase_activo: ClaseActivo;
+  codigo: string;
+  nombre: string;
+  tipo: string;
+  horometro: string;
+  estado_operativo: EstadoOperativo;
+  proxima_mantencion: Mantencion | null;
+  alerta: string | null;
+  nivel_alerta: "informativa" | "advertencia" | "critica" | null;
+}
+
+export interface Alerta {
+  id: number;
+  origen: "mezcla" | "mantencion" | "documento";
+  nivel: "informativa" | "advertencia" | "critica";
+  estado: "activa" | "resuelta";
+  mensaje: string;
+  fecha_generada: string;
+  fecha_resuelta: string | null;
+  mantencion: number | null;
+  activo_nombre: string | null;
 }
 
 export interface Material {

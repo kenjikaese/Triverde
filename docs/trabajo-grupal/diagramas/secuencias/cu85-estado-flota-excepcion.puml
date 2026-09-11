@@ -1,0 +1,13 @@
+@startuml
+title CU-85 - Consultar estado de flota - Excepcion
+actor Administrador
+boundary V_EstadoFlota as Vista
+control C_Maquinaria as Controlador
+database PostgreSQL as DB
+Administrador -> Vista: Abre estado de la flota
+Vista -> Controlador: GET /maquinaria/estado-flota/
+Controlador -> DB: Consultar activos mantenibles
+DB --> Controlador: Coleccion vacia
+Controlador --> Vista: 200 []
+Vista --> Administrador: Invitar a registrar el primer activo
+@enduml

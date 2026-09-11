@@ -1,0 +1,14 @@
+@startuml
+title CU-82 - Registrar mantencion correctiva - Flujo normal
+actor Operador
+boundary V_ProgramarMantencion as Vista
+control C_Mantenimiento as Controlador
+database PostgreSQL as DB
+Operador -> Vista: Ingresa falla, reparacion y costo
+Vista -> Controlador: POST /mantenciones/ tipo correctiva
+Controlador -> DB: Crear Mantencion realizada
+Controlador -> DB: Actualizar estado operativo del activo
+Controlador -> DB: Registrar auditoria
+Controlador --> Vista: 201 con mantencion
+Vista --> Operador: Confirmar reparacion
+@enduml
