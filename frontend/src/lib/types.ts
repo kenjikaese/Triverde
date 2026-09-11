@@ -157,3 +157,50 @@ export interface ComparacionProyeccion {
   desviacion_pct: number | null;
   ingreso_real?: number | null;
 }
+
+export interface PilaResumen {
+  id: number;
+  codigo: string;
+  fecha_inicio: string;
+  estado: string;
+  volumen_total_m3: string;
+}
+
+export interface MezclaCategoria {
+  categoria: "seca" | "verde";
+  volumen_m3: string;
+}
+
+export interface MezclaObjetivo {
+  pila: number;
+  pila_codigo: string;
+  estado: string;
+  receta: {
+    id: number;
+    nombre: string;
+    relacion_seca: string;
+    relacion_verde: string;
+    proporcion: string;
+  } | null;
+  mensaje: string | null;
+  actual: MezclaCategoria[];
+  faltantes: MezclaCategoria[];
+  disponibles: MezclaCategoria[];
+}
+
+export interface Alerta {
+  id: number;
+  origen: "mezcla" | "mantencion" | "documento";
+  nivel: string;
+  estado: "activa" | "resuelta";
+  mensaje: string;
+  categoria: "seca" | "verde" | null;
+  categoria_display: string | null;
+  faltante_m3: string;
+  disponible_m3: string;
+  fecha_generada: string;
+  fecha_resuelta: string | null;
+  pila: number | null;
+  pila_codigo: string | null;
+  resuelta_por_username?: string | null;
+}

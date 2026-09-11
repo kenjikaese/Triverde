@@ -162,6 +162,9 @@ class PilaViewSet(viewsets.ModelViewSet):
             if not creada:
                 composicion.volumen_m3 = composicion.volumen_m3 + volumen
                 composicion.save(update_fields=["volumen_m3"])
+            from mezcla.services import calcular_mezcla
+
+            calcular_mezcla(pila)
         return Response(
             ComposicionPilaSerializer(composicion).data,
             status=status.HTTP_201_CREATED if creada else status.HTTP_200_OK,
