@@ -12,6 +12,7 @@ from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from acceso.urls import router as acceso_router
+from comercial.urls import router as comercial_router
 from configuracion.urls import router as configuracion_router
 from inventario.urls import router as inventario_router
 from mezcla.urls import router as mezcla_router
@@ -23,6 +24,7 @@ from proyecciones.urls import router as proyecciones_router
 router = DefaultRouter()
 for app_router in (
     acceso_router,
+    comercial_router,
     configuracion_router,
     mantenedores_router,
     recepcion_router,
@@ -37,6 +39,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/v1/", include(router.urls)),
     path("api/v1/", include("acceso.urls")),
+    path("api/v1/", include("comercial.urls")),
     path("api/v1/", include("recepcion.urls")),
 ]
 

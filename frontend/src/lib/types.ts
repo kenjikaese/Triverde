@@ -212,6 +212,127 @@ export interface Recepcion {
   detalles: DetalleRecepcion[];
 }
 
+// --- Modulo 8: Comercial (CU-55 a CU-64) -----------------------------------
+
+export interface Cotizacion {
+  id: number;
+  cliente: number;
+  cliente_razon_social?: string;
+  fecha: string;
+  distancia_km: string;
+  servicio: string;
+  costo_estimado: string | null;
+  estado: string;
+  advertencia?: string;
+}
+
+export interface CotizacionExportada {
+  cotizacion: number;
+  fecha: string;
+  cliente: {
+    razon_social: string;
+    rut: string | null;
+    nombre_contacto: string | null;
+    telefono: string | null;
+    email: string | null;
+    direccion: string | null;
+  };
+  servicio: string;
+  distancia_km: string;
+  costo_estimado: string | null;
+}
+
+export interface DetalleVenta {
+  id?: number;
+  producto: number;
+  producto_nombre?: string;
+  cantidad: string;
+  unidad?: "saco" | "m3";
+  precio_unitario?: string;
+  subtotal?: string;
+}
+
+export type EstadoVenta = "pendiente" | "despachada";
+
+export interface Venta {
+  id: number;
+  cliente: number;
+  cliente_razon_social?: string;
+  fecha: string;
+  estado: EstadoVenta;
+  total: string;
+  detalles: DetalleVenta[];
+  despachada: boolean;
+}
+
+export interface TotalesVentas {
+  cantidad: number;
+  total: string;
+}
+
+export interface Despacho {
+  id: number;
+  venta: number;
+  fecha: string;
+  direccion: string | null;
+  receptor: string;
+  estado: string;
+}
+
+export interface Cobro {
+  id: number;
+  venta: number | null;
+  recepcion: number | null;
+  cliente: number;
+  monto: string;
+  monto_sugerido: string | null;
+  fecha: string;
+  medio: string | null;
+  estado: string;
+}
+
+export interface SugerenciaCobro {
+  recepcion: number;
+  cliente: number;
+  monto_sugerido: string | null;
+  cobrada: boolean;
+}
+
+export interface DocumentoTributario {
+  id: number;
+  venta: number | null;
+  cobro: number | null;
+  cliente: number;
+  tipo: "boleta" | "factura";
+  folio: string | null;
+  monto: string;
+  estado: "pendiente";
+  fecha: string;
+}
+
+export interface MovimientoCuentaCorriente {
+  tipo: "venta" | "cobro";
+  id: number;
+  fecha: string;
+  detalle: string;
+  monto: string;
+}
+
+export interface CuentaCorriente {
+  cliente: number;
+  razon_social: string;
+  estado_pago: "al dia" | "con deuda";
+  total_ventas: string;
+  total_cobros: string;
+  saldo: string;
+  movimientos: MovimientoCuentaCorriente[];
+}
+
+export interface CostoKm {
+  costo_por_km: string | null;
+  configurado: boolean;
+}
+
 // Modulo 7 - Proyecciones (espejo de proyecciones/serializers.py)
 export type TipoProyeccion = "mensual" | "semanal" | "comercial";
 

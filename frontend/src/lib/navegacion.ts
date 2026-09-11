@@ -25,6 +25,7 @@ import {
   FileStack,
   ClipboardList,
   ScrollText,
+  Wallet,
 } from "lucide-react";
 import type { RolNombre } from "@/lib/types";
 
@@ -97,9 +98,13 @@ export const navegacion: SeccionNav[] = [
   {
     titulo: "Comercial",
     items: [
-      { etiqueta: "Cotizador", ruta: "/cotizador", icono: Calculator, roles: ADMIN },
-      { etiqueta: "Ventas", ruta: "/ventas", icono: ShoppingCart, roles: ADMIN },
-      { etiqueta: "Cobros", ruta: "/cobros", icono: Receipt, roles: ADMIN },
+      { etiqueta: "Cotizador", ruta: "/cotizador", icono: Calculator, roles: ADMIN, inc1: true },
+      { etiqueta: "Historial de cotizaciones", ruta: "/cotizaciones", icono: FileText, roles: ADMIN, inc1: true },
+      // Registrar ventas, despachos y cobros tambien es tarea del operador
+      // (spec M8 SS4), por eso estas tres van a INTERNO y no a ADMIN.
+      { etiqueta: "Ventas", ruta: "/ventas", icono: ShoppingCart, roles: INTERNO, inc1: true },
+      { etiqueta: "Cobros", ruta: "/cobros", icono: Receipt, roles: INTERNO, inc1: true },
+      { etiqueta: "Cuenta corriente", ruta: "/cuenta-corriente", icono: Wallet, roles: ADMIN, inc1: true },
     ],
   },
   {
