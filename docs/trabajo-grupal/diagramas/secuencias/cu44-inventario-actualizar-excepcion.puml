@@ -1,0 +1,43 @@
+@startuml cu44-inventario-actualizar-excepcion
+' CU-44 Actualizando el inventario tras un proceso - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-44 Actualizando el inventario (excepcion: datos invalidos o saldo insuficiente)
+
+actor Sistema
+participant "C_ProcesosPila" as C
+participant ":ProcesoPila" as PP
+participant ":Inventario" as I
+
+Sistema -> C : detecta el registro que deberia mover material
+C -> PP : obtener(material, cantidad)
+alt el registro no trae material o cantidad validos
+  PP --> C : material o cantidad ausente
+  C --> Sistema : no actualiza el inventario y indica el registro para revision
+else datos validos
+  PP --> C : material y cantidad
+  C -> I : obtenerSaldo(material, etapa de origen)
+  alt la cantidad a descontar supera lo disponible
+    I --> C : saldo insuficiente
+    C -> C : revertirOperacion()
+    C --> Sistema : deja el inventario sin cambios y indica la inconsistencia
+    note right of C : Nunca se deja una cantidad\nen negativo: el movimiento se\nrechaza completo
+  else saldo suficiente
+    I --> C : cantidad disponible
+    C -> I : descontar(origen, cantidad)
+    C -> I : incorporar(destino, cantidad)
+    I --> C : saldos actualizados
+    C --> Sistema : inventario actualizado
+  end
+end
+
+@enduml

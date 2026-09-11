@@ -1,0 +1,39 @@
+@startuml cu34-inventario-consulta-excepcion
+' CU-34 Consultando el inventario por material y estado - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-34 Consultando el inventario (excepcion: sin movimientos o sin coincidencias)
+
+actor Operador
+participant "V_Inventario" as V
+participant "C_Inventario" as C
+participant ":Inventario" as I
+
+Operador -> V : consulta el inventario con un filtro
+V -> C : listarInventario(material, etapa)
+C -> I : obtenerSaldos(material, etapa)
+alt no hay ningun movimiento para esa combinacion
+  I --> C : sin registro para material y etapa
+  C -> C : completarEnCero(material, etapa)
+  C --> V : existencia en cero
+  V --> Operador : muestra la cantidad en cero, sin tratarlo como error
+else el filtro no coincide con ningun registro
+  I --> C : conjunto vacio
+  C --> V : listado vacio
+  V --> Operador : indica que no hay coincidencias y conserva el filtro
+else hay coincidencias
+  I --> C : saldos encontrados
+  C --> V : existencias filtradas
+  V --> Operador : muestra el listado
+end
+
+@enduml

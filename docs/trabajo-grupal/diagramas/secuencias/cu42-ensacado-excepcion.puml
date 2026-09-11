@@ -1,0 +1,48 @@
+@startuml cu42-ensacado-excepcion
+' CU-42 Registrando el ensacado del producto - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-42 Registrando el ensacado (excepcion: cantidad invalida o sobre el curado)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":Pila" as P
+participant ":ProcesoPila" as PP
+participant ":Inventario" as I
+
+Operador -> V : ingresa la cantidad ensacada y confirma
+V -> C : registrarProceso(tipo="ensacado", pila, volumen)
+alt cantidad vacia o en cero
+  C --> V : error de validacion(cantidad mayor a cero)
+  V --> Operador : solicita una cantidad valida
+else la pila no esta "en reposo"
+  C -> P : obtener(pila)
+  P --> C : estado incompatible
+  C --> V : error(solo se ensaca una pila en reposo)
+  V --> Operador : indica el estado actual de la pila
+else cantidad mayor al curado disponible de la pila
+  C -> P : obtenerCuradoDisponible(pila)
+  P --> C : cantidad curada disponible
+  C --> V : error de validacion(maximo disponible para ensacar)
+  V --> Operador : rechaza el valor y indica la cantidad maxima
+else cantidad valida
+  C -> PP : crear(tipo="ensacado", pila, volumen)
+  PP --> C : ensacado registrado
+  C -> I : trasladar(material, "curado", "ensacado", parte)
+  I --> C : saldos actualizados
+  C -> P : actualizar(estado segun material restante)
+  P --> C : pila cerrada o en reposo
+  C --> V : proceso registrado
+end
+
+@enduml

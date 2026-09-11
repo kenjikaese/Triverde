@@ -1,0 +1,36 @@
+@startuml cu35-pila-crear-normal
+' CU-35 Creando una pila o lote de compostaje - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-35 Creando una pila o lote de compostaje (flujo normal)
+
+actor Operador
+participant "V_FormularioPila" as V
+participant "C_Pilas" as C
+participant ":Pila" as P
+
+Operador -> V : presiona "Nueva pila"
+V -> C : obtenerCodigoSugerido()
+C -> P : buscarUltimoCorrelativo()
+P --> C : ultimo codigo registrado
+C -> C : generarCodigo(correlativo siguiente)
+C --> V : codigo propuesto y fecha de inicio actual
+V --> Operador : muestra el formulario
+Operador -> V : confirma o ajusta la fecha y presiona "Crear pila"
+V -> C : crearPila(codigo, fecha_inicio)
+C -> C : validarFechaNoFutura(fecha_inicio)
+C -> P : crear(codigo, fecha_inicio, estado="en formacion")
+P --> C : pila creada
+C --> V : pila(id, codigo, estado)
+V --> Operador : confirma y habilita registrar la composicion
+
+@enduml
