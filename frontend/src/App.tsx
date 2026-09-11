@@ -69,7 +69,7 @@ export function App() {
         <Route path="/cobros" element={<Cobros />} />
         <Route path="/cuenta-corriente" element={<CuentaCorriente />} />
 
-        {/* Mockups visuales (modulos posteriores, sin backend) */}
+        {/* Modulos del Incremento 2 (inventario, mezcla, mantenimiento) y mockups pendientes */}
         <Route path="/inventario" element={<Inventario />} />
         <Route path="/pilas" element={<ListaPilas />} />
         <Route path="/mezcla" element={<MezclaObjetivo />} />

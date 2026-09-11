@@ -38,6 +38,8 @@ python manage.py migrate && python manage.py seed_inicial && python manage.py ru
 | `configuracion` | 2 — Configuración | `ParametroConversion`, `TarifaRecepcion`, `HistorialCambioParametro` |
 | `mantenedores` | 3 — Mantenedores | `Cliente`, `Transportista`, `Vehiculo`, `Material`, `Producto` |
 | `recepcion` | 4 — Recepción | `Recepcion`, `DetalleRecepcion`, `FotoRecepcion`, `Multa` |
+| `mezcla` | 6 — Alertas compartidas | `Alerta` y servicio genérico de activación/deduplicación usado por M11 y preparado para M6 |
+| `mantenimiento` | 11 — Mantenimiento | `Maquinaria`, `RegistroUso`, `Mantencion` |
 | `common` | — | `SincronizableModel` (mixin de la capa offline) |
 
 Los modelos son traducción directa de **`docs/11 - Modelo de Datos.md` §11.6** (nivel físico).
@@ -73,6 +75,13 @@ se manejan anidados dentro de `/recepciones/` y del endpoint de sincronización.
 | `/api/v1/productos/` | CRUD | Admin escribe / Operador lee | `DELETE` = baja lógica. |
 | `/api/v1/recepciones/` | CRUD | Admin/Operador; Transportista solo crea y ve las suyas (CU-28) | Acepta `detalles`, `fotos` y `multas` anidados. Sin `DELETE` físico. |
 | `/api/v1/sincronizacion/` | POST | Admin/Operador | Lote de operaciones offline, idempotente por `id_local` (CU-33). |
+| `/api/v1/maquinaria/` | CRUD | Admin escribe / Operador lee | Activos no vehiculares; `DELETE` aplica baja lógica. |
+| `/api/v1/maquinaria/estado-flota/` | GET | Administrador | Consolida maquinaria y vehículos mantenibles; revisa alertas M11. |
+| `/api/v1/registros-uso/` | GET, POST | Admin/Operador | Lectura monótona de horómetro y horas transcurridas. |
+| `/api/v1/mantenciones/` | GET, POST, PATCH | Admin/Operador | Admin programa/reprograma preventivas; Operador registra correctivas. |
+| `/api/v1/mantenciones/{id}/realizar/` | POST | Administrador | Ejecuta una preventiva y resuelve su alerta. |
+| `/api/v1/alertas/` | GET | Admin/Operador | Bandeja transversal; admite filtros `estado` y `origen`. |
+| `/api/v1/alertas/{id}/resolver/` | POST | Admin/Operador | Resuelve una alerta conservando su historial. |
 
 ### Obtener un token
 
@@ -135,7 +144,7 @@ migrar a un upsert por `id_local`.
 Con el sistema levantado:
 
 ```bash
-docker compose exec web python manage.py test acceso mantenedores configuracion recepcion
+docker compose exec web python manage.py test
 ```
 
 Los tests cubren: la derivación de `peso_derivado_kg`/`chip_derivado_m3`, la **idempotencia del

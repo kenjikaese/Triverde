@@ -68,14 +68,14 @@ export const navegacion: SeccionNav[] = [
       { etiqueta: "Inventario", ruta: "/inventario", icono: Boxes, roles: INTERNO },
       { etiqueta: "Pilas de compostaje", ruta: "/pilas", icono: Layers, roles: INTERNO },
       { etiqueta: "Mezcla objetivo", ruta: "/mezcla", icono: FlaskConical, roles: INTERNO },
-      { etiqueta: "Alertas", ruta: "/alertas", icono: Bell, roles: INTERNO },
+      { etiqueta: "Alertas", ruta: "/alertas", icono: Bell, roles: INTERNO, inc1: true },
     ],
   },
   {
     titulo: "Mantenimiento",
     items: [
-      { etiqueta: "Maquinaria y flota", ruta: "/maquinaria", icono: Wrench, roles: INTERNO },
-      { etiqueta: "Estado de la flota", ruta: "/flota", icono: Gauge, roles: INTERNO },
+      { etiqueta: "Maquinaria y flota", ruta: "/maquinaria", icono: Wrench, roles: INTERNO, inc1: true },
+      { etiqueta: "Estado de la flota", ruta: "/flota", icono: Gauge, roles: ADMIN, inc1: true },
     ],
   },
   {

@@ -24,6 +24,20 @@ class ParametroConversionSerializer(serializers.ModelSerializer):
         model = ParametroConversion
         fields = ["id", "clave", "nombre", "valor", "unidad", "descripcion"]
 
+    def validate(self, attrs):
+        clave = attrs.get("clave", getattr(self.instance, "clave", ""))
+        valor = attrs.get("valor", getattr(self.instance, "valor", None))
+        if clave in {"alerta_mantenimiento_dias", "alerta_mantenimiento_horas"}:
+            if valor is None or valor <= 0:
+                raise serializers.ValidationError(
+                    {"valor": "La anticipacion debe ser mayor que cero."}
+                )
+            if clave == "alerta_mantenimiento_dias" and valor != valor.to_integral_value():
+                raise serializers.ValidationError(
+                    {"valor": "La anticipacion en dias debe ser un numero entero."}
+                )
+        return attrs
+
 
 class TarifaRecepcionSerializer(serializers.ModelSerializer):
     """Tarifa por tramo de camion (m3)."""

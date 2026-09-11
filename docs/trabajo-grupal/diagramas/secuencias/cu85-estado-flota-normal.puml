@@ -1,0 +1,14 @@
+@startuml
+title CU-85 - Consultar estado de flota - Flujo normal
+actor Administrador
+boundary V_EstadoFlota as Vista
+control C_Maquinaria as Controlador
+database PostgreSQL as DB
+Administrador -> Vista: Abre estado de la flota
+Vista -> Controlador: GET /maquinaria/estado-flota/
+Controlador -> Controlador: Ejecutar revision de alertas
+Controlador -> DB: Consultar activos y proximas mantenciones
+DB --> Controlador: Estado consolidado
+Controlador --> Vista: 200 con maquinaria y vehiculos
+Vista --> Administrador: Presentar panel y filtros
+@enduml

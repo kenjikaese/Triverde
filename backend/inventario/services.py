@@ -62,6 +62,9 @@ def ingresar(material, etapa, volumen):
     saldo = _saldo(material, etapa)
     saldo.volumen_m3 = saldo.volumen_m3 + cantidad
     saldo.save(update_fields=["volumen_m3", "actualizado"])
+    from mezcla.services import recalcular_para_material
+
+    recalcular_para_material(material)
     return saldo
 
 
@@ -106,6 +109,9 @@ def aplicar_movimiento(material, origen, destino, volumen_origen, volumen_destin
     saldo_destino = _saldo(material, destino)
     saldo_destino.volumen_m3 = saldo_destino.volumen_m3 + entrante
     saldo_destino.save(update_fields=["volumen_m3", "actualizado"])
+    from mezcla.services import recalcular_para_material
+
+    recalcular_para_material(material)
     return saldo_origen, saldo_destino
 
 

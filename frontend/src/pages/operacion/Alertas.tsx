@@ -1,28 +1,86 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, Check } from "lucide-react";
+import { api } from "@/lib/api";
+import type { Alerta } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody } from "@/components/ui/Card";
-import { Badge, tonoEstado } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
-// MOCK: datos de ejemplo, sin backend (modulo 7).
-const alertasIniciales = [
-  { id: 1, origen: "Mantención", nivel: "Vencida", titulo: "Cambio de aceite minicargador", detalle: "Superó en 12 h el intervalo programado.", fecha: "22-08-2026" },
-  { id: 2, origen: "Mezcla", nivel: "Próxima", titulo: "Control de temperatura P-024", detalle: "Medición requerida antes de las 16:00.", fecha: "22-08-2026" },
-  { id: 3, origen: "Documento", nivel: "Próxima", titulo: "Renovación resolución sanitaria", detalle: "La vigencia vence en 28 días.", fecha: "20-09-2026" },
-  { id: 4, origen: "Mantención", nivel: "Próxima", titulo: "Engrase de chipeadora", detalle: "Faltan 6 horas de uso para el servicio.", fecha: "24-08-2026" },
-];
+function tituloAlerta(alerta: Alerta): string {
+  if (alerta.origen === "mantencion") return alerta.activo_nombre ?? "Mantención pendiente";
+  if (alerta.origen === "mezcla") return "Faltante de material";
+  return "Alerta del sistema";
+}
+
+function detalleAlerta(alerta: Alerta): string | null {
+  if (alerta.origen === "mezcla") return `Pila: ${alerta.pila_codigo ?? "Sin pila"}`;
+  return null;
+}
 
 export function Alertas() {
-  const [resueltas, setResueltas] = useState<number[]>([]);
-  const activas = alertasIniciales.filter((alerta) => !resueltas.includes(alerta.id));
+  const [alertas, setAlertas] = useState<Alerta[]>([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  function cargar() {
+    setCargando(true);
+    api
+      .get<Alerta[]>("/alertas/", { params: { estado: "activa" } })
+      .then((respuesta) => setAlertas(respuesta.data))
+      .catch(() => setError("No se pudieron cargar las alertas activas."))
+      .finally(() => setCargando(false));
+  }
+
+  useEffect(cargar, []);
+
+  async function resolver(id: number) {
+    try {
+      await api.post(`/alertas/${id}/resolver/`);
+      setAlertas((actuales) => actuales.filter((alerta) => alerta.id !== id));
+    } catch {
+      setError("No se pudo resolver la alerta.");
+    }
+  }
+
   return (
     <div>
-      <PageHeader titulo="Alertas" descripcion="Pendientes operativos, documentales y de mantención que requieren atención." />
+      <PageHeader titulo="Alertas" descripcion="Avisos activos de operación y mantenimiento." />
+      {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       <div className="space-y-3">
-        {activas.length === 0 ? <Card><CardBody className="py-10 text-center text-slate-500">No hay alertas activas.</CardBody></Card> : activas.map((alerta) => (
-          <Card key={alerta.id}><CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center"><div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${alerta.nivel === "Vencida" ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}><Bell className="h-5 w-5" /></div><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><p className="font-semibold text-slate-900">{alerta.titulo}</p><Badge tono={tonoEstado(alerta.nivel)}>{alerta.nivel}</Badge><Badge tono="gris">{alerta.origen}</Badge></div><p className="mt-1 text-sm text-slate-600">{alerta.detalle}</p><p className="mt-1 text-xs text-slate-400">Fecha objetivo: {alerta.fecha}</p></div><Button variante="secundario" tamano="sm" onClick={() => setResueltas((actuales) => [...actuales, alerta.id])}><Check className="h-4 w-4" /> Resolver</Button></CardBody></Card>
-        ))}
+        {cargando ? (
+          <Card><CardBody className="py-10 text-center text-slate-500">Cargando alertas...</CardBody></Card>
+        ) : alertas.length === 0 ? (
+          <Card><CardBody className="py-10 text-center text-slate-500">No hay alertas activas.</CardBody></Card>
+        ) : (
+          alertas.map((alerta) => {
+            const critica = alerta.nivel === "critica";
+            const detalle = detalleAlerta(alerta);
+            return (
+              <Card key={alerta.id}>
+                <CardBody className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${critica ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"}`}>
+                    <Bell className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-semibold text-slate-900">{tituloAlerta(alerta)}</p>
+                      <Badge tono={critica ? "rojo" : "ambar"}>{alerta.nivel}</Badge>
+                      <Badge tono="gris">{alerta.origen}</Badge>
+                    </div>
+                    <p className="mt-1 text-sm text-slate-600">{alerta.mensaje}</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      {detalle ? `${detalle} · ` : ""}Generada: {new Date(alerta.fecha_generada).toLocaleString("es-CL")}
+                    </p>
+                  </div>
+                  <Button variante="secundario" tamano="sm" onClick={() => void resolver(alerta.id)}>
+                    <Check className="h-4 w-4" /> Resolver
+                  </Button>
+                </CardBody>
+              </Card>
+            );
+          })
+        )}
       </div>
     </div>
   );

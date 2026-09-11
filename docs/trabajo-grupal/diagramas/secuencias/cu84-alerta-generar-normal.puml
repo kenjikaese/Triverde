@@ -1,0 +1,12 @@
+@startuml
+title CU-84 - Generar alerta de mantencion - Flujo normal
+actor Sistema
+control C_Mantenimiento as Controlador
+database PostgreSQL as DB
+Sistema -> Controlador: Disparar revision periodica
+Controlador -> DB: Leer mantenciones programadas y parametros
+DB --> Controlador: Criterios, activos y anticipacion
+Controlador -> Controlador: Comparar fecha u horas con umbral
+Controlador -> DB: Crear o actualizar Alerta
+DB --> Controlador: Alerta activa unica
+@enduml

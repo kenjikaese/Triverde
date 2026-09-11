@@ -163,6 +163,7 @@ export function RegistroRecepcion() {
               <p key={i} className="text-brand-700">
                 Linea {i + 1}: {d.volumen_m3} m3 → {d.peso_derivado_kg} kg
                 {d.chip_derivado_m3 ? ` · ${d.chip_derivado_m3} m3 de chip` : ""}
+                {d.destino_sugerido ? ` · Destino: ${d.destino_sugerido}` : ""}
               </p>
             ))}
           </div>
@@ -288,7 +289,7 @@ export function RegistroRecepcion() {
                   </Campo>
                 </div>
                 <div className="col-span-3">
-                  <Campo label={i === 0 ? "Destino" : ""} htmlFor={`dest-${i}`}>
+                  <Campo label={i === 0 ? "Destino (opcional)" : ""} htmlFor={`dest-${i}`}>
                     <Select
                       id={`dest-${i}`}
                       value={linea.destino_sugerido}

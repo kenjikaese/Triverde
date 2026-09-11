@@ -1,0 +1,14 @@
+@startuml
+title CU-80 - Registrar horas de uso - Flujo normal
+actor Operador
+boundary V_RegistroUso as Vista
+control C_Maquinaria as Controlador
+database PostgreSQL as DB
+Operador -> Vista: Ingresa lectura actual
+Vista -> Controlador: POST /registros-uso/
+Controlador -> DB: Bloquear y consultar activo
+Controlador -> Controlador: Calcular horas transcurridas
+Controlador -> DB: Crear RegistroUso y actualizar horometro
+Controlador --> Vista: 201 con lectura
+Vista --> Operador: Confirmar registro
+@enduml

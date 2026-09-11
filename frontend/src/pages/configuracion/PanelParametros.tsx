@@ -22,7 +22,7 @@ export function PanelParametros() {
     setError(null);
     api.get<ParametroConversion[]>("/parametros/")
       .then((res) => setParametros(res.data))
-      .catch(() => setError("No se pudieron cargar los parámetros de conversión."))
+      .catch(() => setError("No se pudieron cargar los parámetros del sistema."))
       .finally(() => setCargando(false));
   }
 
@@ -51,7 +51,7 @@ export function PanelParametros() {
 
   return (
     <div>
-      <PageHeader titulo="Parámetros de conversión" descripcion="Valores globales usados en cálculos de peso, rendimiento e impacto." />
+      <PageHeader titulo="Parámetros del sistema" descripcion="Valores editables usados en conversiones, costos y alertas." />
       {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       <Card>
         <Table>

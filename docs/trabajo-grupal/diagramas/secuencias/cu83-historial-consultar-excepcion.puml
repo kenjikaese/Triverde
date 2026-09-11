@@ -1,0 +1,13 @@
+@startuml
+title CU-83 - Consultar historial - Excepcion
+actor Usuario as "Administrador u Operador"
+boundary V_HistorialMantenimiento as Vista
+control C_Mantenimiento as Controlador
+database PostgreSQL as DB
+Usuario -> Vista: Aplica filtros sin coincidencias
+Vista -> Controlador: GET con filtros
+Controlador -> DB: Consultar historial
+DB --> Controlador: Coleccion vacia
+Controlador --> Vista: 200 []
+Vista --> Usuario: Informar que no hay registros
+@enduml
