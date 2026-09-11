@@ -83,6 +83,10 @@ class DetalleRecepcionSerializer(serializers.ModelSerializer):
         volumen = attrs.get("volumen_m3")
         if material is not None and volumen is not None:
             attrs["_peso"], attrs["_chip"] = derivar_peso_y_chip(material, volumen)
+            if not attrs.get("destino_sugerido"):
+                from mezcla.services import sugerir_destino
+
+                attrs["destino_sugerido"] = sugerir_destino(material)
         return attrs
 
 
