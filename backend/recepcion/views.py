@@ -189,7 +189,7 @@ class SincronizacionView(APIView):
                 "motivo": "id_local ausente o no es un UUID valido.",
             }
         tipo = operacion.get("tipo")
-        if tipo != "recepcion":
+        if tipo not in ("recepcion", "proceso_pila"):
             return {
                 "id_local": str(id_local),
                 "estado": "rechazada",
@@ -204,6 +204,14 @@ class SincronizacionView(APIView):
             }
         try:
             with transaction.atomic():
+                if tipo == "proceso_pila":
+                    # Modulo 5: los procesos de pila (CU-37 a CU-42) tambien se
+                    # capturan sin senal. La logica vive en su propia app; aqui
+                    # solo se despacha por tipo. El import es local para no
+                    # acoplar el modulo 4 con el 5 al cargar.
+                    from inventario.sincronizacion import sincronizar_proceso_pila
+
+                    return sincronizar_proceso_pila(id_local, datos, self.request)
                 return self._sincronizar_recepcion(id_local, datos)
         except (serializers.ValidationError, ObjectDoesNotExist, IntegrityError,
                 InvalidOperation, ValueError) as exc:

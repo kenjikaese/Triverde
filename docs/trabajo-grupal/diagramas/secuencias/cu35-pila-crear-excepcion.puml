@@ -1,0 +1,43 @@
+@startuml cu35-pila-crear-excepcion
+' CU-35 Creando una pila o lote de compostaje - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-35 Creando una pila (excepcion: codigo en conflicto o fecha futura)
+
+actor Operador
+participant "V_FormularioPila" as V
+participant "C_Pilas" as C
+participant ":Pila" as P
+
+Operador -> V : presiona "Nueva pila"
+V -> C : obtenerCodigoSugerido()
+C -> P : existeCodigo(correlativo propuesto)
+alt el correlativo ya pertenece a otra pila
+  P --> C : codigo ocupado
+  C -> C : generarCodigo(siguiente libre)
+  note right of C : Excepcion 1: se resuelve sin\nintervencion del operador
+end
+C --> V : codigo libre y fecha actual
+Operador -> V : ingresa la fecha de inicio y confirma
+V -> C : crearPila(codigo, fecha_inicio)
+C -> C : validarFechaNoFutura(fecha_inicio)
+alt fecha posterior al dia de hoy
+  C --> V : error de validacion(fecha_inicio)
+  V --> Operador : solicita una fecha valida y no crea la pila
+else fecha valida
+  C -> P : crear(codigo, fecha_inicio, estado="en formacion")
+  P --> C : pila creada
+  C --> V : pila(id, codigo)
+  V --> Operador : confirma la creacion
+end
+
+@enduml

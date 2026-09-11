@@ -1,0 +1,52 @@
+@startuml cu37-triturado-excepcion
+' CU-37 Registrando el triturado de un ingreso - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-37 Registrando el triturado (excepcion: volumen invalido o sin factor)
+
+actor Operador
+participant "V_RegistroProceso" as V
+participant "C_ProcesosPila" as C
+participant ":Material" as M
+participant ":Inventario" as I
+participant ":ProcesoPila" as PP
+
+Operador -> V : ingresa el material y el volumen triturado
+V -> C : registrarProceso(tipo="triturado", material, volumen)
+alt volumen vacio o en cero
+  C --> V : error de validacion(volumen mayor a cero)
+  V --> Operador : solicita un volumen valido
+else volumen mayor al stock por triturar
+  C -> I : verificarDisponible(material, "por triturar")
+  I --> C : disponible insuficiente
+  C --> V : error de validacion(maximo disponible)
+  V --> Operador : rechaza el valor y indica el maximo
+else el material no tiene factor de reduccion configurado
+  C -> M : obtenerFactorReduccionChip(material)
+  M --> C : factor no configurado
+  C -> PP : crear(tipo="triturado", volumen, chip_pendiente=true)
+  PP --> C : proceso registrado
+  C -> I : descontar(material, "por triturar", volumen)
+  I --> C : saldo actualizado
+  note right of C : Excepcion 3: se descuenta el volumen\ny el chip queda pendiente de conversion,\nsin inventar un valor
+  C --> V : proceso registrado con chip pendiente
+  V --> Operador : avisa que falta configurar el factor del material
+else datos validos
+  C -> C : derivarChip(volumen, factor)
+  C -> PP : crear(tipo="triturado", volumen)
+  PP --> C : proceso registrado
+  C -> I : trasladar(material, "por triturar", "chip", volumen, chip derivado)
+  I --> C : saldos actualizados
+  C --> V : triturado registrado
+end
+
+@enduml

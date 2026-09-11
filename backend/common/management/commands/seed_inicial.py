@@ -1,9 +1,10 @@
-"""Siembra los datos minimos para operar el Incremento 1.
+"""Siembra los datos minimos para operar el Incremento 1 y el arranque del
+Incremento 2 (M02: costo de transporte y costos operativos).
 
 Idempotente: se puede correr varias veces sin duplicar. Crea los roles, un
-usuario administrador inicial y algunos parametros/tarifas de referencia
-tomados de docs/02 (los valores pendientes de confirmar con Javier quedan
-marcados en la descripcion).
+usuario administrador inicial y algunos parametros/tarifas/costos de
+referencia tomados de docs/02 (los valores pendientes de confirmar con
+Javier quedan marcados en la descripcion).
 
 Uso:  python manage.py seed_inicial
 """
@@ -14,13 +15,13 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 
 from acceso.models import Rol
-from configuracion.models import ParametroConversion, TarifaRecepcion
+from configuracion.models import CostoOperativo, CostoTransporte, ParametroConversion, TarifaRecepcion
 
 Usuario = get_user_model()
 
 
 class Command(BaseCommand):
-    help = "Crea roles, administrador inicial y parametros/tarifas de referencia."
+    help = "Crea roles, administrador inicial y parametros/tarifas/costos de referencia."
 
     @transaction.atomic
     def handle(self, *args, **options):
@@ -49,13 +50,13 @@ class Command(BaseCommand):
             self.stdout.write("Usuario admin ya existe.")
 
         # --- Parametros de conversion (docs/02; provisorios) ----------------
+        # `costo_por_km` se retiro de aqui: ahora vive en CostoTransporte,
+        # que mantiene el vigente + el historico versionado (M02 Incremento 2).
         parametros = [
             ("factor_reduccion_rama", "Factor de reduccion al triturar rama", Decimal("5.00"), ":1",
              "Rama ~5:1 (docs/02). Confirmar con Javier."),
             ("factor_reduccion_tronco", "Factor de reduccion al triturar tronco", Decimal("2.00"), ":1",
              "Tronco ~2:1 (docs/02). Confirmar con Javier."),
-            ("costo_por_km", "Costo de transporte por kilometro", Decimal("2000.00"), "CLP/km",
-             "$2.000/km ida-vuelta (docs/02)."),
             ("factor_multa", "Factor de multa por material contaminado", Decimal("1.00"), ":1",
              "Multa 1:1 sobre el volumen contaminado (docs/02)."),
         ]
@@ -80,5 +81,21 @@ class Command(BaseCommand):
                 defaults={"monto": monto, "vigente": True},
             )
         self.stdout.write(self.style.SUCCESS("Tarifas de recepcion listas."))
+
+        # --- Costo de transporte por km (docs/02: $2.000/km ida-vuelta) -----
+        if CostoTransporte.objects.vigente() is None:
+            CostoTransporte.objects.create(costo_por_km=Decimal("2000.00"))
+        self.stdout.write(self.style.SUCCESS("Costo de transporte listo."))
+
+        # --- Costos operativos de referencia (M02 Incremento 2; provisorios) -
+        costos_operativos = [
+            ("Combustible", Decimal("1200"), CostoOperativo.LITRO),
+            ("Ayudante", Decimal("45000"), CostoOperativo.HORA),
+        ]
+        for concepto, monto, unidad in costos_operativos:
+            CostoOperativo.objects.get_or_create(
+                concepto=concepto, vigente=True, defaults={"monto": monto, "unidad": unidad},
+            )
+        self.stdout.write(self.style.SUCCESS("Costos operativos listos."))
 
         self.stdout.write(self.style.SUCCESS("Seed inicial completado."))

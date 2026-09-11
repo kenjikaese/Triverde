@@ -252,3 +252,29 @@ export interface CostoKm {
   costo_por_km: string | null;
   configurado: boolean;
 }
+
+// Modulo 7 - Proyecciones (espejo de proyecciones/serializers.py)
+export type TipoProyeccion = "mensual" | "semanal" | "comercial";
+
+export interface Proyeccion {
+  id: number;
+  tipo: TipoProyeccion;
+  tipo_display: string;
+  periodo_inicio: string;
+  periodo_fin: string;
+  material: number | null;
+  material_nombre: string | null;
+  supuestos: Record<string, unknown>;
+  valor_proyectado: Record<string, number>;
+  fecha_generada: string;
+  usuario: number | null;
+}
+
+export interface ComparacionProyeccion {
+  parcial: boolean;
+  proyectado_m3: number;
+  real_m3: number | null;
+  desviacion_m3: number | null;
+  desviacion_pct: number | null;
+  ingreso_real?: number | null;
+}
