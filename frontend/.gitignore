@@ -23,3 +23,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+
+# Cache de compilacion de TypeScript
+*.tsbuildinfo
+
+# Playwright (e2e)
+test-results/
+e2e-reporte/
+e2e-evidencias/
+playwright-report/
+
+# Capturas de revision manual
+revision-local/

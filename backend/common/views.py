@@ -1,4 +1,6 @@
-"""Vistas base reutilizables (mixin de filtro por estado)."""
+"""Vistas base reutilizables: filtros por query param y baja logica."""
+from datetime import date
+
 from rest_framework.response import Response
 
 
@@ -29,6 +31,36 @@ class BajaLogicaMixin:
         instancia.estado = instancia.INACTIVO
         instancia.save(update_fields=["estado"])
         return Response(status=204)
+
+
+def entero_o_none(valor):
+    """Convierte un parametro de consulta a entero, o None si no lo es.
+
+    Los filtros por clave foranea (`?cliente=3`) llegan como texto desde la
+    URL. Pasarlos directo al ORM con un valor no numerico levanta ValueError y
+    la peticion termina en un 500. Aca se descarta el filtro invalido en vez de
+    reventar: la consulta responde 200 sin aplicarlo.
+    """
+    if valor in (None, ""):
+        return None
+    try:
+        return int(valor)
+    except (TypeError, ValueError):
+        return None
+
+
+def fecha_o_none(valor):
+    """Convierte un parametro de consulta a fecha ISO, o None si no lo es.
+
+    Mismo motivo que `entero_o_none`: en PostgreSQL un `?desde=hola` termina en
+    un error de base de datos. Se valida antes de tocar el ORM.
+    """
+    if valor in (None, ""):
+        return None
+    try:
+        return date.fromisoformat(valor)
+    except (TypeError, ValueError):
+        return None
 
 
 class FiltroVigenteMixin:

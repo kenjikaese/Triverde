@@ -6,3 +6,7 @@ media/
 staticfiles/
 .venv/
 venv/
+
+# Base y trazas de las pruebas end-to-end
+db.e2e.sqlite3
+logs/
