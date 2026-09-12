@@ -1,0 +1,40 @@
+@startuml cu10-receta-mezcla-excepcion
+' CU-10 Creando o editando una receta de mezcla - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-10 Editando una receta (excepcion: eliminada, mismo material o proporcion invalida)
+
+actor Administrador
+participant "V_FormularioReceta" as V
+participant "C_Configuracion" as C
+participant ":RecetaMezcla" as RM
+
+Administrador -> V : selecciona una receta y ajusta sus componentes
+V -> C : guardarReceta(receta, materialSeco, materialVerde, proporcion)
+alt la receta ya fue eliminada por otro administrador
+  C -> RM : obtener(receta)
+  RM --> C : no existe
+  C --> V : aviso(la receta ya no existe)
+  V --> Administrador : vuelve al listado sin cambios
+else mismo material como seco y verde
+  C --> V : error de validacion(dos materiales distintos)
+  V --> Administrador : solicita materiales distintos
+else proporcion vacia, en cero o negativa
+  C --> V : error de validacion(proporcion mayor a cero)
+  V --> Administrador : solicita una proporcion valida
+else datos validos
+  C -> RM : actualizar(receta, proporcion)
+  RM --> C : receta actualizada
+  C --> V : receta guardada
+end
+
+@enduml

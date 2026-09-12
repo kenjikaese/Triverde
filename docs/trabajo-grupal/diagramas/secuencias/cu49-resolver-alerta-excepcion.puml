@@ -1,0 +1,37 @@
+@startuml cu49-resolver-alerta-excepcion
+' CU-49 Marcando una alerta como resuelta - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-49 Marcar una alerta como resuelta (excepcion: ya resuelta o faltante persistente)
+
+actor Operador
+participant "V_Alertas" as V
+participant "C_Alertas" as C
+participant ":Alerta" as A
+
+Operador -> V : selecciona una alerta y presiona "Marcar como resuelta"
+alt la alerta ya fue resuelta por otro usuario
+  V -> C : resolver(alerta)
+  C -> A : obtener(alerta)
+  A --> C : alerta ya en estado resuelta
+  C --> V : informa que la alerta ya fue resuelta
+  V --> Operador : actualiza el listado sin duplicar la accion
+else la pila sigue con faltante pese a la resolucion manual
+  V -> C : resolver(alerta)
+  C -> A : resolver(estado=resuelta, fecha, operador)
+  A --> C : alerta resuelta
+  C --> V : resolucion aplicada
+  V --> Operador : permite la resolucion manual
+  note right of C : el proximo calculo de la mezcla objetivo\ngenerara una nueva alerta si el faltante persiste
+end
+
+@enduml

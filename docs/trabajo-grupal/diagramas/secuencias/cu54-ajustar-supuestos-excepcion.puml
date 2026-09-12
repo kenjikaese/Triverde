@@ -1,0 +1,41 @@
+@startuml cu54-ajustar-supuestos-excepcion
+' CU-54 Ajustando los supuestos de una proyeccion - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-54 Ajustando supuestos (excepcion: proyeccion eliminada, valor invalido o sin cambios)
+
+actor Administrador
+participant "V_Proyecciones" as V
+participant "C_Proyecciones" as C
+participant ":Proyeccion" as P
+
+Administrador -> V : selecciona una proyeccion y presiona "Recalcular"
+V -> C : recalcular(proyeccion, supuestosNuevos)
+alt la proyeccion ya fue eliminada por otro administrador
+  C -> P : obtener(proyeccion)
+  P --> C : no existe
+  C --> V : informa que la proyeccion ya no existe
+  V --> Administrador : vuelve al listado sin cambios
+else un supuesto es vacio, negativo o fuera de rango
+  C --> V : error de validacion(motivo del rechazo)
+  V --> Administrador : senala el valor invalido y no lo guarda
+else no se modifico ningun supuesto
+  C -> C : detectar cambios
+  C --> V : no hay variacion que recalcular
+  V --> Administrador : mantiene el resultado ya calculado
+else supuestos validos y modificados
+  C -> P : actualizarSupuestos(proyeccion, supuestosNuevos, nuevoResultado)
+  P --> C : actualizado
+  C --> V : resultado recalculado
+end
+
+@enduml

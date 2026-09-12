@@ -1,0 +1,40 @@
+@startuml cu81-programar-preventiva-excepcion
+' CU-81 Programando una mantencion preventiva - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-81 Programar preventiva (excepcion: activo fuera de servicio, valor invalido o programacion duplicada)
+
+actor Administrador
+participant "V_ProgramarMantencion" as V
+participant "C_Mantencion" as C
+participant ":Mantencion" as MNT
+
+alt el activo esta fuera de servicio
+  Administrador -> V : selecciona un activo fuera de servicio
+  V --> Administrador : no permite programar; el activo no esta disponible
+else fecha ya pasada o umbral igual o menor al horometro vigente
+  Administrador -> V : ingresa una fecha pasada o un umbral no valido
+  V --> Administrador : rechaza el valor y solicita uno valido
+else ya existe una mantencion programada con el mismo criterio
+  Administrador -> V : "Programar mantencion"
+  V -> C : programarPreventiva(activo, criterio, valor)
+  C -> MNT : buscarProgramada(activo, criterio)
+  MNT --> C : ya existe una programada con ese criterio
+  C --> V : advierte la coincidencia y solicita confirmacion
+  Administrador -> V : confirma la segunda programacion
+  V -> C : programarPreventiva(activo, criterio, valor, confirmar)
+  C -> MNT : crear(tipo=preventiva, estado=programada)
+  MNT --> C : mantencion programada
+  C --> Administrador : programacion confirmada
+end
+
+@enduml

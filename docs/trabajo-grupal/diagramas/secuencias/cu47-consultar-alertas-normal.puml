@@ -1,0 +1,34 @@
+@startuml cu47-consultar-alertas-normal
+' CU-47 Consultando las alertas de mezcla activas - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-47 Consultando las alertas de mezcla activas (flujo normal)
+
+actor Operador
+participant "V_Alertas" as V
+participant "C_Alertas" as C
+participant ":Alerta" as A
+
+Operador -> V : abre la bandeja de alertas
+V -> C : listarAlertas(estado=activa)
+C -> A : obtenerActivas(orden por fecha de generacion)
+A --> C : alertas activas con pila, categoria y faltante
+C --> V : listado de alertas activas
+V --> Operador : muestra las alertas ordenadas
+Operador -> V : filtra por pila o por categoria de material
+V -> C : listarAlertas(estado=activa, filtro)
+C -> A : obtenerActivas(filtro)
+A --> C : alertas que cumplen el criterio
+C --> V : listado filtrado
+V --> Operador : muestra el resultado y permite abrir cada alerta para resolverla
+
+@enduml

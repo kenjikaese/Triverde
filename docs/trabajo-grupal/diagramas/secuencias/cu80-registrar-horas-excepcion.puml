@@ -1,0 +1,46 @@
+@startuml cu80-registrar-horas-excepcion
+' CU-80 Registrando las horas de uso de una maquina - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-80 Registrar horas (excepcion: activo fuera de servicio, lectura menor o umbral alcanzado)
+
+actor Operador
+participant "V_RegistroUso" as V
+participant "C_RegistroUso" as C
+participant ":RegistroUso" as RU
+participant ":Maquinaria" as MQ
+
+alt el activo esta fuera de servicio
+  Operador -> V : selecciona un activo fuera de servicio
+  V -> C : registrarHoras(activo, lectura)
+  C -> MQ : verificarEstado(activo)
+  MQ --> C : estado_operativo fuera de servicio
+  C --> V : no permite el registro
+  V --> Operador : senala que el activo no esta disponible
+else la lectura es menor a la ultima registrada
+  Operador -> V : ingresa una lectura menor a la ultima
+  V -> C : registrarHoras(activo, lectura)
+  C -> RU : obtenerUltima(activo)
+  RU --> C : la nueva lectura retrocede el horometro
+  C --> V : rechaza el valor
+  V --> Operador : solicita una lectura valida
+else la nueva lectura alcanza el umbral de una mantencion
+  Operador -> V : ingresa una lectura que supera el umbral
+  V -> C : registrarHoras(activo, lectura)
+  C -> RU : crear(activo, fecha, horas)
+  RU --> C : registro creado
+  C -> C : deja constancia de que el criterio de horas se cumplio
+  C --> V : registro confirmado con el criterio alcanzado
+  V --> Operador : el dato alimenta la generacion de alertas (CU-84)
+end
+
+@enduml

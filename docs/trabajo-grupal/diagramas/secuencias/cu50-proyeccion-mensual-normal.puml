@@ -1,0 +1,34 @@
+@startuml cu50-proyeccion-mensual-normal
+' CU-50 Proyectando la produccion mensual de compost - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-50 Proyectando la produccion mensual (flujo normal)
+
+actor Administrador
+participant "V_Proyecciones" as V
+participant "C_Proyecciones" as C
+participant ":ParametroConversion" as PC
+participant ":Proyeccion" as P
+
+Administrador -> V : abre proyecciones y elige "Produccion mensual"
+V --> Administrador : presenta el mes en curso, editable
+Administrador -> V : confirma el periodo y el volumen de entrada, presiona "Calcular proyeccion"
+V -> C : proyectarMensual(periodo, volumenEntrada)
+C -> PC : obtenerVigentes(rendimiento, densidad compost, sacos por m3)
+PC --> C : parametros de conversion vigentes
+C -> C : calcular(toneladas, metros cubicos, sacos)
+C -> P : crear(tipo="mensual", periodo, volumenEntrada, supuestos, valorProyectado)
+P --> C : proyeccion registrada
+C --> V : resultado proyectado
+V --> Administrador : muestra toneladas, metros cubicos y sacos del periodo
+
+@enduml

@@ -1,0 +1,35 @@
+@startuml cu57-historial-cotizaciones-normal
+' CU-57 Consultando el historial de cotizaciones - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-57 Consultando el historial de cotizaciones (flujo normal)
+
+actor Administrador
+participant "V_ListaCotizaciones" as V
+participant "C_Cotizaciones" as C
+participant ":Cotizacion" as COT
+
+Administrador -> V : abre "Historial de cotizaciones"
+V -> C : listarCotizaciones()
+C -> COT : obtener(orden por fecha reciente)
+COT --> C : cotizaciones con cliente, servicio y costo
+C --> V : listado de cotizaciones
+V --> Administrador : muestra el historial ordenado
+Administrador -> V : busca por texto o filtra por cliente o rango de fechas
+V -> C : listarCotizaciones(busqueda, filtro)
+C -> COT : obtener(criterio)
+COT --> C : cotizaciones que cumplen el criterio
+C --> V : listado filtrado
+Administrador -> V : selecciona una cotizacion para ver su detalle
+V --> Administrador : muestra el detalle completo
+
+@enduml

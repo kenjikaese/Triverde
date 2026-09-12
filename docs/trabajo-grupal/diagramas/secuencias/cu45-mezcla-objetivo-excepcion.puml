@@ -1,0 +1,39 @@
+@startuml cu45-mezcla-objetivo-excepcion
+' CU-45 Calculando la mezcla objetivo de una pila - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-45 Calcular la mezcla objetivo (excepcion: sin receta, material sin categoria o inventario insuficiente)
+
+actor Sistema
+participant "C_Mezcla" as C
+participant ":RecetaMezcla" as RM
+participant ":ComposicionPila" as CP
+participant ":Inventario" as I
+
+Sistema -> C : solicita recalcular la mezcla de la pila
+alt no existe una receta de mezcla vigente
+  C -> RM : obtenerVigente()
+  RM --> C : sin receta vigente
+  C --> Sistema : deja constancia de que falta configurar la receta; no bloquea la pila
+else un material incorporado no tiene categoria configurada
+  C -> CP : obtenerComposicion(pila)
+  CP --> C : incluye un material sin categoria seca ni verde
+  C -> C : excluye ese material y continua el calculo con el resto
+  C --> Sistema : senala el material como pendiente de configuracion
+else el inventario disponible no cubre el faltante
+  C -> I : obtenerDisponible(categoria)
+  I --> C : disponible menor al faltante calculado
+  C -> C : registra igualmente el faltante para esa categoria
+  C --> Sistema : deja el faltante listo para evaluar la alerta correspondiente (CU-46)
+end
+
+@enduml

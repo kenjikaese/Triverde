@@ -1,0 +1,35 @@
+@startuml cu83-historial-mantenimiento-normal
+' CU-83 Consultando el historial de mantenimiento de un equipo - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-83 Consultando el historial de mantenimiento de un equipo (flujo normal)
+
+actor Operador
+participant "V_HistorialMantenimiento" as V
+participant "C_Mantencion" as C
+participant ":Mantencion" as MNT
+participant ":RegistroUso" as RU
+
+Operador -> V : selecciona el activo cuyo historial quiere revisar
+V -> C : consultarHistorial(activo)
+C -> MNT : obtener(activo, orden cronologico)
+MNT --> C : mantenciones con tipo, estado, fecha y costo
+C -> RU : obtener(activo)
+RU --> C : registros de horas de uso
+C --> V : historial completo del activo
+V --> Operador : muestra el historial en una sola pantalla
+Operador -> V : filtra por tipo de mantencion o rango de fechas
+V -> C : consultarHistorial(activo, filtro)
+C --> V : historial filtrado
+V --> Operador : muestra el resultado sin modificar ningun dato
+
+@enduml

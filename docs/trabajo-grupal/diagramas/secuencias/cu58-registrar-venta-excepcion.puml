@@ -1,0 +1,36 @@
+@startuml cu58-registrar-venta-excepcion
+' CU-58 Registrando una venta de producto - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-58 Registrar una venta (excepcion: sin cliente, sin productos activos o cantidad invalida)
+
+actor Administrador
+participant "V_RegistroVenta" as V
+participant "C_Ventas" as C
+participant ":Producto" as P
+
+alt continua sin seleccionar cliente
+  Administrador -> V : presiona "Registrar venta" sin elegir cliente
+  V --> Administrador : senala el campo obligatorio y no crea la venta
+else no hay productos activos en el catalogo
+  Administrador -> V : selecciona el cliente
+  V -> C : listarProductosActivos()
+  C -> P : obtenerActivos()
+  P --> C : catalogo sin productos activos
+  C --> V : no hay productos disponibles para vender
+  V --> Administrador : informa y no permite continuar
+else cantidad en cero o vacia
+  Administrador -> V : ingresa una cantidad no valida y "Registrar venta"
+  V --> Administrador : rechaza el valor y pide una cantidad mayor a cero
+end
+
+@enduml

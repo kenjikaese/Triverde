@@ -1,0 +1,33 @@
+@startuml cu45-mezcla-objetivo-normal
+' CU-45 Calculando la mezcla objetivo de una pila - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-45 Calculando la mezcla objetivo de una pila (flujo normal)
+
+actor Sistema
+participant "C_Mezcla" as C
+participant ":RecetaMezcla" as RM
+participant ":ComposicionPila" as CP
+participant ":Inventario" as I
+
+Sistema -> C : detecta un cambio en la composicion de una pila en formacion o en el inventario
+C -> RM : obtenerVigente()
+RM --> C : receta vigente con la proporcion seca a verde
+C -> CP : obtenerComposicion(pila)
+CP --> C : volumen ya incorporado por categoria
+C -> I : obtenerDisponible(seca, verde)
+I --> C : volumen disponible por categoria en etapas utilizables
+C -> C : calcularFaltantes(composicion actual, receta)
+C -> C : evaluar por categoria si el inventario cubre el faltante
+C --> Sistema : mezcla objetivo calculada; faltante y disponible por categoria listos para el armado y para la alerta
+
+@enduml

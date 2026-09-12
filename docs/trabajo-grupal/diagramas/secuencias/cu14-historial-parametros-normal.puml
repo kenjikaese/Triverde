@@ -1,0 +1,39 @@
+@startuml cu14-historial-parametros-normal
+' CU-14 Consultando el historial de cambios de parametros - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-14 Consultando el historial de parametros (flujo normal)
+
+actor Administrador
+participant "V_HistorialParametros" as V
+participant "C_Configuracion" as C
+participant ":HistorialCambioParametro" as H
+
+Administrador -> V : abre el historial de cambios de parametros
+V -> C : listarHistorial()
+C -> H : obtenerCambios(orden reciente a antiguo)
+H --> C : registros con parametro, valor anterior, valor nuevo, fecha y autor
+C --> V : historial ordenado
+V --> Administrador : muestra la lista cronologica
+Administrador -> V : filtra por parametro o rango de fechas
+V -> C : listarHistorial(parametro, rango)
+C -> H : obtenerCambios(parametro, rango)
+H --> C : registros que cumplen el criterio
+C --> V : historial filtrado
+Administrador -> V : selecciona un registro para ver su detalle
+V -> C : obtenerDetalle(registro)
+C -> H : obtener(registro)
+H --> C : detalle del cambio
+C --> V : detalle de solo lectura
+V --> Administrador : muestra el detalle sin permitir editar
+
+@enduml

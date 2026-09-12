@@ -1,0 +1,30 @@
+@startuml cu81-programar-preventiva-normal
+' CU-81 Programando una mantencion preventiva - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-81 Programando una mantencion preventiva (flujo normal)
+
+actor Administrador
+participant "V_ProgramarMantencion" as V
+participant "C_Mantencion" as C
+participant ":Mantencion" as MNT
+
+Administrador -> V : selecciona el activo y elige el criterio (por horas o por fecha)
+Administrador -> V : ingresa el umbral de horas o la fecha, agrega la descripcion; "Programar mantencion"
+V -> C : programarPreventiva(activo, criterio, valor, descripcion)
+C -> MNT : crear(tipo=preventiva, estado=programada, criterio, umbral o fecha)
+MNT --> C : mantencion programada
+C -> C : registrarAuditoria("Registro de mantencion")
+C --> V : programacion confirmada
+V --> Administrador : la mantencion queda a la espera de ejecutarse o de alertar
+
+@enduml

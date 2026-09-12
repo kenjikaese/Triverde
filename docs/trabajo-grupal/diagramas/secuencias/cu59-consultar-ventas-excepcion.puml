@@ -1,0 +1,37 @@
+@startuml cu59-consultar-ventas-excepcion
+' CU-59 Consultando las ventas del periodo - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-59 Consultar las ventas (excepcion: sin ventas en el periodo o filtro sin coincidencias)
+
+actor Administrador
+participant "V_ListaVentas" as V
+participant "C_Ventas" as C
+participant ":Venta" as VT
+
+Administrador -> V : abre "Ventas del periodo"
+alt no hay ventas en el periodo por defecto
+  V -> C : listarVentas(periodo vigente)
+  C -> VT : obtener(periodo)
+  VT --> C : sin ventas
+  C --> V : listado vacio y total en cero
+  V --> Administrador : muestra el listado vacio
+else el rango o filtro no coincide con ninguna venta
+  Administrador -> V : ajusta el rango o aplica un filtro
+  V -> C : listarVentas(rango, filtro)
+  C -> VT : obtener(criterio)
+  VT --> C : sin coincidencias
+  C --> V : listado vacio con el filtro aplicado
+  V --> Administrador : informa que no hay coincidencias, sin descartar el filtro
+end
+
+@enduml

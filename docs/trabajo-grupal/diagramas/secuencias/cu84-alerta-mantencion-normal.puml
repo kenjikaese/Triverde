@@ -1,0 +1,34 @@
+@startuml cu84-alerta-mantencion-normal
+' CU-84 Generando la alerta de mantencion proxima o vencida - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-84 Generando la alerta de mantencion proxima o vencida (flujo normal)
+
+actor Sistema
+participant "C_Mantencion" as C
+participant ":ParametroConversion" as PC
+participant ":Mantencion" as MNT
+participant ":Alerta" as A
+
+Sistema -> C : inicia la revision periodica de mantenciones programadas
+C -> PC : obtenerUmbralesAnticipacion(dias, horas)
+PC --> C : umbrales de anticipacion vigentes
+C -> MNT : obtenerProgramadasPreventivas()
+MNT --> C : mantenciones programadas con su criterio
+loop por cada mantencion programada
+  C -> C : compara la fecha o las horas acumuladas contra el umbral
+  C -> A : activarAlerta(origen=mantencion, clave, nivel proxima o vencida, mantencion)
+  A --> C : alerta activa creada o actualizada
+end
+C --> Sistema : alertas disponibles para el administrador en el tablero
+
+@enduml

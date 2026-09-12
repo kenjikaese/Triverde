@@ -1,0 +1,33 @@
+@startuml cu82-correctiva-normal
+' CU-82 Registrando una mantencion correctiva - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-82 Registrando una mantencion correctiva (flujo normal)
+
+actor Operador
+participant "V_ProgramarMantencion" as V
+participant "C_Mantencion" as C
+participant ":Mantencion" as MNT
+participant ":Maquinaria" as MQ
+
+Operador -> V : selecciona el activo que presento la falla y la describe
+Operador -> V : registra la reparacion efectuada y su costo; "Registrar mantencion"
+V -> C : registrarCorrectiva(activo, falla, reparacion, costo)
+C -> MNT : crear(tipo=correctiva, estado=realizada, fecha, falla, reparacion, costo)
+MNT --> C : mantencion registrada
+C -> MQ : actualizar(estado_operativo=operativa)
+MQ --> C : activo operativo
+C -> C : registrarAuditoria("Registro de mantencion")
+C --> V : registro confirmado
+V --> Operador : queda constancia de la falla y su reparacion
+
+@enduml

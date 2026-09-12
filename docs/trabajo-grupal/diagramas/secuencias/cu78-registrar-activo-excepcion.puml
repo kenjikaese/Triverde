@@ -1,0 +1,36 @@
+@startuml cu78-registrar-activo-excepcion
+' CU-78 Registrando una maquina o vehiculo mantenible - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-78 Registrar un activo (excepcion: habilitar vehiculo, dato faltante u horometro invalido)
+
+actor Administrador
+participant "V_FormularioMaquinaria" as V
+participant "C_Maquinaria" as C
+participant ":Vehiculo" as VH
+
+alt habilita un vehiculo ya registrado en vez de crear una maquina
+  Administrador -> V : elige habilitar un vehiculo existente
+  V -> C : habilitarVehiculo(vehiculo, datos tecnicos, horometro)
+  C -> VH : actualizar(es_mantenible, estado_operativo=operativa)
+  VH --> C : vehiculo habilitado sin duplicarlo
+  C --> V : activo mantenible confirmado
+  V --> Administrador : queda disponible para horas y mantenciones
+else falta un dato obligatorio (nombre o tipo)
+  Administrador -> V : "Registrar" sin completar un dato obligatorio
+  V --> Administrador : senala el campo faltante y no crea la maquinaria
+else horometro inicial negativo o no numerico
+  Administrador -> V : ingresa un horometro no valido
+  V --> Administrador : rechaza el valor y solicita uno valido
+end
+
+@enduml

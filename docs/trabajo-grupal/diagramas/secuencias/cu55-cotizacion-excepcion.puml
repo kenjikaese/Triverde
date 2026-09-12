@@ -1,0 +1,39 @@
+@startuml cu55-cotizacion-excepcion
+' CU-55 Generando una cotizacion de servicio - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-55 Generar una cotizacion (excepcion: sin cliente, distancia invalida o sin costo por km)
+
+actor Administrador
+participant "V_Cotizador" as V
+participant "C_Cotizaciones" as C
+participant ":CostoTransporte" as CT
+participant ":Cotizacion" as COT
+
+alt continua sin seleccionar cliente
+  Administrador -> V : presiona "Calcular" sin elegir cliente
+  V --> Administrador : senala el campo obligatorio y no calcula
+else distancia en cero, vacia o negativa
+  Administrador -> V : ingresa una distancia no valida y "Calcular"
+  V --> Administrador : rechaza el valor y pide una distancia mayor a cero
+else no hay costo por kilometro configurado
+  Administrador -> V : presiona "Calcular cotizacion"
+  V -> C : calcularCosto(distancia)
+  C -> CT : obtenerCostoPorKmVigente()
+  CT --> C : sin costo por km configurado
+  C -> COT : crear(cliente, servicio, distancia, costo=nulo)
+  COT --> C : cotizacion registrada sin costo
+  C --> V : advertencia: falta el parametro; se guardo sin costo calculado
+  V --> Administrador : informa que debe configurar el costo por km
+end
+
+@enduml

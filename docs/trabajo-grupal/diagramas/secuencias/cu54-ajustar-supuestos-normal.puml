@@ -1,0 +1,36 @@
+@startuml cu54-ajustar-supuestos-normal
+' CU-54 Ajustando los supuestos de una proyeccion - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-54 Ajustando los supuestos de una proyeccion (flujo normal)
+
+actor Administrador
+participant "V_Proyecciones" as V
+participant "C_Proyecciones" as C
+participant ":Proyeccion" as P
+
+Administrador -> V : selecciona una proyeccion y abre sus supuestos
+V -> C : obtenerSupuestos(proyeccion)
+C -> P : obtener(proyeccion)
+P --> C : supuestos actuales y resultado original
+C --> V : supuestos editables
+V --> Administrador : modifica volumen, rendimiento, densidad, sacos o precio y presiona "Recalcular"
+V -> C : recalcular(proyeccion, supuestosNuevos)
+C -> C : validar(valores dentro de rango) y detectar cambios
+C -> C : recalcular resultado con los supuestos nuevos
+C -> P : actualizarSupuestos(proyeccion, supuestosNuevos, nuevoResultado)
+P --> C : supuestos y resultado actualizados
+note right of C : no modifica ParametroConversion ni Material vigentes;\nconserva el resultado anterior como referencia
+C --> V : resultado recalculado junto al original
+V --> Administrador : compara ambos escenarios
+
+@enduml

@@ -1,0 +1,33 @@
+@startuml cu63-documento-tributario-excepcion
+' CU-63 Registrando un documento tributario pendiente - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-63 Registrar un documento tributario (excepcion: origen sin monto o sin tipo seleccionado)
+
+actor Administrador
+participant "V_ListaVentas" as V
+participant "C_Documentos" as C
+participant ":Venta" as VT
+
+Administrador -> V : presiona "Registrar documento tributario"
+alt la venta o el cobro de origen no tiene monto
+  V -> C : prepararDocumento(origen)
+  C -> VT : obtenerMonto(origen)
+  VT --> C : sin monto asociado
+  C --> V : solicita ingresar el monto manualmente
+  V --> Administrador : pide el monto antes de continuar
+else registra sin seleccionar el tipo de documento
+  Administrador -> V : presiona "Registrar documento" sin elegir el tipo
+  V --> Administrador : senala el campo obligatorio y no crea el documento
+end
+
+@enduml

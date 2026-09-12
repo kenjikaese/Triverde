@@ -1,0 +1,35 @@
+@startuml cu56-exportar-cotizacion-excepcion
+' CU-56 Exportando la cotizacion como documento - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-56 Exportar la cotizacion (excepcion: datos de contacto incompletos o descarga cancelada)
+
+actor Administrador
+participant "V_ListaCotizaciones" as V
+participant "C_Cotizaciones" as C
+participant ":Cliente" as CL
+
+Administrador -> V : presiona "Exportar cotizacion"
+V -> C : exportar(cotizacion)
+C -> CL : obtenerDatosContacto(cliente)
+alt el cliente no tiene sus datos de contacto completos
+  CL --> C : faltan datos de contacto (RUT, telefono, email u otros)
+  C --> V : senala los datos faltantes y no arma el documento
+  V --> Administrador : pide completar los datos del cliente antes de exportar
+else el administrador cancela la descarga antes de completarla
+  CL --> C : datos completos
+  C --> V : documento disponible
+  Administrador -> V : cancela la descarga
+  V --> Administrador : conserva la cotizacion sin cambios y permite reintentar
+end
+
+@enduml

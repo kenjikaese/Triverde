@@ -1,0 +1,35 @@
+@startuml cu63-documento-tributario-normal
+' CU-63 Registrando un documento tributario pendiente - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-63 Registrando un documento tributario pendiente (flujo normal)
+
+actor Administrador
+participant "V_ListaVentas" as V
+participant "C_Documentos" as C
+participant ":Venta" as VT
+participant ":DocumentoTributario" as DT
+
+Administrador -> V : desde el detalle de una venta o un cobro, presiona "Registrar documento tributario"
+V -> C : prepararDocumento(origen)
+C -> VT : obtenerMonto(venta o cobro de origen)
+VT --> C : monto precargado
+C --> V : formulario con tipo y monto precargado
+V --> Administrador : muestra el formulario
+Administrador -> V : confirma o ajusta el monto, selecciona el tipo; "Registrar documento"
+V -> C : registrarDocumento(origen, tipo, monto)
+C -> DT : crear(estado=pendiente, cliente, tipo, monto, fecha, origen)
+DT --> C : documento registrado
+C --> V : documento confirmado
+V --> Administrador : queda disponible para su seguimiento
+
+@enduml

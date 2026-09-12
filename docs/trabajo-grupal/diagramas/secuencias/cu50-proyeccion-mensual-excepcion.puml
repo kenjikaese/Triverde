@@ -1,0 +1,45 @@
+@startuml cu50-proyeccion-mensual-excepcion
+' CU-50 Proyectando la produccion mensual de compost - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-50 Proyectando la produccion mensual (excepcion: existente, sin volumen o parametro faltante)
+
+actor Administrador
+participant "V_Proyecciones" as V
+participant "C_Proyecciones" as C
+participant ":ParametroConversion" as PC
+participant ":Proyeccion" as P
+
+Administrador -> V : elige el periodo y presiona "Calcular proyeccion"
+V -> C : proyectarMensual(periodo, volumenEntrada)
+alt ya existe una proyeccion mensual para el periodo
+  C -> P : buscarPorPeriodo("mensual", periodo)
+  P --> C : proyeccion existente
+  C --> V : advierte de la proyeccion existente
+  V --> Administrador : ofrece reemplazarla o conservar ambas como escenarios
+else no se ingreso el volumen de entrada
+  C --> V : error de validacion(volumen obligatorio)
+  V --> Administrador : senala el campo y no proyecta
+else falta un parametro de conversion requerido
+  C -> PC : obtenerVigentes(rendimiento, densidad, sacos por m3)
+  PC --> C : parametro no configurado
+  C --> V : indica cual parametro falta
+  V --> Administrador : no calcula hasta configurarlo
+else datos completos
+  C -> PC : obtenerVigentes(rendimiento, densidad, sacos por m3)
+  PC --> C : parametros vigentes
+  C -> P : crear(tipo="mensual", periodo, supuestos, valorProyectado)
+  P --> C : proyeccion registrada
+  C --> V : resultado proyectado
+end
+
+@enduml

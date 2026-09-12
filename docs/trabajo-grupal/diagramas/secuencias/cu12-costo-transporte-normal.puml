@@ -1,0 +1,35 @@
+@startuml cu12-costo-transporte-normal
+' CU-12 Configurando el costo indexado por kilometro - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-12 Configurando el costo por kilometro (flujo normal)
+
+actor Administrador
+participant "V_FormularioTarifa" as V
+participant "C_Configuracion" as C
+participant ":CostoTransporte" as CT
+
+Administrador -> V : abre el costo de transporte
+V -> C : obtenerCostoTransporte()
+C -> CT : obtenerVigente()
+CT --> C : valor por km vigente y fecha
+C --> V : costo vigente
+V --> Administrador : muestra el valor por km y su fecha
+Administrador -> V : ingresa el valor nuevo y presiona "Guardar costo"
+V -> C : guardarCostoTransporte(valor)
+C -> C : validar(valor mayor a cero y distinto del vigente)
+C -> CT : actualizar(valor, fecha)
+CT --> C : costo actualizado
+C --> V : costo guardado
+V --> Administrador : confirma; rige para nuevas cotizaciones y despachos
+
+@enduml

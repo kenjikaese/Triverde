@@ -1,0 +1,38 @@
+@startuml cu84-alerta-mantencion-excepcion
+' CU-84 Generando la alerta de mantencion proxima o vencida - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-84 Generar la alerta (excepcion: sin umbral configurado, alerta existente o mantencion resuelta)
+
+actor Sistema
+participant "C_Mantencion" as C
+participant ":ParametroConversion" as PC
+participant ":Alerta" as A
+
+Sistema -> C : ejecuta la revision periodica de mantenciones
+alt no hay umbral de anticipacion configurado
+  C -> PC : obtenerUmbralesAnticipacion()
+  PC --> C : sin umbral configurado
+  C -> C : aplica el valor por defecto configurable y continua
+else ya existe una alerta activa para la misma mantencion
+  C -> A : activarAlerta(origen=mantencion, clave, nivel)
+  A --> C : mantiene la alerta existente sin duplicarla
+  C --> Sistema : no genera una alerta duplicada
+else la mantencion fue ejecutada o reprogramada
+  C -> A : buscarActiva(mantencion)
+  A --> C : la mantencion ya no esta programada y pendiente
+  C -> A : resolverAlerta(alerta)
+  A --> C : alerta resuelta
+  C --> Sistema : deja de considerarla en la siguiente revision
+end
+
+@enduml

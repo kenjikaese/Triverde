@@ -1,0 +1,38 @@
+@startuml cu55-cotizacion-normal
+' CU-55 Generando una cotizacion de servicio - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-55 Generando una cotizacion de servicio (flujo normal)
+
+actor Administrador
+participant "V_Cotizador" as V
+participant "C_Cotizaciones" as C
+participant ":CostoTransporte" as CT
+participant ":Cotizacion" as COT
+
+Administrador -> V : "Nueva cotizacion"; selecciona cliente y servicio, ingresa la distancia
+Administrador -> V : presiona "Calcular cotizacion"
+V -> C : calcularCosto(distancia)
+C -> CT : obtenerCostoPorKmVigente()
+CT --> C : costo por kilometro vigente
+C -> C : recorrido = distancia x 2; costo = recorrido x costo por km
+C --> V : costo estimado
+V --> Administrador : muestra el costo calculado
+Administrador -> V : presiona "Guardar cotizacion"
+V -> C : crearCotizacion(cliente, servicio, distancia, costo)
+C -> COT : crear(cliente, servicio, distancia, costo, fecha)
+COT --> C : cotizacion registrada
+C -> C : registrarAuditoria("Generacion de cotizacion")
+C --> V : cotizacion confirmada
+V --> Administrador : queda disponible para exportar y en el historial
+
+@enduml

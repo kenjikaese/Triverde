@@ -1,0 +1,38 @@
+@startuml cu64-cuenta-corriente-excepcion
+' CU-64 Consultando la cuenta corriente de un cliente - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-64 Consultar la cuenta corriente (excepcion: cliente sin movimientos o filtro sin coincidencias)
+
+actor Administrador
+participant "V_CuentaCorriente" as V
+participant "C_CuentaCorriente" as C
+participant ":Venta" as VT
+participant ":Cobro" as CB
+
+Administrador -> V : abre la cuenta corriente del cliente
+alt el cliente no tiene ventas ni cobros asociados
+  V -> C : consultarCuentaCorriente(cliente)
+  C -> VT : obtenerVentas(cliente)
+  VT --> C : sin ventas
+  C -> CB : obtenerCobros(cliente)
+  CB --> C : sin cobros
+  C --> V : saldo en cero y detalle vacio
+  V --> Administrador : muestra el saldo en cero
+else el rango de fechas no coincide con ningun movimiento
+  Administrador -> V : filtra por un rango de fechas
+  V -> C : consultarCuentaCorriente(cliente, rango)
+  C --> V : detalle vacio para el rango
+  V --> Administrador : informa que no hay coincidencias, sin descartar el filtro
+end
+
+@enduml

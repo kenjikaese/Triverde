@@ -1,13 +1,42 @@
-@startuml
-title CU-85 - Consultar estado de flota - Excepcion
+@startuml cu85-estado-flota-excepcion
+' CU-85 Consultando el estado de la flota y los equipos - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-85 Consultar el estado de la flota (excepcion: sin activos, sin mantencion proxima o filtro sin resultados)
+
 actor Administrador
-boundary V_EstadoFlota as Vista
-control C_Maquinaria as Controlador
-database PostgreSQL as DB
-Administrador -> Vista: Abre estado de la flota
-Vista -> Controlador: GET /maquinaria/estado-flota/
-Controlador -> DB: Consultar activos mantenibles
-DB --> Controlador: Coleccion vacia
-Controlador --> Vista: 200 []
-Vista --> Administrador: Invitar a registrar el primer activo
+participant "V_EstadoFlota" as V
+participant "C_Maquinaria" as C
+participant ":Maquinaria" as MQ
+participant ":Mantencion" as MNT
+
+Administrador -> V : abre el estado de la flota
+alt no hay ningun activo mantenible registrado
+  V -> C : consultarEstadoFlota()
+  C -> MQ : obtenerActivos()
+  MQ --> C : sin activos
+  C --> V : listado vacio
+  V --> Administrador : invita a registrar el primer activo
+else un activo no tiene mantencion programada vigente
+  V -> C : consultarEstadoFlota()
+  C -> MNT : obtenerProximaProgramada(activo)
+  MNT --> C : sin mantencion proxima
+  C --> V : incluye el activo senalando que no tiene mantencion definida
+  V --> Administrador : lo muestra igual en el listado
+else el filtro no arroja resultados
+  Administrador -> V : aplica un filtro por estado operativo o tipo
+  V -> C : consultarEstadoFlota(filtro)
+  C --> V : sin activos para el filtro
+  V --> Administrador : informa y mantiene el listado completo disponible
+end
+
 @enduml

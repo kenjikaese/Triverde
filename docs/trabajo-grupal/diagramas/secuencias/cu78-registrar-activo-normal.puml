@@ -1,0 +1,31 @@
+@startuml cu78-registrar-activo-normal
+' CU-78 Registrando una maquina o vehiculo mantenible - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-78 Registrando una maquina o vehiculo mantenible (flujo normal)
+
+actor Administrador
+participant "V_FormularioMaquinaria" as V
+participant "C_Maquinaria" as C
+participant ":Maquinaria" as MQ
+
+Administrador -> V : "Nuevo activo"; elige maquina o equipo nuevo
+V --> Administrador : presenta el formulario de datos tecnicos y horometro
+Administrador -> V : ingresa nombre, tipo, datos tecnicos y horometro inicial; "Registrar"
+V -> C : crearMaquinaria(datos)
+C -> MQ : crear(estado_operativo=operativa, estado=activo, datos, horometro)
+MQ --> C : maquinaria registrada
+C -> C : registrarAuditoria("Alta")
+C --> V : maquinaria confirmada
+V --> Administrador : queda disponible para registrar horas y programar mantenciones
+
+@enduml

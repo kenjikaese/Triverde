@@ -1,0 +1,38 @@
+@startuml cu80-registrar-horas-normal
+' CU-80 Registrando las horas de uso de una maquina - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-80 Registrando las horas de uso de una maquina (flujo normal)
+
+actor Operador
+participant "V_RegistroUso" as V
+participant "C_RegistroUso" as C
+participant ":RegistroUso" as RU
+participant ":Maquinaria" as MQ
+
+Operador -> V : selecciona el activo cuyo uso va a registrar
+V -> C : obtenerUltimaLectura(activo)
+C -> RU : obtenerUltima(activo)
+RU --> C : ultima lectura de horometro
+C --> V : lectura de referencia
+V --> Operador : muestra la ultima lectura
+Operador -> V : ingresa la lectura actual y "Registrar horas"
+V -> C : registrarHoras(activo, lectura)
+C -> RU : crear(activo, fecha, horas, horas_transcurridas)
+RU --> C : registro creado
+C -> MQ : actualizar(horometro = ultima lectura)
+MQ --> C : horometro actualizado
+C -> C : evalua si se alcanzo el umbral de alguna mantencion programada
+C --> V : registro confirmado
+V --> Operador : confirma las horas de uso registradas
+
+@enduml

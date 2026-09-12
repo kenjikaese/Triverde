@@ -1,0 +1,36 @@
+@startuml cu60-despacho-normal
+' CU-60 Registrando un despacho de producto - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-60 Registrando un despacho de producto (flujo normal)
+
+actor Operador
+participant "V_Despacho" as V
+participant "C_Ventas" as C
+participant ":Venta" as VT
+participant ":Despacho" as D
+
+Operador -> V : desde una venta pendiente, presiona "Registrar despacho"
+V --> Operador : presenta la fecha actual editable y quien retira
+Operador -> V : ajusta la fecha e ingresa quien retira; "Confirmar despacho"
+V -> C : despachar(venta, fecha, receptor)
+C -> VT : obtener(venta)
+VT --> C : venta en estado pendiente, sin despacho
+C -> D : crear(venta, fecha, receptor)
+D --> C : despacho registrado
+C -> VT : actualizarEstado(despachada)
+VT --> C : venta despachada
+C -> C : registrarAuditoria("Registro de despacho")
+C --> V : despacho confirmado
+V --> Operador : constancia de que el producto salio de la planta
+
+@enduml

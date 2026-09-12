@@ -1,0 +1,27 @@
+@startuml cu46-alerta-faltante-normal
+' CU-46 Generando la alerta de faltante de material - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-46 Generando la alerta de faltante de material (flujo normal)
+
+actor Sistema
+participant "C_Mezcla" as C
+participant ":Alerta" as A
+
+Sistema -> C : entrega el resultado de la mezcla con un faltante no cubierto
+C -> A : buscarActiva(pila, categoria)
+A --> C : no existe una alerta activa para esa pila y categoria
+C -> A : crear(origen=mezcla, estado=activa, pila, categoria, faltante, disponible, fecha)
+A --> C : alerta activa registrada
+C --> Sistema : alerta disponible de inmediato para consulta del administrador y el operador
+
+@enduml

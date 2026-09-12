@@ -1,0 +1,37 @@
+@startuml cu57-historial-cotizaciones-excepcion
+' CU-57 Consultando el historial de cotizaciones - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-57 Consultar el historial (excepcion: sin cotizaciones o busqueda sin coincidencias)
+
+actor Administrador
+participant "V_ListaCotizaciones" as V
+participant "C_Cotizaciones" as C
+participant ":Cotizacion" as COT
+
+Administrador -> V : abre "Historial de cotizaciones"
+alt no existe ninguna cotizacion generada
+  V -> C : listarCotizaciones()
+  C -> COT : obtener()
+  COT --> C : sin cotizaciones
+  C --> V : listado vacio
+  V --> Administrador : indica generar la primera cotizacion
+else la busqueda o el filtro no coincide con ninguna
+  Administrador -> V : ingresa un texto o filtro
+  V -> C : listarCotizaciones(busqueda, filtro)
+  C -> COT : obtener(criterio)
+  COT --> C : sin coincidencias
+  C --> V : listado vacio con el filtro aplicado
+  V --> Administrador : informa que no hay coincidencias, sin descartar el filtro
+end
+
+@enduml

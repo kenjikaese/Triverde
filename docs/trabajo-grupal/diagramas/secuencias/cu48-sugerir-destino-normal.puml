@@ -1,0 +1,40 @@
+@startuml cu48-sugerir-destino-normal
+' CU-48 Sugiriendo el destino de un material recibido - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-48 Sugiriendo el destino de un material recibido (flujo normal)
+
+actor Sistema
+participant "C_Mezcla" as C
+participant ":DetalleRecepcion" as DR
+participant ":Material" as M
+participant ":Alerta" as A
+
+Sistema -> C : detecta que se confirmo un detalle de recepcion
+C -> DR : obtener(detalle)
+DR --> C : material y volumen del detalle
+C -> M : obtenerConfiguracion(material)
+M --> C : categoria de mezcla y si admite conversion a chip
+C -> A : buscarActiva(categoria del material)
+A --> C : alertas activas que reclaman esa categoria
+alt existe una alerta activa que reclama la categoria
+  C -> C : sugiere "a pila" e indica la pila de la alerta
+else el material admite conversion a chip
+  C -> C : sugiere "a chip" para su triturado
+else no admite chip ni corresponde a una alerta
+  C -> C : sugiere "a venta directa"
+end
+C -> DR : registrar destino sugerido
+DR --> C : detalle con la sugerencia
+C --> Sistema : presenta la sugerencia junto al detalle para que el operador la confirme o la cambie
+
+@enduml

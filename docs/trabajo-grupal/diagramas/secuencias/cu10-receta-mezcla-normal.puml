@@ -1,0 +1,36 @@
+@startuml cu10-receta-mezcla-normal
+' CU-10 Creando o editando una receta de mezcla - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-10 Creando una receta de mezcla (flujo normal)
+
+actor Administrador
+participant "V_FormularioReceta" as V
+participant "C_Configuracion" as C
+participant ":Material" as M
+participant ":RecetaMezcla" as RM
+
+Administrador -> V : abre recetas y presiona "Nueva receta"
+V -> C : listarMateriales()
+C -> M : obtenerMaterialesActivos()
+M --> C : catalogo de materiales
+C --> V : materiales disponibles
+V --> Administrador : muestra el formulario de seco y verde
+Administrador -> V : elige componente seco, componente verde y proporcion
+V -> C : guardarReceta(materialSeco, materialVerde, proporcion)
+C -> C : validar(materiales distintos, proporcion mayor a cero)
+C -> RM : crear(materialSeco, materialVerde, proporcion)
+RM --> C : receta registrada
+C --> V : receta guardada
+V --> Administrador : confirma y deja la receta disponible
+
+@enduml

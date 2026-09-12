@@ -1,0 +1,37 @@
+@startuml cu12-costo-transporte-excepcion
+' CU-12 Configurando el costo por kilometro - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-12 Configurando el costo por kilometro (excepcion: valor invalido o sin cambios)
+
+actor Administrador
+participant "V_FormularioTarifa" as V
+participant "C_Configuracion" as C
+participant ":CostoTransporte" as CT
+
+Administrador -> V : ingresa un valor y presiona "Guardar costo"
+V -> C : guardarCostoTransporte(valor)
+alt valor vacio, en cero o negativo
+  C --> V : error de validacion(valor mayor a cero)
+  V --> Administrador : solicita un valor valido
+else valor igual al vigente
+  C -> CT : obtenerVigente()
+  CT --> C : mismo valor
+  C --> V : sin cambios que guardar
+  V --> Administrador : no actualiza la fecha ni confirma cambio
+else valor valido y distinto
+  C -> CT : actualizar(valor, fecha)
+  CT --> C : costo actualizado
+  C --> V : costo guardado
+end
+
+@enduml

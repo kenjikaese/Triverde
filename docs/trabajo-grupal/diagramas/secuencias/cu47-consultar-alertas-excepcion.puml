@@ -1,0 +1,37 @@
+@startuml cu47-consultar-alertas-excepcion
+' CU-47 Consultando las alertas de mezcla activas - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-47 Consultar las alertas activas (excepcion: sin alertas o filtro sin resultados)
+
+actor Operador
+participant "V_Alertas" as V
+participant "C_Alertas" as C
+participant ":Alerta" as A
+
+Operador -> V : abre la bandeja de alertas
+alt no existe ninguna alerta activa
+  V -> C : listarAlertas(estado=activa)
+  C -> A : obtenerActivas()
+  A --> C : sin alertas activas
+  C --> V : listado vacio
+  V --> Operador : informa que no hay alertas pendientes
+else el filtro aplicado no encuentra alertas
+  Operador -> V : filtra por pila o por categoria
+  V -> C : listarAlertas(estado=activa, filtro)
+  C -> A : obtenerActivas(filtro)
+  A --> C : sin resultados para el filtro
+  C --> V : listado vacio con el filtro aplicado
+  V --> Operador : informa sin resultados y ofrece quitar el filtro
+end
+
+@enduml

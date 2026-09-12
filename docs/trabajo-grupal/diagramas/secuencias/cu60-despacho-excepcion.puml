@@ -1,0 +1,33 @@
+@startuml cu60-despacho-excepcion
+' CU-60 Registrando un despacho de producto - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-60 Registrar un despacho (excepcion: sin receptor o venta ya despachada)
+
+actor Operador
+participant "V_Despacho" as V
+participant "C_Ventas" as C
+participant ":Venta" as VT
+
+alt confirma sin ingresar quien retira
+  Operador -> V : presiona "Confirmar despacho" sin el receptor
+  V --> Operador : senala el campo obligatorio y no crea el despacho
+else la venta ya tiene un despacho registrado
+  Operador -> V : "Confirmar despacho"
+  V -> C : despachar(venta, fecha, receptor)
+  C -> VT : obtener(venta)
+  VT --> C : la venta ya tiene despacho
+  C --> V : impide duplicar el despacho
+  V --> Operador : senala que esa venta ya fue despachada
+end
+
+@enduml

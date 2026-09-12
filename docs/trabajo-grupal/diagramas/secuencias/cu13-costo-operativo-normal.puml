@@ -1,0 +1,35 @@
+@startuml cu13-costo-operativo-normal
+' CU-13 Registrando los costos operativos de referencia - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-13 Registrando un costo operativo de referencia (flujo normal)
+
+actor Administrador
+participant "V_CostosOperativos" as V
+participant "C_Configuracion" as C
+participant ":CostoOperativo" as CO
+
+Administrador -> V : abre costos operativos de referencia
+V -> C : listarCostosOperativos()
+C -> CO : obtenerConceptos()
+CO --> C : conceptos con valor y unidad
+C --> V : lista de costos
+V --> Administrador : muestra los conceptos vigentes
+Administrador -> V : presiona "Agregar concepto", ingresa nombre, valor y unidad
+V -> C : guardarCostoOperativo(nombre, valor, unidad)
+C -> C : validar(nombre no vacio ni repetido, valor mayor a cero)
+C -> CO : crear(nombre, valor, unidad)
+CO --> C : costo registrado
+C --> V : costo guardado
+V --> Administrador : confirma; disponible para las proyecciones de rentabilidad
+
+@enduml

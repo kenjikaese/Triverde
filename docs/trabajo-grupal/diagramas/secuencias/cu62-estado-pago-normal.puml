@@ -1,0 +1,33 @@
+@startuml cu62-estado-pago-normal
+' CU-62 Registrando el estado de pago de un cliente - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-62 Registrando el estado de pago de un cliente (flujo normal)
+
+actor Administrador
+participant "V_CuentaCorriente" as V
+participant "C_CuentaCorriente" as C
+participant ":Cliente" as CL
+
+Administrador -> V : consulta la cuenta corriente del cliente y presiona "Actualizar estado de pago"
+V --> Administrador : presenta las opciones de estado de pago
+Administrador -> V : selecciona el estado que corresponde y "Guardar"
+V -> C : actualizarEstadoPago(cliente, estado_pago)
+C -> CL : verificarMovimientos(cliente)
+CL --> C : tiene ventas o cobros asociados
+C -> CL : actualizar(estado_pago, fecha)
+CL --> C : estado de pago actualizado
+C -> C : registrarAuditoria("Cambio de estado de pago")
+C --> V : cambio confirmado
+V --> Administrador : se refleja como indicador en el listado de clientes
+
+@enduml

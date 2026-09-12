@@ -1,14 +1,36 @@
-@startuml
-title CU-85 - Consultar estado de flota - Flujo normal
+@startuml cu85-estado-flota-normal
+' CU-85 Consultando el estado de la flota y los equipos - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-85 Consultando el estado de la flota y los equipos (flujo normal)
+
 actor Administrador
-boundary V_EstadoFlota as Vista
-control C_Maquinaria as Controlador
-database PostgreSQL as DB
-Administrador -> Vista: Abre estado de la flota
-Vista -> Controlador: GET /maquinaria/estado-flota/
-Controlador -> Controlador: Ejecutar revision de alertas
-Controlador -> DB: Consultar activos y proximas mantenciones
-DB --> Controlador: Estado consolidado
-Controlador --> Vista: 200 con maquinaria y vehiculos
-Vista --> Administrador: Presentar panel y filtros
+participant "V_EstadoFlota" as V
+participant "C_Maquinaria" as C
+participant ":Maquinaria" as MQ
+participant ":Mantencion" as MNT
+
+Administrador -> V : abre el estado de la flota y los equipos
+V -> C : consultarEstadoFlota()
+C -> C : revisar_alertas_mantenimiento()
+C -> MQ : obtenerActivos(maquinaria y vehiculos mantenibles)
+MQ --> C : activos con estado_operativo y horometro
+C -> MNT : obtenerProximaProgramada(por activo)
+MNT --> C : proxima mantencion y su alerta si existe
+C --> V : listado de la flota con su estado
+V --> Administrador : muestra el estado operativo, horometro y proxima mantencion
+Administrador -> V : filtra por estado operativo o tipo de activo
+V -> C : consultarEstadoFlota(filtro)
+C --> V : listado filtrado
+V --> Administrador : muestra el resultado sin modificar ningun dato
+
 @enduml

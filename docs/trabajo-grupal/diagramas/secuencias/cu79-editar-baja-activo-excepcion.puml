@@ -1,0 +1,44 @@
+@startuml cu79-editar-baja-activo-excepcion
+' CU-79 Editando o dando de baja una maquina - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-79 Editar o dar de baja (excepcion: activo inexistente, dato faltante o baja que requiere confirmacion)
+
+actor Administrador
+participant "V_ListaMaquinaria" as V
+participant "C_Maquinaria" as C
+participant ":Maquinaria" as MQ
+
+alt el activo ya no existe o fue eliminado por otra sesion
+  Administrador -> V : accede a un activo no disponible
+  V -> C : obtener(activo)
+  C -> MQ : obtener(activo)
+  MQ --> C : no existe
+  C --> V : el activo no esta disponible
+  V --> Administrador : informa y vuelve al listado
+else deja vacio un dato tecnico obligatorio al editar
+  Administrador -> V : "Guardar cambios" sin un dato obligatorio
+  V --> Administrador : senala el campo faltante y no guarda
+else da de baja un activo en mantencion o con una mantencion pendiente
+  Administrador -> V : selecciona "Dar de baja"
+  V -> C : darDeBaja(activo)
+  C -> MQ : verificarEstado(activo)
+  MQ --> C : en mantencion o con mantencion programada pendiente
+  C --> V : advierte la situacion y solicita confirmacion explicita
+  Administrador -> V : confirma la baja
+  V -> C : darDeBaja(activo, confirmar)
+  C -> MQ : actualizar(estado=inactivo)
+  MQ --> C : baja logica aplicada; conserva el historial
+  C --> Administrador : baja confirmada
+end
+
+@enduml

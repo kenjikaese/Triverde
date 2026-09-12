@@ -1,0 +1,38 @@
+@startuml cu14-historial-parametros-excepcion
+' CU-14 Consultando el historial de cambios de parametros - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-14 Consultando el historial (excepcion: filtro sin resultados o parametro no vigente)
+
+actor Administrador
+participant "V_HistorialParametros" as V
+participant "C_Configuracion" as C
+participant ":HistorialCambioParametro" as H
+
+Administrador -> V : aplica un filtro sobre el historial
+V -> C : listarHistorial(filtro)
+alt el filtro no arroja resultados
+  C -> H : obtenerCambios(filtro)
+  H --> C : sin coincidencias
+  C --> V : sin cambios registrados
+  V --> Administrador : informa que no hay resultados y mantiene la lista al limpiar
+else registro de un parametro ya no vigente
+  Administrador -> V : selecciona un registro de un material dado de baja
+  V -> C : obtenerDetalle(registro)
+  C -> H : obtener(registro)
+  H --> C : detalle historico
+  note right of C : el parametro ya no esta disponible para editar,\nsu cambio se conserva como constancia historica
+  C --> V : detalle como constancia
+  V --> Administrador : muestra el detalle historico
+end
+
+@enduml

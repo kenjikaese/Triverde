@@ -1,0 +1,32 @@
+@startuml cu56-exportar-cotizacion-normal
+' CU-56 Exportando la cotizacion como documento - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-56 Exportando la cotizacion como documento (flujo normal)
+
+actor Administrador
+participant "V_ListaCotizaciones" as V
+participant "C_Cotizaciones" as C
+participant ":Cotizacion" as COT
+participant ":Cliente" as CL
+
+Administrador -> V : desde el detalle de una cotizacion, presiona "Exportar cotizacion"
+V -> C : exportar(cotizacion)
+C -> COT : obtener(cotizacion)
+COT --> C : servicio, distancia y costo
+C -> CL : obtenerDatosContacto(cliente)
+CL --> C : datos de contacto completos
+C -> C : arma el documento descargable con cliente, servicio y costo
+C --> V : documento disponible para descargar
+V --> Administrador : descarga el documento y lo hace llegar al cliente fuera del sistema
+
+@enduml

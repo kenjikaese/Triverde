@@ -1,0 +1,38 @@
+@startuml cu48-sugerir-destino-excepcion
+' CU-48 Sugiriendo el destino de un material recibido - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-48 Sugerir el destino (excepcion: material sin configurar, varias alertas o cambio manual)
+
+actor Sistema
+participant "C_Mezcla" as C
+participant ":DetalleRecepcion" as DR
+participant ":Material" as M
+participant ":Alerta" as A
+
+Sistema -> C : detecta que se confirmo un detalle de recepcion
+alt el material no tiene categoria ni conversion a chip configuradas
+  C -> M : obtenerConfiguracion(material)
+  M --> C : sin categoria ni conversion configuradas
+  C --> Sistema : lo senala pendiente de configuracion; no bloquea el registro de la recepcion
+else existen varias alertas activas para la categoria en pilas distintas
+  C -> A : buscarActiva(categoria del material)
+  A --> C : varias alertas activas en pilas distintas
+  C -> C : sugiere la pila con mayor faltante y deja las demas como alternativa
+  C --> Sistema : entrega la sugerencia con la pila prioritaria
+else el operador descarta la sugerencia
+  C -> DR : registrar destino elegido por el operador
+  DR --> C : detalle con el destino manual
+  C --> Sistema : conserva la decision del operador sin alterar las sugerencias futuras
+end
+
+@enduml

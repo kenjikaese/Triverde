@@ -1,0 +1,36 @@
+@startuml cu64-cuenta-corriente-normal
+' CU-64 Consultando la cuenta corriente de un cliente - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-64 Consultando la cuenta corriente de un cliente (flujo normal)
+
+actor Administrador
+participant "V_CuentaCorriente" as V
+participant "C_CuentaCorriente" as C
+participant ":Venta" as VT
+participant ":Cobro" as CB
+
+Administrador -> V : selecciona el cliente y abre su cuenta corriente
+V -> C : consultarCuentaCorriente(cliente)
+C -> VT : obtenerVentas(cliente)
+VT --> C : ventas del cliente
+C -> CB : obtenerCobros(cliente)
+CB --> C : cobros del cliente
+C -> C : saldo = suma de ventas - suma de cobros; ordena los movimientos
+C --> V : saldo, estado de pago y detalle cronologico
+V --> Administrador : muestra el saldo y los movimientos
+Administrador -> V : filtra el detalle por rango de fechas
+V -> C : consultarCuentaCorriente(cliente, rango)
+C --> V : saldo y movimientos del rango
+V --> Administrador : muestra el detalle filtrado
+
+@enduml

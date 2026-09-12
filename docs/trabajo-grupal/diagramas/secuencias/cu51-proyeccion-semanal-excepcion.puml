@@ -1,0 +1,44 @@
+@startuml cu51-proyeccion-semanal-excepcion
+' CU-51 Proyectando la produccion semanal por material - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-51 Proyeccion semanal (excepcion: material sin parametros, sin seleccion o sin rendimiento)
+
+actor Administrador
+participant "V_Proyecciones" as V
+participant "C_Proyecciones" as C
+participant ":Material" as M
+participant ":ParametroConversion" as PC
+participant ":Proyeccion" as P
+
+Administrador -> V : selecciona materiales y presiona "Calcular proyeccion"
+V -> C : proyectarSemanal(periodo, volumenesPorMaterial)
+alt un material no tiene sus parametros propios configurados
+  C -> M : obtenerParametros(material)
+  M --> C : parametros pendientes
+  C --> V : marca el material como pendiente y lo excluye
+  V --> Administrador : avisa que ese material queda fuera del calculo
+else no se selecciono material o falta el volumen de alguno
+  C --> V : error de validacion(seleccion y volumen requeridos)
+  V --> Administrador : senala la falta y no proyecta
+else el rendimiento del compostaje no esta configurado
+  C -> PC : obtenerVigente(rendimiento)
+  PC --> C : rendimiento no configurado
+  C --> V : indica que falta el rendimiento
+  V --> Administrador : no calcula hasta configurarlo
+else datos validos
+  C -> P : crear(tipo="semanal", periodo, detalle, supuestos, valorProyectado)
+  P --> C : proyeccion registrada
+  C --> V : desglose por material y acumulado
+end
+
+@enduml

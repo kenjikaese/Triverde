@@ -1,0 +1,40 @@
+@startuml cu13-costo-operativo-excepcion
+' CU-13 Registrando los costos operativos de referencia - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-13 Registrando un costo operativo (excepcion: duplicado, nombre vacio o valor invalido)
+
+actor Administrador
+participant "V_CostosOperativos" as V
+participant "C_Configuracion" as C
+participant ":CostoOperativo" as CO
+
+Administrador -> V : ingresa un concepto y presiona "Guardar costo"
+V -> C : guardarCostoOperativo(nombre, valor, unidad)
+alt el nombre ya existe en el catalogo
+  C -> CO : buscarPorNombre(nombre)
+  CO --> C : concepto existente
+  C --> V : rechaza y sugiere editar el existente
+  V --> Administrador : ofrece editar el concepto ya registrado
+else nombre vacio
+  C --> V : error de validacion(nombre obligatorio)
+  V --> Administrador : senala el campo obligatorio
+else valor vacio, en cero o negativo
+  C --> V : error de validacion(valor mayor a cero)
+  V --> Administrador : solicita un valor valido
+else datos validos
+  C -> CO : crear(nombre, valor, unidad)
+  CO --> C : costo registrado
+  C --> V : costo guardado
+end
+
+@enduml

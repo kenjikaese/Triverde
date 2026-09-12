@@ -1,0 +1,41 @@
+@startuml cu51-proyeccion-semanal-normal
+' CU-51 Proyectando la produccion semanal por material - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-51 Proyectando la produccion semanal por material (flujo normal)
+
+actor Administrador
+participant "V_Proyecciones" as V
+participant "C_Proyecciones" as C
+participant ":Material" as M
+participant ":ParametroConversion" as PC
+participant ":Proyeccion" as P
+
+Administrador -> V : abre proyecciones y elige "Semanal por material"
+V -> C : listarMateriales()
+C -> M : obtenerMaterialesActivos()
+M --> C : catalogo de materiales
+C --> V : materiales disponibles
+V --> Administrador : selecciona materiales e ingresa el volumen de cada uno
+Administrador -> V : presiona "Calcular proyeccion"
+V -> C : proyectarSemanal(periodo, volumenesPorMaterial)
+C -> M : obtenerParametros(material) : densidad y factor de reduccion
+M --> C : parametros propios por material
+C -> PC : obtenerVigente(rendimiento del compostaje)
+PC --> C : rendimiento vigente
+C -> C : calcular por material y total semanal
+C -> P : crear(tipo="semanal", periodo, detallePorMaterial, supuestos, valorProyectado)
+P --> C : proyeccion registrada
+C --> V : desglose por material y acumulado
+V --> Administrador : muestra el detalle y el total de la semana
+
+@enduml

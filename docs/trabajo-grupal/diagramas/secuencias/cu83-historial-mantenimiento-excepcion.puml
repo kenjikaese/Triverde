@@ -1,0 +1,41 @@
+@startuml cu83-historial-mantenimiento-excepcion
+' CU-83 Consultando el historial de mantenimiento - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-83 Consultar el historial (excepcion: activo no disponible, sin registros o filtro sin resultados)
+
+actor Operador
+participant "V_HistorialMantenimiento" as V
+participant "C_Mantencion" as C
+participant ":Mantencion" as MNT
+
+alt el activo no existe o fue dado de baja
+  Operador -> V : consulta un activo no disponible
+  V -> C : consultarHistorial(activo)
+  C -> MNT : obtener(activo)
+  MNT --> C : no disponible
+  C --> V : el activo no esta disponible
+  V --> Operador : informa la situacion
+else el activo aun no tiene mantenciones ni registros de uso
+  V -> C : consultarHistorial(activo)
+  C -> MNT : obtener(activo)
+  MNT --> C : sin registros
+  C --> V : historial vacio
+  V --> Operador : presenta el historial vacio, sin tratarlo como error
+else el filtro no arroja resultados
+  Operador -> V : aplica un filtro por tipo o rango de fechas
+  V -> C : consultarHistorial(activo, filtro)
+  C --> V : sin registros para el filtro
+  V --> Operador : informa y mantiene el historial completo disponible
+end
+
+@enduml

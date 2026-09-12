@@ -1,0 +1,39 @@
+@startuml cu52-rendimiento-comercial-normal
+' CU-52 Proyectando el rendimiento comercial de un camion - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-52 Proyectando el rendimiento comercial de un camion (flujo normal)
+
+actor Administrador
+participant "V_Proyecciones" as V
+participant "C_Proyecciones" as C
+participant ":DetalleRecepcion" as DR
+participant ":Material" as M
+participant ":ParametroConversion" as PC
+participant ":Proyeccion" as P
+
+Administrador -> V : abre proyecciones y elige "Rendimiento comercial de un camion"
+Administrador -> V : selecciona un DetalleRecepcion registrado
+V -> C : proyectarComercial(detalleRecepcion)
+C -> DR : obtenerVolumenYMaterial(detalleRecepcion)
+DR --> C : volumen y material recibidos
+C -> M : obtenerParametros(material) : densidad y factor de reduccion
+M --> C : parametros propios del material
+C -> PC : obtenerVigentes(rendimiento, sacos por m3, precio de venta)
+PC --> C : parametros vigentes
+C -> C : calcular(sacos, metros cubicos, ingreso estimado)
+C -> P : crear(tipo="comercial", detalleRecepcion, supuestos, valorProyectado)
+P --> C : proyeccion registrada
+C --> V : sacos, metros cubicos e ingreso estimados
+V --> Administrador : muestra el rendimiento comercial del camion
+
+@enduml

@@ -1,0 +1,41 @@
+@startuml cu61-cobro-recepcion-excepcion
+' CU-61 Registrando el cobro de una recepcion - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-61 Registrar el cobro (excepcion: sin tarifa del tramo, monto invalido o recepcion ya cobrada)
+
+actor Operador
+participant "V_Cobros" as V
+participant "C_Cobros" as C
+participant ":TarifaRecepcion" as T
+participant ":Cobro" as CB
+
+Operador -> V : presiona "Registrar cobro"
+alt no hay tarifa configurada para el tramo del vehiculo
+  V -> C : sugerenciaCobro(recepcion)
+  C -> T : buscarVigentePorTramo(capacidad)
+  T --> C : sin tarifa para el tramo
+  C --> V : informa que falta el parametro; permite ingresar el monto a mano
+  V --> Operador : ingresa el monto manualmente sin que se bloquee el cobro
+else monto en cero o negativo
+  Operador -> V : ingresa un monto no valido y "Registrar cobro"
+  V --> Operador : rechaza el valor y pide un monto mayor a cero
+else la recepcion ya tiene un cobro registrado
+  Operador -> V : "Registrar cobro"
+  V -> C : registrarCobro(recepcion, cliente, monto, medio)
+  C -> CB : buscarPorRecepcion(recepcion)
+  CB --> C : ya existe un cobro para esa recepcion
+  C --> V : impide duplicarlo
+  V --> Operador : senala que esa recepcion ya fue cobrada
+end
+
+@enduml

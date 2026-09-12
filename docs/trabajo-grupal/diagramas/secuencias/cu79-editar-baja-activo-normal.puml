@@ -1,0 +1,35 @@
+@startuml cu79-editar-baja-activo-normal
+' CU-79 Editando o dando de baja una maquina - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-79 Editando o dando de baja una maquina (flujo normal)
+
+actor Administrador
+participant "V_ListaMaquinaria" as V
+participant "C_Maquinaria" as C
+participant ":Maquinaria" as MQ
+
+Administrador -> V : selecciona un activo del listado
+V -> C : obtener(activo)
+C -> MQ : obtener(activo)
+MQ --> C : datos vigentes
+C --> V : datos del activo
+V --> Administrador : muestra los datos vigentes
+Administrador -> V : modifica los datos tecnicos y "Guardar cambios"
+V -> C : actualizarMaquinaria(activo, datos)
+C -> MQ : actualizar(datos tecnicos)
+MQ --> C : datos actualizados
+C -> C : registrarAuditoria("Edicion")
+C --> V : cambio confirmado
+V --> Administrador : muestra los datos actualizados
+
+@enduml

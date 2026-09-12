@@ -1,0 +1,37 @@
+@startuml cu82-correctiva-excepcion
+' CU-82 Registrando una mantencion correctiva - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-82 Registrar correctiva (excepcion: activo no disponible, sin falla o costo invalido)
+
+actor Operador
+participant "V_ProgramarMantencion" as V
+participant "C_Mantencion" as C
+participant ":Maquinaria" as MQ
+
+alt el activo no existe o fue dado de baja
+  Operador -> V : selecciona un activo no disponible
+  V -> C : registrarCorrectiva(activo, falla, reparacion, costo)
+  C -> MQ : obtener(activo)
+  MQ --> C : no disponible
+  C --> V : no permite el registro
+  V --> Operador : senala que el activo no esta disponible
+else registra sin describir la falla
+  Operador -> V : "Registrar mantencion" sin describir la falla
+  V --> Operador : senala el campo faltante y no crea la mantencion
+else costo negativo o no numerico
+  Operador -> V : ingresa un costo no valido
+  V --> Operador : rechaza el valor y solicita uno valido
+  note right of V : si la reparacion queda incompleta,\nel activo queda "fuera de servicio"
+end
+
+@enduml

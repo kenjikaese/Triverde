@@ -1,0 +1,31 @@
+@startuml cu49-resolver-alerta-normal
+' CU-49 Marcando una alerta como resuelta - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-49 Marcando una alerta como resuelta (flujo normal)
+
+actor Operador
+participant "V_Alertas" as V
+participant "C_Alertas" as C
+participant ":Alerta" as A
+
+Operador -> V : selecciona una alerta activa y presiona "Marcar como resuelta"
+V -> C : resolver(alerta)
+C -> A : obtener(alerta)
+A --> C : alerta en estado activa
+C -> A : resolver(estado=resuelta, fecha de resolucion, operador)
+A --> C : alerta resuelta
+C -> C : registrarAuditoria("Resolucion de alerta")
+C --> V : alerta actualizada
+V --> Operador : retira la alerta del listado activo y la deja como historial de la pila
+
+@enduml

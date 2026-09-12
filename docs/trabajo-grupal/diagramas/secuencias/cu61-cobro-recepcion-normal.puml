@@ -1,0 +1,39 @@
+@startuml cu61-cobro-recepcion-normal
+' CU-61 Registrando el cobro de una recepcion - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-61 Registrando el cobro de una recepcion (flujo normal)
+
+actor Operador
+participant "V_Cobros" as V
+participant "C_Cobros" as C
+participant ":Recepcion" as R
+participant ":TarifaRecepcion" as T
+participant ":Cobro" as CB
+
+Operador -> V : sobre una recepcion recibida, presiona "Registrar cobro"
+V -> C : sugerenciaCobro(recepcion)
+C -> R : obtenerVehiculo(recepcion)
+R --> C : capacidad del vehiculo
+C -> T : buscarVigentePorTramo(capacidad)
+T --> C : tarifa del tramo con su monto
+C --> V : monto sugerido
+V --> Operador : muestra el monto sugerido
+Operador -> V : confirma o ajusta el monto, elige forma de pago; "Registrar cobro"
+V -> C : registrarCobro(recepcion, cliente, monto, medio)
+C -> CB : crear(recepcion, cliente, monto, medio, fecha)
+CB --> C : cobro registrado
+C -> C : registrarAuditoria("Registro de cobro")
+C --> V : cobro confirmado
+V --> Operador : queda disponible para la cuenta corriente del cliente
+
+@enduml
