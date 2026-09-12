@@ -1,0 +1,291 @@
+Found 151 test(s).
+Creating test database for alias 'default' ('test_triverde')...
+Operations to perform:
+  Synchronize unmigrated apps: common, corsheaders, messages, rest_framework, staticfiles
+  Apply all migrations: acceso, admin, auth, authtoken, comercial, configuracion, contenttypes, inventario, mantenedores, mantenimiento, mezcla, proyecciones, recepcion, sessions
+Synchronizing apps without migrations:
+  Creating tables...
+    Running deferred SQL...
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0001_initial... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying auth.0012_alter_user_first_name_max_length... OK
+  Applying acceso.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying authtoken.0001_initial... OK
+  Applying authtoken.0002_auto_20160226_1747... OK
+  Applying authtoken.0003_tokenproxy... OK
+  Applying authtoken.0004_alter_tokenproxy_options... OK
+  Applying mantenedores.0001_initial... OK
+  Applying recepcion.0001_initial... OK
+  Applying comercial.0001_initial... OK
+  Applying configuracion.0001_initial... OK
+  Applying configuracion.0002_parametros_alerta_mantenimiento... OK
+  Applying configuracion.0002_costooperativo_costotransporte_recetamezcla_and_more... OK
+  Applying configuracion.0003_merge_20260910_0001... OK
+  Applying inventario.0001_initial... OK
+  Applying mantenedores.0002_vehiculo_mantenimiento... OK
+  Applying mantenimiento.0001_initial... OK
+  Applying mezcla.0001_initial... OK
+  Applying mezcla.0002_mezcla_campos_y_constraints... OK
+  Applying proyecciones.0001_initial... OK
+  Applying sessions.0001_initial... OK
+System check identified no issues (0 silenced).
+test_login_devuelve_token_y_perfil_responde (acceso.tests.AutenticacionTests.test_login_devuelve_token_y_perfil_responde) ... ok
+test_login_rechaza_usuario_inactivo (acceso.tests.AutenticacionTests.test_login_rechaza_usuario_inactivo) ... ok
+test_logout_invalida_token (acceso.tests.AutenticacionTests.test_logout_invalida_token) ... ok
+test_sin_token_da_401 (acceso.tests.AutenticacionTests.test_sin_token_da_401) ... ok
+test_admin_crea_usuario_y_audita (acceso.tests.PermisosTests.test_admin_crea_usuario_y_audita) ... ok
+test_baja_logica_de_usuario (acceso.tests.PermisosTests.test_baja_logica_de_usuario) ... ok
+test_operador_no_puede_crear_usuario (acceso.tests.PermisosTests.test_operador_no_puede_crear_usuario) ... ok
+test_transportista_sin_acceso_a_auditoria (acceso.tests.PermisosTests.test_transportista_sin_acceso_a_auditoria) ... ok
+test_transportista_sin_acceso_a_usuarios (acceso.tests.PermisosTests.test_transportista_sin_acceso_a_usuarios) ... ok
+test_cotizacion_sin_cliente_es_rechazada (comercial.tests.CatalogoVacioTests.test_cotizacion_sin_cliente_es_rechazada) ... ok
+test_documento_con_monto_no_positivo_es_rechazado (comercial.tests.CatalogoVacioTests.test_documento_con_monto_no_positivo_es_rechazado)
+CU-63 exc. 1: el origen sin monto obliga a ingresarlo a mano. ... 2026-09-11 19:35:43,844 CU-58 venta.creada venta=1 cliente=1 lineas=1 total=45000.00 estado=pendiente
+ok
+test_venta_con_producto_inexistente_es_rechazada (comercial.tests.CatalogoVacioTests.test_venta_con_producto_inexistente_es_rechazada) ... ok
+test_venta_sin_cliente_es_rechazada (comercial.tests.CatalogoVacioTests.test_venta_sin_cliente_es_rechazada) ... ok
+test_venta_sin_lineas_es_rechazada (comercial.tests.CatalogoVacioTests.test_venta_sin_lineas_es_rechazada) ... ok
+test_cobro_de_recepcion_no_se_duplica (comercial.tests.CobroTests.test_cobro_de_recepcion_no_se_duplica) ... 2026-09-11 19:35:44,093 CU-61 cobro.tarifa_sugerida recepcion=1 capacidad=30.00 tramo=20.00-40.00 monto=245000.00
+2026-09-11 19:35:44,093 CU-61 cobro.creado cobro=1 recepcion=1 venta=None monto=245000.00
+2026-09-11 19:35:44,095 CU-61 cobro.duplicado_rechazado recepcion=1
+ok
+test_cobro_exige_venta_o_recepcion_pero_no_ambas (comercial.tests.CobroTests.test_cobro_exige_venta_o_recepcion_pero_no_ambas) ... 2026-09-11 19:35:44,108 CU-58 venta.creada venta=2 cliente=2 lineas=1 total=45000.00 estado=pendiente
+ok
+test_monto_no_positivo_es_rechazado (comercial.tests.CobroTests.test_monto_no_positivo_es_rechazado) ... ok
+test_sin_tarifa_para_el_tramo_no_bloquea_el_cobro (comercial.tests.CobroTests.test_sin_tarifa_para_el_tramo_no_bloquea_el_cobro) ... 2026-09-11 19:35:44,123 CU-61 cobro.sin_tarifa recepcion=1 capacidad=30.00
+2026-09-11 19:35:44,129 CU-61 cobro.sin_tarifa recepcion=1 capacidad=30.00
+2026-09-11 19:35:44,129 CU-61 cobro.creado cobro=2 recepcion=1 venta=None monto=200000.00
+ok
+test_sugerencia_toma_la_tarifa_del_tramo_del_vehiculo (comercial.tests.CobroTests.test_sugerencia_toma_la_tarifa_del_tramo_del_vehiculo) ... 2026-09-11 19:35:44,133 CU-61 cobro.tarifa_sugerida recepcion=1 capacidad=30.00 tramo=20.00-40.00 monto=245000.00
+ok
+test_cuenta_corriente_con_rango_sin_movimientos (comercial.tests.ConsultasVaciasTests.test_cuenta_corriente_con_rango_sin_movimientos) ... 2026-09-11 19:35:44,329 CU-58 venta.creada venta=3 cliente=3 lineas=1 total=45000.00 estado=pendiente
+2026-09-11 19:35:44,334 CU-64 cuenta_corriente.calculada cliente=3 ventas=0.00 cobros=0.00 saldo=0.00 movimientos=0
+ok
+test_filtro_por_producto_sin_coincidencias (comercial.tests.ConsultasVaciasTests.test_filtro_por_producto_sin_coincidencias) ... 2026-09-11 19:35:44,343 CU-58 venta.creada venta=4 cliente=3 lineas=1 total=45000.00 estado=pendiente
+ok
+test_historial_sin_cotizaciones (comercial.tests.ConsultasVaciasTests.test_historial_sin_cotizaciones) ... ok
+test_periodo_sin_ventas_da_total_cero (comercial.tests.ConsultasVaciasTests.test_periodo_sin_ventas_da_total_cero) ... ok
+test_cotizacion_aplica_ida_y_vuelta_sobre_el_costo_por_km (comercial.tests.CotizacionTests.test_cotizacion_aplica_ida_y_vuelta_sobre_el_costo_por_km) ... /usr/local/lib/python3.12/site-packages/django/db/models/fields/__init__.py:1535: RuntimeWarning: DateTimeField CostoTransporte.fecha received a naive datetime (2026-09-11 00:00:00) while time zone support is active.
+  warnings.warn(
+2026-09-11 19:35:44,550 CU-55 cotizacion.calculada distancia=10.00 recorrido=20.00 costo_km=1000.00 costo=20000.00
+ok
+test_distancia_no_positiva_es_rechazada (comercial.tests.CotizacionTests.test_distancia_no_positiva_es_rechazada) ... ok
+test_exportar_devuelve_el_documento_con_cliente_completo (comercial.tests.CotizacionTests.test_exportar_devuelve_el_documento_con_cliente_completo) ... ok
+test_exportar_exige_datos_de_contacto_completos (comercial.tests.CotizacionTests.test_exportar_exige_datos_de_contacto_completos) ... ok
+test_formula_ida_y_vuelta_sin_depender_del_modulo_2 (comercial.tests.CotizacionTests.test_formula_ida_y_vuelta_sin_depender_del_modulo_2)
+La formula del CU-55 con el costo por km simulado. ... 2026-09-11 19:35:44,583 CU-55 cotizacion.calculada distancia=10 recorrido=20 costo_km=1000 costo=20000.00
+2026-09-11 19:35:44,583 CU-55 cotizacion.sin_costo_km distancia=10
+ok
+test_historial_filtra_por_cliente_sin_coincidencias (comercial.tests.CotizacionTests.test_historial_filtra_por_cliente_sin_coincidencias) ... ok
+test_cliente_sin_movimientos_da_saldo_cero (comercial.tests.CuentaCorrienteTests.test_cliente_sin_movimientos_da_saldo_cero) ... 2026-09-11 19:35:44,770 CU-64 cuenta_corriente.calculada cliente=8 ventas=0.00 cobros=0.00 saldo=0.00 movimientos=0
+ok
+test_estado_de_pago_requiere_movimientos_y_valor_valido (comercial.tests.CuentaCorrienteTests.test_estado_de_pago_requiere_movimientos_y_valor_valido) ... 2026-09-11 19:35:44,781 CU-58 venta.creada venta=5 cliente=7 lineas=1 total=45000.00 estado=pendiente
+2026-09-11 19:35:44,786 CU-62 estado_pago.actualizado cliente=7 transicion=al dia->con deuda
+ok
+test_saldo_es_ventas_menos_cobros_con_detalle_cronologico (comercial.tests.CuentaCorrienteTests.test_saldo_es_ventas_menos_cobros_con_detalle_cronologico) ... 2026-09-11 19:35:44,795 CU-58 venta.creada venta=6 cliente=7 lineas=1 total=45000.00 estado=pendiente
+2026-09-11 19:35:44,798 CU-64 cuenta_corriente.calculada cliente=7 ventas=45000.00 cobros=20000.00 saldo=25000.00 movimientos=2
+ok
+test_documento_exige_tipo (comercial.tests.DocumentoTributarioTests.test_documento_exige_tipo) ... 2026-09-11 19:35:44,985 CU-58 venta.creada venta=7 cliente=9 lineas=1 total=45000.00 estado=pendiente
+ok
+test_documento_nace_pendiente_vinculado_a_la_venta (comercial.tests.DocumentoTributarioTests.test_documento_nace_pendiente_vinculado_a_la_venta) ... 2026-09-11 19:35:44,997 CU-58 venta.creada venta=8 cliente=9 lineas=1 total=45000.00 estado=pendiente
+2026-09-11 19:35:45,001 CU-63 documento.registrado documento=1 tipo=factura origen=venta estado=pendiente
+ok
+test_fechas_invalidas_no_rompen (comercial.tests.ParametrosInvalidosTests.test_fechas_invalidas_no_rompen) ... 2026-09-11 19:35:45,192 CU-64 cuenta_corriente.calculada cliente=10 ventas=0.00 cobros=0.00 saldo=0.00 movimientos=0
+ok
+test_filtros_con_valores_no_numericos_no_rompen (comercial.tests.ParametrosInvalidosTests.test_filtros_con_valores_no_numericos_no_rompen) ... ok
+test_operador_no_puede_cotizar (comercial.tests.PermisosTests.test_operador_no_puede_cotizar) ... ok
+test_operador_no_registra_documentos_tributarios (comercial.tests.PermisosTests.test_operador_no_registra_documentos_tributarios) ... ok
+test_operador_no_ve_la_cuenta_corriente (comercial.tests.PermisosTests.test_operador_no_ve_la_cuenta_corriente) ... ok
+test_operador_si_registra_ventas_y_cobros (comercial.tests.PermisosTests.test_operador_si_registra_ventas_y_cobros) ... 2026-09-11 19:35:45,414 CU-58 venta.creada venta=9 cliente=11 lineas=1 total=9000.00 estado=pendiente
+ok
+test_venta_no_se_borra_fisicamente (comercial.tests.PermisosTests.test_venta_no_se_borra_fisicamente) ... 2026-09-11 19:35:45,423 CU-58 venta.creada venta=10 cliente=11 lineas=1 total=45000.00 estado=pendiente
+ok
+test_cantidad_no_positiva_es_rechazada (comercial.tests.VentaTests.test_cantidad_no_positiva_es_rechazada) ... ok
+test_despacho_exige_receptor (comercial.tests.VentaTests.test_despacho_exige_receptor) ... 2026-09-11 19:35:45,621 CU-58 venta.creada venta=11 cliente=12 lineas=1 total=45000.00 estado=pendiente
+ok
+test_despacho_pasa_la_venta_a_despachada_y_no_se_duplica (comercial.tests.VentaTests.test_despacho_pasa_la_venta_a_despachada_y_no_se_duplica) ... 2026-09-11 19:35:45,638 CU-58 venta.creada venta=12 cliente=12 lineas=1 total=45000.00 estado=pendiente
+2026-09-11 19:35:45,644 CU-60 despacho.creado venta=12 receptor=Juan Perez
+2026-09-11 19:35:45,644 CU-60 venta.estado venta=12 transicion=pendiente->despachada
+2026-09-11 19:35:45,649 CU-60 despacho.duplicado_rechazado venta=12
+ok
+test_producto_inactivo_o_sin_precio_es_rechazado (comercial.tests.VentaTests.test_producto_inactivo_o_sin_precio_es_rechazado) ... ok
+test_totales_del_periodo (comercial.tests.VentaTests.test_totales_del_periodo) ... 2026-09-11 19:35:45,665 CU-58 venta.creada venta=13 cliente=12 lineas=1 total=45000.00 estado=pendiente
+2026-09-11 19:35:45,671 CU-58 venta.creada venta=14 cliente=12 lineas=1 total=18000.00 estado=pendiente
+ok
+test_venta_calcula_total_y_nace_pendiente (comercial.tests.VentaTests.test_venta_calcula_total_y_nace_pendiente) ... 2026-09-11 19:35:45,686 CU-58 venta.creada venta=15 cliente=12 lineas=1 total=45000.00 estado=pendiente
+ok
+test_concepto_dado_de_baja_se_puede_recrear (configuracion.tests.CostoOperativoTests.test_concepto_dado_de_baja_se_puede_recrear) ... ok
+test_concepto_vigente_no_se_duplica (configuracion.tests.CostoOperativoTests.test_concepto_vigente_no_se_duplica) ... ok
+test_cambio_deja_anterior_no_vigente (configuracion.tests.CostoTransporteTests.test_cambio_deja_anterior_no_vigente) ... ok
+test_mismo_valor_no_crea_registro (configuracion.tests.CostoTransporteTests.test_mismo_valor_no_crea_registro) ... ok
+test_filtro_fechas_sin_resultados (configuracion.tests.HistorialFiltroTests.test_filtro_fechas_sin_resultados) ... ok
+test_orden_y_filtro_por_clave (configuracion.tests.HistorialFiltroTests.test_orden_y_filtro_por_clave) ... ok
+test_cambio_parametro_genera_historial_y_auditoria (configuracion.tests.ParametroTests.test_cambio_parametro_genera_historial_y_auditoria) ... ok
+test_operador_lee_pero_no_escribe_parametros (configuracion.tests.ParametroTests.test_operador_lee_pero_no_escribe_parametros) ... ok
+test_operador_lee_recetas_e_historial_pero_no_costos (configuracion.tests.PermisosM2Tests.test_operador_lee_recetas_e_historial_pero_no_costos) ... ok
+test_operador_no_escribe_recetas_ni_costos (configuracion.tests.PermisosM2Tests.test_operador_no_escribe_recetas_ni_costos) ... ok
+test_sin_token_es_401 (configuracion.tests.PermisosM2Tests.test_sin_token_es_401) ... ok
+test_crear_receta_3_a_1_queda_vigente (configuracion.tests.RecetaMezclaTests.test_crear_receta_3_a_1_queda_vigente) ... ok
+test_delete_es_baja_logica (configuracion.tests.RecetaMezclaTests.test_delete_es_baja_logica) ... ok
+test_proporcion_cero_rechazada (configuracion.tests.RecetaMezclaTests.test_proporcion_cero_rechazada) ... ok
+test_correlativo_salta_los_codigos_ya_tomados (inventario.tests.AltaPilaTests.test_correlativo_salta_los_codigos_ya_tomados)
+CU-35 Excepcion 1: si el correlativo choca, se genera otro. ... ok
+test_crea_pila_con_codigo_correlativo_y_estado_en_formacion (inventario.tests.AltaPilaTests.test_crea_pila_con_codigo_correlativo_y_estado_en_formacion)
+CU-35: sin codigo declarado, el sistema propone el correlativo. ... ok
+test_pila_no_se_borra (inventario.tests.AltaPilaTests.test_pila_no_se_borra)
+La pila es la trazabilidad del lote: se cierra, no se borra. ... ok
+test_rechaza_fecha_de_inicio_futura (inventario.tests.AltaPilaTests.test_rechaza_fecha_de_inicio_futura)
+CU-35 Excepcion 2. ... ok
+test_agrega_material_a_la_pila (inventario.tests.ComposicionPilaTests.test_agrega_material_a_la_pila) ... ok
+test_confirmar_mueve_el_inventario_y_arranca_la_pila (inventario.tests.ComposicionPilaTests.test_confirmar_mueve_el_inventario_y_arranca_la_pila)
+CU-36: chip y verde pasan a 'pila en proceso'; la pila queda en proceso. ... ok
+test_confirmar_sin_materiales_no_cambia_el_estado (inventario.tests.ComposicionPilaTests.test_confirmar_sin_materiales_no_cambia_el_estado)
+CU-36 Excepcion 3. ... ok
+test_material_repetido_se_suma_en_vez_de_duplicarse (inventario.tests.ComposicionPilaTests.test_material_repetido_se_suma_en_vez_de_duplicarse)
+CU-36 Excepcion 2. ... ok
+test_rechaza_mas_volumen_del_disponible (inventario.tests.ComposicionPilaTests.test_rechaza_mas_volumen_del_disponible)
+CU-36 Excepcion 1: se senala el maximo disponible. ... ok
+test_filtra_por_material_y_por_etapa (inventario.tests.ConsultaInventarioTests.test_filtra_por_material_y_por_etapa)
+CU-34: el filtro acota el listado sin descartarse. ... ok
+test_lista_muestra_en_cero_las_combinaciones_sin_movimiento (inventario.tests.ConsultaInventarioTests.test_lista_muestra_en_cero_las_combinaciones_sin_movimiento)
+CU-34 Excepcion 1: sin movimientos, la cantidad es cero, no un error. ... ok
+test_transportista_sin_acceso_al_inventario (inventario.tests.ConsultaInventarioTests.test_transportista_sin_acceso_al_inventario) ... ok
+test_material_con_factor_deriva_el_chip (inventario.tests.DerivacionChipTests.test_material_con_factor_deriva_el_chip) ... ok
+test_material_sin_factor_no_inventa_un_valor (inventario.tests.DerivacionChipTests.test_material_sin_factor_no_inventa_un_valor) ... ok
+test_cola_offline_acepta_el_tipo_proceso_pila (inventario.tests.IdempotenciaProcesoTests.test_cola_offline_acepta_el_tipo_proceso_pila)
+Spec sec. 5: los procesos entran por la misma cola del Incremento 1. ... ok
+test_reenviar_el_lote_sincronizado_no_duplica_el_movimiento (inventario.tests.IdempotenciaProcesoTests.test_reenviar_el_lote_sincronizado_no_duplica_el_movimiento)
+Criterio 6 sobre la cola: el reintento devuelve el mismo resultado. ... ok
+test_reenviar_el_mismo_proceso_no_mueve_dos_veces_el_inventario (inventario.tests.IdempotenciaProcesoTests.test_reenviar_el_mismo_proceso_no_mueve_dos_veces_el_inventario) ... ok
+test_material_a_venta_directa_no_entra_al_circuito (inventario.tests.MovimientosInventarioTests.test_material_a_venta_directa_no_entra_al_circuito)
+CU-44: lo que se vende directo no se inventaria como compostable. ... ok
+test_no_deja_el_inventario_en_negativo (inventario.tests.MovimientosInventarioTests.test_no_deja_el_inventario_en_negativo)
+CU-44 Excepcion 2: el movimiento se rechaza entero. ... ok
+test_recepcion_incorpora_el_material_al_inventario (inventario.tests.MovimientosInventarioTests.test_recepcion_incorpora_el_material_al_inventario)
+CU-44: lo descargado entra en 'por triturar'. ... ok
+test_transportista_no_registra_procesos (inventario.tests.MovimientosInventarioTests.test_transportista_no_registra_procesos) ... ok
+test_harneado_sobre_pila_que_no_esta_en_proceso (inventario.tests.ProcesosDeMaduracionTests.test_harneado_sobre_pila_que_no_esta_en_proceso)
+CU-40 Excepcion 2. ... ok
+test_rechaza_fecha_futura (inventario.tests.ProcesosDeMaduracionTests.test_rechaza_fecha_futura)
+CU-39 Excepcion 2 / CU-40 Excepcion 1. ... ok
+test_riego_sin_humedad_es_valido (inventario.tests.ProcesosDeMaduracionTests.test_riego_sin_humedad_es_valido)
+CU-39 Excepcion 1: la humedad es informativa. ... ok
+test_volteo_exige_temperatura (inventario.tests.ProcesosDeMaduracionTests.test_volteo_exige_temperatura)
+CU-38 Excepcion 1. ... ok
+test_volteo_sobre_el_techo_se_registra_con_advertencia (inventario.tests.ProcesosDeMaduracionTests.test_volteo_sobre_el_techo_se_registra_con_advertencia)
+CU-38 Excepcion 2: se registra igual, marcado. ... ok
+test_ensacado_parcial_deja_la_pila_en_reposo (inventario.tests.ReposoYEnsacadoTests.test_ensacado_parcial_deja_la_pila_en_reposo)
+CU-42: queda material curado pendiente. ... ok
+test_ensacado_sobre_el_curado_disponible_se_rechaza (inventario.tests.ReposoYEnsacadoTests.test_ensacado_sobre_el_curado_disponible_se_rechaza)
+CU-42 Excepcion 2. ... ok
+test_ensacado_total_cierra_la_pila (inventario.tests.ReposoYEnsacadoTests.test_ensacado_total_cierra_la_pila)
+CU-42: agotado el curado, la pila se cierra. ... ok
+test_reposo_duplicado_se_rechaza (inventario.tests.ReposoYEnsacadoTests.test_reposo_duplicado_se_rechaza)
+CU-41 Excepcion 2. ... ok
+test_reposo_sin_harneado_previo (inventario.tests.ReposoYEnsacadoTests.test_reposo_sin_harneado_previo)
+CU-41 Excepcion 1. ... ok
+test_reposo_traslada_el_material_a_curado (inventario.tests.ReposoYEnsacadoTests.test_reposo_traslada_el_material_a_curado)
+CU-41: de 'pila en proceso' a 'curado'; la pila queda en reposo. ... ok
+test_ficha_trae_composicion_y_procesos_en_orden (inventario.tests.TrazabilidadPilaTests.test_ficha_trae_composicion_y_procesos_en_orden)
+CU-43: composicion + linea de tiempo cronologica. ... ok
+test_pila_recien_creada_no_es_un_error (inventario.tests.TrazabilidadPilaTests.test_pila_recien_creada_no_es_un_error)
+CU-43 Excepcion 2: sin procesos, la ficha se muestra igual. ... ok
+test_rechaza_volumen_en_cero (inventario.tests.TrituradoTests.test_rechaza_volumen_en_cero)
+CU-37 Excepcion 1. ... ok
+test_rechaza_volumen_sobre_el_stock_disponible (inventario.tests.TrituradoTests.test_rechaza_volumen_sobre_el_stock_disponible)
+CU-37 Excepcion 2: no se tritura mas de lo que hay. ... ok
+test_sin_factor_configurado_registra_y_deja_el_chip_pendiente (inventario.tests.TrituradoTests.test_sin_factor_configurado_registra_y_deja_el_chip_pendiente)
+CU-37 Excepcion 3: descuenta el volumen, no calcula el chip. ... ok
+test_triturado_descuenta_rama_e_incorpora_chip_derivado (inventario.tests.TrituradoTests.test_triturado_descuenta_rama_e_incorpora_chip_derivado)
+CU-37: 9 m3 de rama con factor 3 -> 3 m3 de chip. ... ok
+test_triturado_no_admite_pila (inventario.tests.TrituradoTests.test_triturado_no_admite_pila)
+CU-37: el triturado ocurre antes de armar la pila. ... ok
+test_crud_y_baja_logica_cliente (mantenedores.tests.ClienteTests.test_crud_y_baja_logica_cliente) ... ok
+test_operador_lee_pero_no_escribe (mantenedores.tests.ClienteTests.test_operador_lee_pero_no_escribe) ... ok
+test_transportista_sin_acceso_a_mantenedores (mantenedores.tests.ClienteTests.test_transportista_sin_acceso_a_mantenedores) ... ok
+test_alerta_proxima_no_se_duplica_y_flota_la_refleja (mantenimiento.tests.MantencionTests.test_alerta_proxima_no_se_duplica_y_flota_la_refleja) ... ok
+test_correctiva_registra_costo_y_estado_final (mantenimiento.tests.MantencionTests.test_correctiva_registra_costo_y_estado_final) ... ok
+test_historial_filtra_por_activo_y_tipo (mantenimiento.tests.MantencionTests.test_historial_filtra_por_activo_y_tipo) ... ok
+test_operador_no_programa_preventiva (mantenimiento.tests.MantencionTests.test_operador_no_programa_preventiva) ... ok
+test_preventiva_por_horas_debe_superar_horometro (mantenimiento.tests.MantencionTests.test_preventiva_por_horas_debe_superar_horometro) ... ok
+test_reprogramar_resuelve_alerta_anterior (mantenimiento.tests.MantencionTests.test_reprogramar_resuelve_alerta_anterior) ... ok
+test_transportista_no_tiene_acceso (mantenimiento.tests.MantencionTests.test_transportista_no_tiene_acceso) ... ok
+test_umbral_de_horas_es_editable (mantenimiento.tests.MantencionTests.test_umbral_de_horas_es_editable) ... ok
+test_umbral_no_acepta_valor_cero (mantenimiento.tests.MantencionTests.test_umbral_no_acepta_valor_cero) ... ok
+test_administrador_registra_maquinaria_y_audita (mantenimiento.tests.MaquinariaTests.test_administrador_registra_maquinaria_y_audita) ... ok
+test_baja_logica_conserva_historial_y_exige_confirmacion (mantenimiento.tests.MaquinariaTests.test_baja_logica_conserva_historial_y_exige_confirmacion) ... ok
+test_operador_no_puede_crear_maquinaria (mantenimiento.tests.MaquinariaTests.test_operador_no_puede_crear_maquinaria) ... ok
+test_horometro_no_retrocede (mantenimiento.tests.RegistroUsoTests.test_horometro_no_retrocede) ... ok
+test_lectura_actualiza_horometro_y_calcula_diferencia (mantenimiento.tests.RegistroUsoTests.test_lectura_actualiza_horometro_y_calcula_diferencia) ... ok
+test_no_registra_fuera_de_servicio (mantenimiento.tests.RegistroUsoTests.test_no_registra_fuera_de_servicio) ... ok
+test_activar_misma_clave_actualiza_sin_duplicar (mezcla.tests.AlertasCompartidasTests.test_activar_misma_clave_actualiza_sin_duplicar) ... ok
+test_operador_lista_y_resuelve_alerta (mezcla.tests.AlertasCompartidasTests.test_operador_lista_y_resuelve_alerta) ... ok
+test_transportista_no_accede_a_alertas (mezcla.tests.AlertasCompartidasTests.test_transportista_no_accede_a_alertas) ... ok
+test_calcula_faltante_y_deduplica_alerta (mezcla.tests.MezclaYAlertasTests.test_calcula_faltante_y_deduplica_alerta)
+Una receta 3:1 calcula el faltante y no duplica la alerta. ... ok
+test_endpoint_mezcla_sin_receta_no_bloquea (mezcla.tests.MezclaYAlertasTests.test_endpoint_mezcla_sin_receta_no_bloquea)
+Sin receta vigente, consultar la mezcla sigue siendo valido. ... ok
+test_pila_fuera_de_formacion_no_genera_alerta_de_mezcla (mezcla.tests.MezclaYAlertasTests.test_pila_fuera_de_formacion_no_genera_alerta_de_mezcla)
+CU-45: la mezcla objetivo solo aplica mientras se arma la pila. ... ok
+test_recepcion_sugiere_pila_si_hay_alerta_activa (mezcla.tests.MezclaYAlertasTests.test_recepcion_sugiere_pila_si_hay_alerta_activa)
+Una alerta activa hace que una recepcion sugiera destino a pila. ... ok
+test_resolver_alerta_la_saca_de_activas_y_audita (mezcla.tests.MezclaYAlertasTests.test_resolver_alerta_la_saca_de_activas_y_audita)
+Resolver quita la alerta de activas y registra al operador. ... ok
+test_ajustar_recalcula_sin_tocar_parametro_del_sistema (proyecciones.tests.AjusteTests.test_ajustar_recalcula_sin_tocar_parametro_del_sistema)
+Criterio 3: ajustar un supuesto recalcula esa proyeccion sin cambiar ... ok
+test_cada_proyeccion_queda_guardada (proyecciones.tests.CalculoTests.test_cada_proyeccion_queda_guardada)
+Criterio 5: cada proyeccion calculada queda guardada para consultarse. ... ok
+test_crear_mensual_devuelve_toneladas_m3_sacos (proyecciones.tests.CalculoTests.test_crear_mensual_devuelve_toneladas_m3_sacos)
+Criterio 1: aplica los parametros y devuelve toneladas, m3 y sacos. ... ok
+test_falta_parametro_indica_cual_y_no_calcula (proyecciones.tests.CalculoTests.test_falta_parametro_indica_cual_y_no_calcula)
+Criterio 2: falta un parametro requerido -> lo indica y no calcula. ... ok
+test_operador_no_puede_crear (proyecciones.tests.CalculoTests.test_operador_no_puede_crear) ... ok
+test_semanal_aplica_parametros_del_material (proyecciones.tests.CalculoTests.test_semanal_aplica_parametros_del_material) ... ok
+test_semanal_requiere_material (proyecciones.tests.CalculoTests.test_semanal_requiere_material) ... ok
+test_comparar_muestra_proyectado_real_y_desviacion (proyecciones.tests.ComparacionTests.test_comparar_muestra_proyectado_real_y_desviacion)
+Criterio 4: comparar muestra proyectado, real y desviacion. ... ok
+test_comparar_periodo_abierto_avisa_parcial (proyecciones.tests.ComparacionTests.test_comparar_periodo_abierto_avisa_parcial) ... ok
+test_delete_recepcion_no_permitido (recepcion.tests.DerivacionTests.test_delete_recepcion_no_permitido) ... ok
+test_derivacion_al_crear_recepcion (recepcion.tests.DerivacionTests.test_derivacion_al_crear_recepcion) ... ok
+test_material_sin_densidad_rechazado (recepcion.tests.DerivacionTests.test_material_sin_densidad_rechazado) ... ok
+test_aplicar_multa_a_recepcion (recepcion.tests.MultaYRechazoTests.test_aplicar_multa_a_recepcion)
+CU-30: el operador aplica una multa por material contaminado y queda auditada. ... ok
+test_rechazo_de_recepcion (recepcion.tests.MultaYRechazoTests.test_rechazo_de_recepcion)
+CU-31: el operador rechaza una carga registrando el motivo, y queda auditado. ... ok
+test_transportista_crea_con_su_propio_transportista (recepcion.tests.PermisosTransportistaTests.test_transportista_crea_con_su_propio_transportista) ... ok
+test_transportista_no_puede_editar (recepcion.tests.PermisosTransportistaTests.test_transportista_no_puede_editar) ... ok
+test_transportista_no_puede_sincronizar (recepcion.tests.PermisosTransportistaTests.test_transportista_no_puede_sincronizar) ... ok
+test_transportista_solo_ve_sus_recepciones (recepcion.tests.PermisosTransportistaTests.test_transportista_solo_ve_sus_recepciones) ... ok
+test_sincronizacion_con_foto_base64 (recepcion.tests.SincronizacionTests.test_sincronizacion_con_foto_base64)
+La foto viaja embebida en base64 y la recepcion sincroniza (CU-33). ... ok
+test_sincronizacion_conflicto (recepcion.tests.SincronizacionTests.test_sincronizacion_conflicto)
+Objeto ya existente en estado incompatible: queda en conflicto. ... ok
+test_sincronizacion_foto_base64_invalida_rechaza (recepcion.tests.SincronizacionTests.test_sincronizacion_foto_base64_invalida_rechaza)
+Una foto base64 corrupta rechaza la operacion completa (Excepcion 3). ... ok
+test_sincronizacion_idempotente (recepcion.tests.SincronizacionTests.test_sincronizacion_idempotente)
+Enviar el mismo lote dos veces crea una sola Recepcion. ... ok
+test_sincronizacion_ordena_por_capturado_en (recepcion.tests.SincronizacionTests.test_sincronizacion_ordena_por_capturado_en) ... ok
+test_sincronizacion_rechaza_y_continua (recepcion.tests.SincronizacionTests.test_sincronizacion_rechaza_y_continua)
+Una operacion invalida no bloquea a las demas (CU-33 Excepcion 3). ... ok
+test_sincronizacion_sin_autenticacion_da_401 (recepcion.tests.SincronizacionTests.test_sincronizacion_sin_autenticacion_da_401) ... ok
+
+----------------------------------------------------------------------
+Ran 151 tests in 11.056s
+
+OK
+Destroying test database for alias 'default' ('test_triverde')...
