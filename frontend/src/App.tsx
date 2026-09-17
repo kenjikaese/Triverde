@@ -29,9 +29,12 @@ import { CuentaCorriente } from "@/pages/comercial/CuentaCorriente";
 import { Certificados } from "@/pages/trazabilidad/Certificados";
 import { ExportacionSinader } from "@/pages/trazabilidad/ExportacionSinader";
 import { IndicadorAmbiental } from "@/pages/trazabilidad/IndicadorAmbiental";
+import { TrazabilidadLote } from "@/pages/trazabilidad/TrazabilidadLote";
 import { Proyecciones } from "@/pages/gestion/Proyecciones";
 import { Reportes } from "@/pages/gestion/Reportes";
 import { ListaDocumentos } from "@/pages/gestion/ListaDocumentos";
+import { CumplimientoDocumental } from "@/pages/gestion/CumplimientoDocumental";
+import { HistorialDocumento } from "@/pages/gestion/HistorialDocumento";
 
 export function App() {
   return (
@@ -79,9 +82,12 @@ export function App() {
         <Route path="/certificados" element={<Certificados />} />
         <Route path="/sinader" element={<ExportacionSinader />} />
         <Route path="/ambiental" element={<IndicadorAmbiental />} />
+        <Route path="/trazabilidad-lote" element={<TrazabilidadLote />} />
         <Route path="/proyecciones" element={<Proyecciones />} />
         <Route path="/reportes" element={<Reportes />} />
         <Route path="/documentos" element={<ListaDocumentos />} />
+        <Route path="/documentos/historial" element={<HistorialDocumento />} />
+        <Route path="/cumplimiento" element={<CumplimientoDocumental />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

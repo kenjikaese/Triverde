@@ -26,6 +26,8 @@ import {
   ClipboardList,
   ScrollText,
   Wallet,
+  Waypoints,
+  ShieldCheck,
 } from "lucide-react";
 import type { RolNombre } from "@/lib/types";
 
@@ -113,6 +115,7 @@ export const navegacion: SeccionNav[] = [
       { etiqueta: "Certificados", ruta: "/certificados", icono: BadgeCheck, roles: ADMIN },
       { etiqueta: "Exportacion SINADER", ruta: "/sinader", icono: FileCheck2, roles: ADMIN },
       { etiqueta: "Indicador ambiental", ruta: "/ambiental", icono: Leaf, roles: ADMIN },
+      { etiqueta: "Trazabilidad de lote", ruta: "/trazabilidad-lote", icono: Waypoints, roles: ADMIN },
     ],
   },
   {
@@ -121,6 +124,7 @@ export const navegacion: SeccionNav[] = [
       { etiqueta: "Proyecciones", ruta: "/proyecciones", icono: TrendingUp, roles: ADMIN },
       { etiqueta: "Reportes", ruta: "/reportes", icono: FileText, roles: ADMIN },
       { etiqueta: "Documentos legales", ruta: "/documentos", icono: FileStack, roles: ADMIN },
+      { etiqueta: "Cumplimiento documental", ruta: "/cumplimiento", icono: ShieldCheck, roles: ADMIN },
       { etiqueta: "Usuarios", ruta: "/usuarios", icono: ClipboardList, roles: ADMIN, inc1: true },
       { etiqueta: "Bitacora de auditoria", ruta: "/auditoria", icono: ScrollText, roles: ADMIN, inc1: true },
     ],
