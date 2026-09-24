@@ -16,7 +16,7 @@ title CU-63 Registrar un documento tributario (excepcion: origen sin monto o sin
 actor Administrador
 participant "V_ListaVentas" as V
 participant "C_Documentos" as C
-participant ":Venta" as VT
+participant ":comercial_venta" as VT
 
 Administrador -> V : presiona "Registrar documento tributario"
 alt la venta o el cobro de origen no tiene monto

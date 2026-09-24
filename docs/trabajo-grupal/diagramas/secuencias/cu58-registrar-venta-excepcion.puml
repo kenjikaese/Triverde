@@ -16,7 +16,7 @@ title CU-58 Registrar una venta (excepcion: sin cliente, sin productos activos o
 actor Administrador
 participant "V_RegistroVenta" as V
 participant "C_Ventas" as C
-participant ":Producto" as P
+participant ":mantenedores_producto" as P
 
 alt continua sin seleccionar cliente
   Administrador -> V : presiona "Registrar venta" sin elegir cliente
