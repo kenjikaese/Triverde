@@ -1,0 +1,29 @@
+@startuml cu71-indicador-ambiental-normal
+' CU-71 Consultando el indicador ambiental acumulado - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-71 Consultando el indicador ambiental acumulado (flujo normal)
+
+actor Administrador
+participant "V_IndicadorAmbiental" as V
+participant "C_IndicadorAmbiental" as C
+participant ":IndicadorAmbiental" as IA
+
+Administrador -> V : abre el indicador y selecciona un periodo opcional
+V -> C : consultar(desde, hasta)
+C -> IA : filtrarPorFecha(desde, hasta)
+IA --> C : indicadores de recepcion y pila
+C -> C : sumar total y desglose por origen
+C --> V : total, recepciones, pilas, detalles y pendientes
+V --> Administrador : muestra el acumulado y su desglose
+
+@enduml

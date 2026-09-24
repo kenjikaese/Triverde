@@ -1,0 +1,41 @@
+@startuml cu70-co2-pila-normal
+' CU-70 Calculando el CO2 evitado por un lote compostado - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-70 Calculando el CO2 evitado por un lote compostado (flujo normal)
+
+actor Sistema
+participant "C_IndicadorAmbiental" as C
+participant ":Pila" as P
+participant ":ComposicionPila" as CP
+participant ":Material" as M
+participant ":ParametroConversion" as PC
+participant ":IndicadorAmbiental" as IA
+
+Sistema -> C : detecta Pila en estado cerrada
+C -> P : obtener(pila)
+P --> C : lote con ciclo concluido
+C -> CP : obtenerComposiciones(pila)
+CP --> C : materiales y volumenes
+loop por cada material de la composicion
+  C -> M : obtenerDensidad(material)
+  M --> C : densidad kg/m3
+  C -> C : peso += volumen_m3 x densidad
+end
+C -> PC : obtener(co2_evitado_compostaje)
+PC --> C : factor ambiental vigente
+C -> C : co2_evitado_kg = peso_total_kg x factor
+C -> IA : crearOActualizar(pila, co2, metodo, fecha)
+IA --> C : indicador persistido sin duplicar
+C --> Sistema : acumulado ambiental actualizado
+
+@enduml
