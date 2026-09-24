@@ -246,6 +246,8 @@ export interface DetalleVenta {
   id?: number;
   producto: number;
   producto_nombre?: string;
+  pila?: number | null;
+  pila_codigo?: string | null;
   cantidad: string;
   unidad?: "saco" | "m3";
   precio_unitario?: string;
@@ -263,6 +265,40 @@ export interface Venta {
   total: string;
   detalles: DetalleVenta[];
   despachada: boolean;
+}
+
+// CU-68: cadena trazable de un lote entregado (Venta -> Pila -> composicion).
+export interface TrazabilidadComposicion {
+  material: string;
+  volumen_m3: string;
+}
+
+export interface TrazabilidadPila {
+  id: number;
+  codigo: string;
+  estado: string;
+  fecha_inicio: string;
+  volumen_total_m3: string;
+  composicion: TrazabilidadComposicion[];
+  composicion_definitiva: boolean;
+}
+
+export interface TrazabilidadLinea {
+  detalle: number;
+  producto: string;
+  cantidad: string;
+  unidad: string;
+  pila: TrazabilidadPila | null;
+}
+
+export interface TrazabilidadVenta {
+  venta: number;
+  cliente: string;
+  fecha: string;
+  estado: EstadoVenta;
+  trazable: boolean;
+  lineas: TrazabilidadLinea[];
+  advertencias: string[];
 }
 
 export interface TotalesVentas {
