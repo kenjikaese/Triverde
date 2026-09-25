@@ -1,0 +1,49 @@
+@startuml cu90-alerta-vencimiento-excepcion
+' CU-90 Generando la alerta de vencimiento de un documento - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-90 Generando la alerta de vencimiento (excepcion: sin umbral, alerta ya activa o documento renovado)
+
+actor Sistema
+participant "C_CumplimientoDocumental" as C
+participant ":ParametroConversion" as P
+participant ":DocumentoLegal" as D
+participant ":Alerta" as A
+
+Sistema -> C : inicia la revision periodica de vigencias
+C -> P : obtenerUmbralAnticipacion()
+alt no hay umbral configurado
+  P --> C : sin parametro
+  C -> C : aplicarUmbralPorDefecto()
+  note right of C : Excepcion 1: se usa el valor\npor defecto y la revision sigue
+else umbral configurado
+  P --> C : dias de anticipacion
+end
+C -> D : obtenerPorEstado("vigente", "por vencer")
+D --> C : documentos a revisar
+alt ya existe una alerta activa para el documento
+  C -> A : buscarActiva(origen="documento", documento)
+  A --> C : alerta ya vigente
+  C -> C : mantenerAlertaExistente()
+  note right of C : Excepcion 2: no se duplica
+else el documento fue renovado tras generarse la alerta
+  D --> C : estado="vigente" con nueva vigencia
+  C -> C : excluirDeLaRevision()
+  note right of C : Excepcion 3: sale de la\nrevision siguiente
+else corresponde alertar
+  C -> D : actualizar(estado="por vencer" o "vencido")
+  C -> A : crear(origen="documento", documento)
+  A --> C : alerta creada
+end
+C --> Sistema : revision terminada sin interrumpirse
+
+@enduml

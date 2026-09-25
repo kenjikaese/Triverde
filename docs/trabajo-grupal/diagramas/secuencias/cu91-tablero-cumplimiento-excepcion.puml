@@ -1,0 +1,41 @@
+@startuml cu91-tablero-cumplimiento-excepcion
+' CU-91 Consultando el tablero de cumplimiento documental - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-91 Consultando el tablero (excepcion: sin documentos, nada por vencer o vigencia sin definir)
+
+actor Administrador
+participant "V_TableroCumplimiento" as V
+participant "C_CumplimientoDocumental" as C
+participant ":DocumentoLegal" as D
+
+Administrador -> V : abre el tablero de cumplimiento
+V -> C : consultarTablero()
+C -> D : obtenerDocumentos()
+alt no hay ningun documento registrado
+  D --> C : listado vacio
+  C --> V : resumen en cero
+  V --> Administrador : tablero vacio, invita a registrar el primero
+else ninguno esta por vencer ni vencido
+  D --> C : documentos, todos vigentes
+  C -> C : agruparPorEstado()
+  C --> V : resumen con esas categorias en cero
+  V --> Administrador : muestra igual el resumen
+  note right of V : Excepcion 2: cero no es un error
+else hay documentos sin vigencia definida
+  D --> C : documentos, algunos sin fechas
+  C -> C : separarLosSinVigenciaDefinida()
+  C --> V : resumen + listado aparte de pendientes
+  V --> Administrador : los muestra como pendientes de completar,\nfuera de los conteos
+end
+
+@enduml

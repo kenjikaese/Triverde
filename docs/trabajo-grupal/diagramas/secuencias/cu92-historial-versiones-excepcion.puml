@@ -1,0 +1,45 @@
+@startuml cu92-historial-versiones-excepcion
+' CU-92 Consultando el historial de versiones - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-92 Consultando el historial (excepcion: documento inexistente, version unica o archivo no disponible)
+
+actor Administrador
+participant "V_VersionesDocumento" as V
+participant "C_DocumentosLegales" as C
+participant ":DocumentoLegal" as D
+participant ":VersionDocumento" as VD
+
+Administrador -> V : abre el historial de un documento
+V -> C : obtenerHistorial(documento)
+C -> D : obtener(documento)
+alt el documento no existe
+  D --> C : no encontrado
+  C --> V : documento no disponible
+  V --> Administrador : informa que el documento no esta disponible
+else el documento tiene una sola version
+  D --> C : datos del documento
+  C -> VD : obtenerVersiones(documento)
+  VD --> C : una unica version, marcada vigente
+  C --> V : historial con una sola version
+  V --> Administrador : lo muestra igual, sin tratarlo como error
+  note right of V : Excepcion 2
+else el archivo de una version anterior no esta disponible
+  Administrador -> V : descarga una version anterior
+  V -> C : descargarVersion(version)
+  C -> VD : obtenerArchivo(version)
+  VD --> C : archivo faltante o danado
+  C --> V : error puntual de esa version
+  V --> Administrador : informa el error; las demas versiones\nsiguen disponibles
+end
+
+@enduml
