@@ -40,6 +40,7 @@ python manage.py migrate && python manage.py seed_inicial && python manage.py ru
 | `recepcion` | 4 — Recepción | `Recepcion`, `DetalleRecepcion`, `FotoRecepcion`, `Multa` |
 | `mezcla` | 6 — Alertas compartidas | `Alerta` y servicio genérico de activación/deduplicación usado por M11 y preparado para M6 |
 | `mantenimiento` | 11 — Mantenimiento | `Maquinaria`, `RegistroUso`, `Mantencion` |
+| `trazabilidad` | 9 — Trazabilidad, SINADER y ambiental | `CertificadoTrazabilidad`, `DeclaracionSinader`, `IndicadorAmbiental`; `DetalleVenta.pila` enlaza la venta con su lote |
 | `common` | — | `SincronizableModel` (mixin de la capa offline) |
 
 Los modelos son traducción directa de **`docs/11 - Modelo de Datos.md` §11.6** (nivel físico).
@@ -82,6 +83,14 @@ se manejan anidados dentro de `/recepciones/` y del endpoint de sincronización.
 | `/api/v1/mantenciones/{id}/realizar/` | POST | Administrador | Ejecuta una preventiva y resuelve su alerta. |
 | `/api/v1/alertas/` | GET | Admin/Operador | Bandeja transversal; admite filtros `estado` y `origen`. |
 | `/api/v1/alertas/{id}/resolver/` | POST | Admin/Operador | Resuelve una alerta conservando su historial. |
+| `/api/v1/ventas/{id}/trazabilidad/` | GET | Administrador | CU-68: cadena Venta → Pila → composición; advierte si no hay pila o si la pila no está cerrada. |
+| `/api/v1/certificados/` | GET | Administrador | Historial de certificados; filtros `cliente` y `tipo`. |
+| `/api/v1/certificados/generar-descarga/` | POST | Administrador | CU-65: certificado de una descarga recibida con peso. Una descarga se certifica una sola vez. |
+| `/api/v1/certificados/generar-consolidado/` | POST | Administrador | CU-66: consolidado mensual por cliente; `409` si ya existe, `confirmar` emite nueva versión. |
+| `/api/v1/certificados/{id}/exportar/` | GET | Administrador | Contenido descargable del certificado. |
+| `/api/v1/declaraciones-sinader/` | GET, POST `generar/` | Administrador | CU-67: declaración del período agrupada por cliente; excluye clientes sin RUT o dirección y avisa. |
+| `/api/v1/declaraciones-sinader/{id}/descargar/` | GET | Administrador | Planilla XLSX para carga manual en SINADER. |
+| `/api/v1/indicador-ambiental/` | GET | Administrador | CU-71: CO₂ evitado acumulado con desglose recepción/pila y filtro `desde`/`hasta`. |
 
 ### Obtener un token
 
