@@ -369,6 +369,40 @@ export interface CostoKm {
   configurado: boolean;
 }
 
+// Modulo 9 - Indicador ambiental (CU-69 a CU-71)
+export type OrigenIndicadorAmbiental = "recepcion" | "pila";
+
+export interface IndicadorAmbientalDetalle {
+  id: number;
+  origen: OrigenIndicadorAmbiental;
+  origen_display: string;
+  recepcion: number | null;
+  pila: number | null;
+  referencia: string;
+  descripcion: string;
+  co2_evitado_kg: string;
+  metodo: string;
+  fecha: string;
+}
+
+export interface CalculoAmbientalPendiente {
+  origen: OrigenIndicadorAmbiental;
+  objeto_id: number;
+  referencia: string;
+  motivo: string;
+}
+
+export interface ResumenIndicadorAmbiental {
+  periodo: { desde: string | null; hasta: string | null };
+  total_co2_evitado_kg: string;
+  recepciones_co2_evitado_kg: string;
+  pilas_co2_evitado_kg: string;
+  cantidad_recepciones: number;
+  cantidad_pilas: number;
+  resultados: IndicadorAmbientalDetalle[];
+  pendientes: CalculoAmbientalPendiente[];
+}
+
 // Modulo 7 - Proyecciones (espejo de proyecciones/serializers.py)
 export type TipoProyeccion = "mensual" | "semanal" | "comercial";
 
