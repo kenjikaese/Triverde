@@ -301,6 +301,75 @@ export interface TrazabilidadVenta {
   advertencias: string[];
 }
 
+// CU-65/66: certificado de trazabilidad emitido.
+export type TipoCertificado = "descarga" | "consolidado";
+
+export interface CertificadoMaterial {
+  material: string;
+  volumen_m3: string;
+  peso_kg: string;
+  descargas?: number;
+}
+
+export interface CertificadoContenido {
+  codigo?: string;
+  fecha_emision?: string;
+  cliente: { id: number; razon_social: string; rut: string | null; direccion: string | null };
+  materiales: CertificadoMaterial[];
+  totales: { volumen_m3: string; peso_kg: string; descargas?: number };
+  version?: number;
+  transportista?: string | null;
+  vehiculo?: string | null;
+  fecha?: string;
+}
+
+export interface CertificadoTrazabilidad {
+  id: number;
+  codigo: string;
+  tipo: TipoCertificado;
+  tipo_display: string;
+  cliente: number;
+  cliente_razon_social: string;
+  recepcion: number | null;
+  periodo_inicio: string | null;
+  periodo_fin: string | null;
+  fecha_emision: string;
+  referencia: string;
+  contenido: CertificadoContenido;
+}
+
+// CU-67: declaracion para SINADER.
+export interface SinaderClienteResumen {
+  cliente: string;
+  rut: string | null;
+  direccion: string | null;
+  descargas: number;
+  volumen_m3: string;
+  peso_kg: string;
+}
+
+export interface SinaderExcluido {
+  cliente: string;
+  faltantes: string[];
+  descargas: number;
+}
+
+export interface DeclaracionSinader {
+  id: number;
+  periodo_inicio: string;
+  periodo_fin: string;
+  fecha_generada: string;
+  usuario: number | null;
+  usuario_nombre: string | null;
+  nombre_archivo: string | null;
+  contenido: {
+    periodo: { inicio: string; fin: string };
+    clientes: SinaderClienteResumen[];
+    excluidos: SinaderExcluido[];
+    totales: { clientes: number; descargas: number; volumen_m3: string; peso_kg: string };
+  };
+}
+
 export interface TotalesVentas {
   cantidad: number;
   total: string;
