@@ -1,0 +1,11 @@
+Creating test database for alias 'default'...
+Found 193 test(s).
+System check identified no issues (0 silenced).
+...C:\repos\personal\universidad\ing_software_2\Triverde\backend\.venv\Lib\site-packages\django\db\models\fields\__init__.py:1535: RuntimeWarning: DateTimeField CostoTransporte.fecha received a naive datetime (2026-09-26 00:00:00) while time zone support is active.
+  warnings.warn(
+....
+----------------------------------------------------------------------
+Ran 193 tests in 18.476s
+
+OK
+Destroying test database for alias 'default'...
