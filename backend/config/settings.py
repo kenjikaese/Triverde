@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     "proyecciones",    # Modulo 7 - Proyecciones
     "comercial",       # Modulo 8 - Comercial
     "mantenimiento",   # Modulo 11 - Mantenimiento
+    "documental",      # Modulo 12 - Gestion documental
 ]
 
 MIDDLEWARE = [
