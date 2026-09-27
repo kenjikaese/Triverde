@@ -1,0 +1,44 @@
+@startuml cu66-certificado-consolidado-normal
+' CU-66 Generando el certificado consolidado mensual de un cliente - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-66 Generando el certificado consolidado mensual de un cliente (flujo normal)
+
+actor Administrador
+participant "V_Certificados" as V
+participant "C_Certificados" as C
+participant ":mantenedores_cliente" as CL
+participant ":recepcion_recepcion" as R
+participant ":recepcion_detallerecepcion" as DR
+participant ":trazabilidad_certificadotrazabilidad" as CT
+
+Administrador -> V : elige "Consolidado mensual"
+V -> C : listarClientes()
+C -> CL : obtenerActivos()
+CL --> C : clientes activos
+C --> V : clientes seleccionables
+Administrador -> V : selecciona cliente y periodo; presiona "Generar"
+V -> C : generarConsolidado(cliente, periodo_inicio, periodo_fin)
+C -> R : obtener(cliente, estado=recibida, fecha en periodo)
+R --> C : descargas recibidas del periodo
+C -> DR : obtenerDetalles(descargas)
+DR --> C : material, volumen y peso de cada linea
+C -> C : agrupar por material sumando volumen y peso
+C -> CT : buscar(cliente, tipo=consolidado, periodo)
+CT --> C : no existe consolidado previo
+C -> CT : crear(tipo=consolidado, cliente, recepcion=nula, periodo, fecha_emision, codigo, contenido)
+CT --> C : certificado registrado
+C -> C : registrarAuditoria("Generacion de certificado consolidado")
+C --> V : consolidado listo para descarga
+V --> Administrador : muestra los totales por material y habilita la descarga
+
+@enduml

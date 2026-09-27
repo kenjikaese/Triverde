@@ -16,7 +16,7 @@ title CU-60 Registrar un despacho (excepcion: sin receptor o venta ya despachada
 actor Operador
 participant "V_Despacho" as V
 participant "C_Ventas" as C
-participant ":Venta" as VT
+participant ":comercial_venta" as VT
 
 alt confirma sin ingresar quien retira
   Operador -> V : presiona "Confirmar despacho" sin el receptor

@@ -16,24 +16,31 @@ title CU-58 Registrando una venta de producto (flujo normal)
 actor Administrador
 participant "V_RegistroVenta" as V
 participant "C_Ventas" as C
-participant ":Producto" as P
-participant ":Venta" as VT
-participant ":DetalleVenta" as DV
+participant "C_Pilas" as CP
+participant ":mantenedores_producto" as P
+participant ":inventario_pila" as PI
+participant ":comercial_venta" as VT
+participant ":comercial_detalleventa" as DV
 
 Administrador -> V : "Nueva venta"; selecciona el cliente
 V -> C : listarProductosActivos()
 C -> P : obtenerActivos()
 P --> C : catalogo de productos con su unidad de venta
 C --> V : catalogo disponible
-Administrador -> V : selecciona el producto e ingresa la cantidad
+V -> CP : listarPilas()
+CP -> PI : obtenerPilas()
+PI --> CP : pilas registradas
+CP --> V : listado de pilas
+V -> V : descarta las pilas "en formacion" (sin composicion confirmada)
+Administrador -> V : selecciona el producto, ingresa la cantidad y, opcionalmente, la pila de origen
 Administrador -> V : presiona "Registrar venta"
-V -> C : registrarVenta(cliente, producto, cantidad, unidad)
+V -> C : registrarVenta(cliente, producto, cantidad, unidad, pila?)
 C -> P : obtenerPrecio(producto)
 P --> C : precio configurado del producto
 C -> C : subtotal = precio x cantidad; total de la venta
 C -> VT : crear(cliente, estado=pendiente, total, fecha)
 VT --> C : venta creada
-C -> DV : crear(venta, producto, cantidad, unidad, precio, subtotal)
+C -> DV : crear(venta, producto, pila, cantidad, unidad, precio, subtotal)
 DV --> C : linea registrada
 C -> C : registrarAuditoria("Registro de venta")
 C --> V : venta confirmada

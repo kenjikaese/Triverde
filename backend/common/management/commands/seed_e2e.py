@@ -28,8 +28,14 @@ from comercial.models import (
     DocumentoTributario,
     Venta,
 )
+from inventario.models import ComposicionPila, Pila
 from mantenedores.models import Cliente, Material, Producto, Vehiculo
-from recepcion.models import Recepcion
+from recepcion.models import DetalleRecepcion, Recepcion
+from trazabilidad.models import (
+    CertificadoTrazabilidad,
+    DeclaracionSinader,
+    IndicadorAmbiental,
+)
 
 Usuario = get_user_model()
 
@@ -43,7 +49,11 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         call_command("seed_inicial", verbosity=0)
 
-        # --- Estado limpio del ciclo comercial -----------------------------
+        # --- Estado limpio del ciclo comercial y de trazabilidad -----------
+        # Los certificados y las declaraciones protegen (PROTECT) a las
+        # recepciones y clientes que referencian: se borran primero.
+        CertificadoTrazabilidad.objects.all().delete()
+        DeclaracionSinader.objects.all().delete()
         DocumentoTributario.objects.all().delete()
         Cobro.objects.all().delete()
         Despacho.objects.all().delete()
@@ -120,7 +130,7 @@ class Command(BaseCommand):
         )
 
         # --- Material y recepcion recibida lista para cobrar ---------------
-        Material.objects.update_or_create(
+        rama_verde, _ = Material.objects.update_or_create(
             nombre="Rama verde",
             defaults={
                 "categoria": Material.VERDE,
@@ -129,14 +139,46 @@ class Command(BaseCommand):
                 "factor_reduccion_chip": Decimal("5.00"),
             },
         )
-        Recepcion.objects.filter(cliente=cliente, vehiculo=vehiculo).delete()
-        Recepcion.objects.create(
+        # Las recepciones del ciclo anterior se reemplazan. La del cliente sin
+        # datos la crea el escenario e2e de SINADER (CU-67); se limpia aca para
+        # que no quede como "por cobrar" en la corrida siguiente.
+        recepciones_previas = Recepcion.objects.filter(
+            cliente__razon_social__in=[cliente.razon_social, "Constructora Sin Datos"]
+        )
+        IndicadorAmbiental.objects.filter(recepcion__in=recepciones_previas).delete()
+        recepciones_previas.delete()
+        recepcion = Recepcion.objects.create(
             cliente=cliente,
             vehiculo=vehiculo,
             fecha=date.today(),
             hora="09:30",
             estado=Recepcion.RECIBIDA,
             conductor="Pedro Soto",
+        )
+        # Una linea de material con su peso derivado: lo que exige el CU-65
+        # para certificar la descarga (20 m3 x 250 kg/m3 = 5.000 kg).
+        DetalleRecepcion.objects.create(
+            recepcion=recepcion,
+            material=rama_verde,
+            volumen_m3=Decimal("20.00"),
+            peso_derivado_kg=Decimal("5000.00"),
+            chip_derivado_m3=Decimal("4.00"),
+            destino_sugerido=DetalleRecepcion.A_PILA,
+        )
+
+        # --- Pila cerrada con composicion (Modulo 9, CU-68) ---------------
+        # Lote de origen que el registro de venta puede enlazar y que la
+        # trazabilidad del lote recorre hasta su composicion.
+        pila, _ = Pila.objects.update_or_create(
+            codigo="P-E2E-01",
+            defaults={
+                "fecha_inicio": date(2026, 6, 1),
+                "estado": Pila.CERRADA,
+                "observaciones": "Lote de pruebas end-to-end",
+            },
+        )
+        ComposicionPila.objects.update_or_create(
+            pila=pila, material=rama_verde, defaults={"volumen_m3": Decimal("20.00")}
         )
 
         self.stdout.write(self.style.SUCCESS("Datos e2e listos."))

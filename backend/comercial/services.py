@@ -177,3 +177,81 @@ def cuenta_corriente(cliente, desde=None, hasta=None):
         "saldo": total_ventas - total_cobros,
         "movimientos": movimientos,
     }
+
+
+def trazabilidad_venta(venta):
+    """Cadena trazable de un lote entregado (CU-68): Venta -> Pila -> composicion.
+
+    Recorre cada linea de la venta. Si la linea tiene pila de origen, devuelve
+    la pila (codigo, estado, fecha de inicio) y su composicion por material y
+    volumen. Si ninguna linea tiene pila, la venta queda "sin trazabilidad"
+    (CU-68, Excepcion 1). Si la pila no esta cerrada, se advierte que su
+    composicion aun no es definitiva (CU-68, Excepcion 2).
+
+    Limite conocido del modelo de datos: `ComposicionPila` registra material y
+    volumen, pero no que recepcion aporto ese material, y el inventario se
+    lleva como saldo por material y etapa. Por eso la cadena llega con certeza
+    hasta la composicion de la pila; las recepciones de origen no se pueden
+    reconstruir sin inventar un vinculo que el modelo no tiene.
+    """
+    Pila = apps.get_model("inventario", "Pila")
+
+    lineas = []
+    for detalle in venta.detalles.select_related("producto", "pila").all():
+        linea = {
+            "detalle": detalle.pk,
+            "producto": detalle.producto.nombre,
+            "cantidad": f"{detalle.cantidad:.2f}",
+            "unidad": detalle.unidad,
+            "pila": None,
+        }
+        pila = detalle.pila
+        if pila is not None:
+            composicion = [
+                {
+                    "material": item.material.nombre,
+                    "volumen_m3": f"{item.volumen_m3:.2f}",
+                }
+                for item in pila.composiciones.select_related("material").all()
+            ]
+            linea["pila"] = {
+                "id": pila.pk,
+                "codigo": pila.codigo,
+                "estado": pila.estado,
+                "fecha_inicio": pila.fecha_inicio,
+                "volumen_total_m3": f"{pila.volumen_composicion():.2f}",
+                "composicion": composicion,
+                "composicion_definitiva": pila.estado == Pila.CERRADA,
+            }
+        lineas.append(linea)
+
+    con_pila = [linea for linea in lineas if linea["pila"] is not None]
+    advertencias = []
+    if not con_pila:
+        advertencias.append(
+            "Este lote no cuenta con trazabilidad de compostaje registrada: "
+            "ninguna linea de la venta tiene pila de origen."
+        )
+    for linea in con_pila:
+        if not linea["pila"]["composicion_definitiva"]:
+            advertencias.append(
+                f"La pila {linea['pila']['codigo']} sigue en estado "
+                f"'{linea['pila']['estado']}'; su composicion aun no es definitiva."
+            )
+
+    traza(
+        "CU-68",
+        "venta.trazabilidad",
+        venta=venta.pk,
+        lineas=len(lineas),
+        con_pila=len(con_pila),
+    )
+    return {
+        "venta": venta.pk,
+        "cliente": venta.cliente.razon_social,
+        "fecha": venta.fecha,
+        "estado": venta.estado,
+        "trazable": bool(con_pila),
+        "lineas": lineas,
+        "advertencias": advertencias,
+    }

@@ -246,6 +246,8 @@ export interface DetalleVenta {
   id?: number;
   producto: number;
   producto_nombre?: string;
+  pila?: number | null;
+  pila_codigo?: string | null;
   cantidad: string;
   unidad?: "saco" | "m3";
   precio_unitario?: string;
@@ -263,6 +265,109 @@ export interface Venta {
   total: string;
   detalles: DetalleVenta[];
   despachada: boolean;
+}
+
+// CU-68: cadena trazable de un lote entregado (Venta -> Pila -> composicion).
+export interface TrazabilidadComposicion {
+  material: string;
+  volumen_m3: string;
+}
+
+export interface TrazabilidadPila {
+  id: number;
+  codigo: string;
+  estado: string;
+  fecha_inicio: string;
+  volumen_total_m3: string;
+  composicion: TrazabilidadComposicion[];
+  composicion_definitiva: boolean;
+}
+
+export interface TrazabilidadLinea {
+  detalle: number;
+  producto: string;
+  cantidad: string;
+  unidad: string;
+  pila: TrazabilidadPila | null;
+}
+
+export interface TrazabilidadVenta {
+  venta: number;
+  cliente: string;
+  fecha: string;
+  estado: EstadoVenta;
+  trazable: boolean;
+  lineas: TrazabilidadLinea[];
+  advertencias: string[];
+}
+
+// CU-65/66: certificado de trazabilidad emitido.
+export type TipoCertificado = "descarga" | "consolidado";
+
+export interface CertificadoMaterial {
+  material: string;
+  volumen_m3: string;
+  peso_kg: string;
+  descargas?: number;
+}
+
+export interface CertificadoContenido {
+  codigo?: string;
+  fecha_emision?: string;
+  cliente: { id: number; razon_social: string; rut: string | null; direccion: string | null };
+  materiales: CertificadoMaterial[];
+  totales: { volumen_m3: string; peso_kg: string; descargas?: number };
+  version?: number;
+  transportista?: string | null;
+  vehiculo?: string | null;
+  fecha?: string;
+}
+
+export interface CertificadoTrazabilidad {
+  id: number;
+  codigo: string;
+  tipo: TipoCertificado;
+  tipo_display: string;
+  cliente: number;
+  cliente_razon_social: string;
+  recepcion: number | null;
+  periodo_inicio: string | null;
+  periodo_fin: string | null;
+  fecha_emision: string;
+  referencia: string;
+  contenido: CertificadoContenido;
+}
+
+// CU-67: declaracion para SINADER.
+export interface SinaderClienteResumen {
+  cliente: string;
+  rut: string | null;
+  direccion: string | null;
+  descargas: number;
+  volumen_m3: string;
+  peso_kg: string;
+}
+
+export interface SinaderExcluido {
+  cliente: string;
+  faltantes: string[];
+  descargas: number;
+}
+
+export interface DeclaracionSinader {
+  id: number;
+  periodo_inicio: string;
+  periodo_fin: string;
+  fecha_generada: string;
+  usuario: number | null;
+  usuario_nombre: string | null;
+  nombre_archivo: string | null;
+  contenido: {
+    periodo: { inicio: string; fin: string };
+    clientes: SinaderClienteResumen[];
+    excluidos: SinaderExcluido[];
+    totales: { clientes: number; descargas: number; volumen_m3: string; peso_kg: string };
+  };
 }
 
 export interface TotalesVentas {
@@ -331,6 +436,40 @@ export interface CuentaCorriente {
 export interface CostoKm {
   costo_por_km: string | null;
   configurado: boolean;
+}
+
+// Modulo 9 - Indicador ambiental (CU-69 a CU-71)
+export type OrigenIndicadorAmbiental = "recepcion" | "pila";
+
+export interface IndicadorAmbientalDetalle {
+  id: number;
+  origen: OrigenIndicadorAmbiental;
+  origen_display: string;
+  recepcion: number | null;
+  pila: number | null;
+  referencia: string;
+  descripcion: string;
+  co2_evitado_kg: string;
+  metodo: string;
+  fecha: string;
+}
+
+export interface CalculoAmbientalPendiente {
+  origen: OrigenIndicadorAmbiental;
+  objeto_id: number;
+  referencia: string;
+  motivo: string;
+}
+
+export interface ResumenIndicadorAmbiental {
+  periodo: { desde: string | null; hasta: string | null };
+  total_co2_evitado_kg: string;
+  recepciones_co2_evitado_kg: string;
+  pilas_co2_evitado_kg: string;
+  cantidad_recepciones: number;
+  cantidad_pilas: number;
+  resultados: IndicadorAmbientalDetalle[];
+  pendientes: CalculoAmbientalPendiente[];
 }
 
 // Modulo 7 - Proyecciones (espejo de proyecciones/serializers.py)

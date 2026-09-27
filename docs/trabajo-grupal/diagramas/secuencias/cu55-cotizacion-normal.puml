@@ -16,8 +16,8 @@ title CU-55 Generando una cotizacion de servicio (flujo normal)
 actor Administrador
 participant "V_Cotizador" as V
 participant "C_Cotizaciones" as C
-participant ":CostoTransporte" as CT
-participant ":Cotizacion" as COT
+participant ":configuracion_costotransporte" as CT
+participant ":comercial_cotizacion" as COT
 
 Administrador -> V : "Nueva cotizacion"; selecciona cliente y servicio, ingresa la distancia
 Administrador -> V : presiona "Calcular cotizacion"
