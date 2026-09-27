@@ -31,7 +31,7 @@ test.describe("Trazabilidad de lote", () => {
     await page.goto(`/trazabilidad-lote?venta=${ventaId}`);
     await esperarTrazas(marca, [
       "CU-68 venta.trazabilidad",
-      `venta=${ventaId} lineas=1 con_pila=1`,
+      `venta=${ventaId} lineas=1 con_pila=1 recepciones=1`,
     ]);
 
     await expect(page.getByText("1 de 1 líneas trazables")).toBeVisible();
@@ -40,6 +40,13 @@ test.describe("Trazabilidad de lote", () => {
     await expect(composicion).toHaveCount(1);
     await expect(composicion.first()).toContainText("Rama verde");
     await expect(composicion.first()).toContainText("20 m³");
+    // Y hasta la descarga de origen: el seed registra que los 20 m3 de la
+    // pila salieron de la recepcion recibida de Vivero Los Aromos.
+    const origen = page.getByTestId("recepcion-origen");
+    await expect(origen).toHaveCount(1);
+    await expect(origen.first()).toContainText("Vivero Los Aromos");
+    await expect(origen.first()).toContainText("Rama verde");
+    await expect(origen.first()).toContainText("20 m³");
     // La pila esta cerrada: no hay advertencia de composicion provisoria.
     await expect(page.getByTestId("advertencia-trazabilidad")).toHaveCount(0);
     expect(

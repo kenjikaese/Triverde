@@ -16,9 +16,10 @@ from rest_framework.response import Response
 
 from common.auditoria import registrar_auditoria
 from common.permissions import IsOperadorOAdministrador
+from common.trazas import traza
 from mantenedores.models import Material
 
-from .models import ComposicionPila, Inventario, Pila, ProcesoPila
+from .models import AporteRecepcionPila, ComposicionPila, Inventario, Pila, ProcesoPila
 from .serializers import (
     AgregarComposicionSerializer,
     ComposicionPilaSerializer,
@@ -155,6 +156,7 @@ class PilaViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         material = serializer.validated_data["material"]
         volumen = serializer.validated_data["volumen_m3"]
+        detalle = serializer.validated_data.get("detalle_recepcion")
         with transaction.atomic():
             composicion, creada = ComposicionPila.objects.get_or_create(
                 pila=pila, material=material, defaults={"volumen_m3": volumen}
@@ -162,6 +164,23 @@ class PilaViewSet(viewsets.ModelViewSet):
             if not creada:
                 composicion.volumen_m3 = composicion.volumen_m3 + volumen
                 composicion.save(update_fields=["volumen_m3"])
+            if detalle is not None:
+                # Origen de la composicion (propuesta Inc 3, CU-68): la misma
+                # descarga se registra una vez por pila; si se repite, se suma.
+                aporte, aporte_creado = AporteRecepcionPila.objects.get_or_create(
+                    pila=pila, detalle_recepcion=detalle, defaults={"volumen_m3": volumen}
+                )
+                if not aporte_creado:
+                    aporte.volumen_m3 = aporte.volumen_m3 + volumen
+                    aporte.save(update_fields=["volumen_m3"])
+                traza(
+                    "CU-36",
+                    "composicion.origen_registrado",
+                    pila=pila.pk,
+                    recepcion=detalle.recepcion_id,
+                    material=material.pk,
+                    volumen=volumen,
+                )
             from mezcla.services import calcular_mezcla
 
             calcular_mezcla(pila)

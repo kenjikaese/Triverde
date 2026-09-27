@@ -273,6 +273,14 @@ export interface TrazabilidadComposicion {
   volumen_m3: string;
 }
 
+export interface TrazabilidadRecepcionOrigen {
+  recepcion: number;
+  cliente: string;
+  fecha: string;
+  material: string;
+  volumen_m3: string;
+}
+
 export interface TrazabilidadPila {
   id: number;
   codigo: string;
@@ -281,6 +289,7 @@ export interface TrazabilidadPila {
   volumen_total_m3: string;
   composicion: TrazabilidadComposicion[];
   composicion_definitiva: boolean;
+  recepciones_origen: TrazabilidadRecepcionOrigen[];
 }
 
 export interface TrazabilidadLinea {

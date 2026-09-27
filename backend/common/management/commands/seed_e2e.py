@@ -28,7 +28,7 @@ from comercial.models import (
     DocumentoTributario,
     Venta,
 )
-from inventario.models import ComposicionPila, Pila
+from inventario.models import AporteRecepcionPila, ComposicionPila, Pila
 from mantenedores.models import Cliente, Material, Producto, Vehiculo
 from recepcion.models import DetalleRecepcion, Recepcion
 from trazabilidad.models import (
@@ -146,6 +146,9 @@ class Command(BaseCommand):
             cliente__razon_social__in=[cliente.razon_social, "Constructora Sin Datos"]
         )
         IndicadorAmbiental.objects.filter(recepcion__in=recepciones_previas).delete()
+        AporteRecepcionPila.objects.filter(
+            detalle_recepcion__recepcion__in=recepciones_previas
+        ).delete()
         recepciones_previas.delete()
         recepcion = Recepcion.objects.create(
             cliente=cliente,
@@ -157,7 +160,7 @@ class Command(BaseCommand):
         )
         # Una linea de material con su peso derivado: lo que exige el CU-65
         # para certificar la descarga (20 m3 x 250 kg/m3 = 5.000 kg).
-        DetalleRecepcion.objects.create(
+        detalle = DetalleRecepcion.objects.create(
             recepcion=recepcion,
             material=rama_verde,
             volumen_m3=Decimal("20.00"),
@@ -179,6 +182,10 @@ class Command(BaseCommand):
         )
         ComposicionPila.objects.update_or_create(
             pila=pila, material=rama_verde, defaults={"volumen_m3": Decimal("20.00")}
+        )
+        # Origen de esa composicion: los 20 m3 salieron de la descarga de arriba.
+        AporteRecepcionPila.objects.update_or_create(
+            pila=pila, detalle_recepcion=detalle, defaults={"volumen_m3": Decimal("20.00")}
         )
 
         self.stdout.write(self.style.SUCCESS("Datos e2e listos."))

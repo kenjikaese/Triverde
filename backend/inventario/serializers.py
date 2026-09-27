@@ -10,11 +10,13 @@ from datetime import datetime
 from decimal import Decimal
 
 from django.db import transaction
+from django.db.models import Sum
 from django.utils import timezone
 from rest_framework import serializers
 
 from configuracion.models import ParametroConversion
 from mantenedores.models import Material
+from recepcion.models import DetalleRecepcion, Recepcion
 
 from . import services
 from .models import ComposicionPila, Inventario, Pila, ProcesoPila
@@ -98,10 +100,19 @@ class ComposicionPilaSerializer(serializers.ModelSerializer):
 
 
 class AgregarComposicionSerializer(serializers.Serializer):
-    """Entrada de CU-36: un material y su volumen incorporado a la pila."""
+    """Entrada de CU-36: un material y su volumen incorporado a la pila.
+
+    `detalle_recepcion` es opcional (propuesta Inc 3, CU-68): indica de que
+    descarga sale el material, para que la pila conserve su origen.
+    """
 
     material = serializers.PrimaryKeyRelatedField(queryset=Material.objects.all())
     volumen_m3 = serializers.DecimalField(max_digits=8, decimal_places=2)
+    detalle_recepcion = serializers.PrimaryKeyRelatedField(
+        queryset=DetalleRecepcion.objects.select_related("recepcion", "material"),
+        required=False,
+        allow_null=True,
+    )
 
     def validate(self, attrs):
         material = attrs["material"]
@@ -110,6 +121,9 @@ class AgregarComposicionSerializer(serializers.Serializer):
             raise serializers.ValidationError(
                 {"volumen_m3": "El volumen debe ser mayor a cero."}
             )
+        detalle = attrs.get("detalle_recepcion")
+        if detalle is not None:
+            self._validar_origen(detalle, material, volumen)
         # CU-36 Excepcion 1: no se puede incorporar mas de lo disponible.
         etapa = services.etapa_origen_para_pila(material)
         disponible = services.disponible(material, etapa)
@@ -131,6 +145,42 @@ class AgregarComposicionSerializer(serializers.Serializer):
             )
         attrs["etapa_origen"] = etapa
         return attrs
+
+    def _validar_origen(self, detalle, material, volumen):
+        """La descarga de origen debe estar recibida, ser del mismo material y
+        tener volumen suficiente sin contar lo ya aportado a otras pilas."""
+        if detalle.recepcion.estado != Recepcion.RECIBIDA:
+            raise serializers.ValidationError(
+                {"detalle_recepcion": "Solo una descarga recibida puede ser origen de una pila."}
+            )
+        if detalle.material_id != material.pk:
+            raise serializers.ValidationError(
+                {
+                    "detalle_recepcion": (
+                        f"La descarga es de '{detalle.material.nombre}', no de "
+                        f"'{material.nombre}'."
+                    )
+                }
+            )
+        ya_aportado = detalle.aportes_pila.aggregate(total=Sum("volumen_m3"))["total"] or CERO
+        pila = self.context.get("pila")
+        if pila is not None:
+            # Lo aportado por esta misma descarga a esta pila se va a sumar, no
+            # a duplicar: se descuenta del acumulado para no contarlo dos veces.
+            propio = detalle.aportes_pila.filter(pila=pila).aggregate(
+                total=Sum("volumen_m3")
+            )["total"] or CERO
+            ya_aportado -= propio
+            volumen = volumen + propio
+        if ya_aportado + volumen > detalle.volumen_m3:
+            raise serializers.ValidationError(
+                {
+                    "detalle_recepcion": (
+                        f"La descarga trajo {detalle.volumen_m3} m3 y ya aporto "
+                        f"{ya_aportado} m3 a otras pilas; no alcanza para {volumen} m3."
+                    )
+                }
+            )
 
 
 class PilaSerializer(serializers.ModelSerializer):
