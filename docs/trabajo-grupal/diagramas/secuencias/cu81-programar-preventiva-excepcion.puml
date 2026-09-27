@@ -16,7 +16,7 @@ title CU-81 Programar preventiva (excepcion: activo fuera de servicio, valor inv
 actor Administrador
 participant "V_ProgramarMantencion" as V
 participant "C_Mantencion" as C
-participant ":Mantencion" as MNT
+participant ":mantenimiento_mantencion" as MNT
 
 alt el activo esta fuera de servicio
   Administrador -> V : selecciona un activo fuera de servicio

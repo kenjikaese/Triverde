@@ -15,9 +15,9 @@ title CU-45 Calcular la mezcla objetivo (excepcion: sin receta, material sin cat
 
 actor Sistema
 participant "C_Mezcla" as C
-participant ":RecetaMezcla" as RM
-participant ":ComposicionPila" as CP
-participant ":Inventario" as I
+participant ":configuracion_recetamezcla" as RM
+participant ":inventario_composicionpila" as CP
+participant ":inventario_inventario" as I
 
 Sistema -> C : solicita recalcular la mezcla de la pila
 alt no existe una receta de mezcla vigente

@@ -16,7 +16,7 @@ title CU-79 Editar o dar de baja (excepcion: activo inexistente, dato faltante o
 actor Administrador
 participant "V_ListaMaquinaria" as V
 participant "C_Maquinaria" as C
-participant ":Maquinaria" as MQ
+participant ":mantenimiento_maquinaria" as MQ
 
 alt el activo ya no existe o fue eliminado por otra sesion
   Administrador -> V : accede a un activo no disponible

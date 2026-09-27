@@ -16,9 +16,9 @@ title CU-51 Proyeccion semanal (excepcion: material sin parametros, sin seleccio
 actor Administrador
 participant "V_Proyecciones" as V
 participant "C_Proyecciones" as C
-participant ":Material" as M
-participant ":ParametroConversion" as PC
-participant ":Proyeccion" as P
+participant ":mantenedores_material" as M
+participant ":configuracion_parametroconversion" as PC
+participant ":proyecciones_proyeccion" as P
 
 Administrador -> V : selecciona materiales y presiona "Calcular proyeccion"
 V -> C : proyectarSemanal(periodo, volumenesPorMaterial)

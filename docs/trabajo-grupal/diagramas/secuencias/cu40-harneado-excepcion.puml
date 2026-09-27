@@ -16,8 +16,8 @@ title CU-40 Registrando el harneado (excepcion: fecha futura o estado incorrecto
 actor Operador
 participant "V_RegistroProceso" as V
 participant "C_ProcesosPila" as C
-participant ":Pila" as P
-participant ":ProcesoPila" as PP
+participant ":inventario_pila" as P
+participant ":inventario_procesopila" as PP
 
 Operador -> V : confirma el harneado de la pila
 V -> C : registrarProceso(tipo="harneado", pila, fecha)

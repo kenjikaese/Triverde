@@ -1,0 +1,46 @@
+@startuml cu87-adjuntar-archivo-excepcion
+' CU-87 Adjuntando el archivo de un documento - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-87 Adjuntar archivo (excepcion: documento inexistente, archivo invalido o version previa)
+
+actor Administrador
+participant "V_ListaDocumentos" as V
+participant "C_DocumentosLegales" as C
+participant ":documental_documentolegal" as DL
+participant ":documental_versiondocumento" as VD
+participant ":configuracion_parametroconversion" as PC
+
+alt el documento no existe
+  V -> C : adjuntarArchivo(documento, archivo)
+  C -> DL : obtener(documento)
+  DL --> C : no encontrado
+  C --> V : documento no disponible
+  V --> Administrador : informa que el documento no esta disponible
+else formato no soportado o tamano excedido
+  V -> C : adjuntarArchivo(documento, archivo)
+  C -> PC : obtener("documento_tamano_max_mb")
+  PC --> C : tamano maximo configurado
+  C -> C : valida formato y tamano
+  C --> V : rechaza el archivo con la restriccion
+  V --> Administrador : informa formatos aceptados y tamano maximo
+else el documento ya tenia una version vigente
+  V -> C : adjuntarArchivo(documento, archivo)
+  C -> VD : marcarNoVigente(version anterior)
+  VD --> C : version anterior conservada en el historial
+  C -> VD : crear(documento, archivo, version = anterior + 1, vigente = verdadero)
+  VD --> C : nueva version vigente
+  C --> V : adjunto confirmado
+  V --> Administrador : muestra la nueva version vigente
+end
+
+@enduml

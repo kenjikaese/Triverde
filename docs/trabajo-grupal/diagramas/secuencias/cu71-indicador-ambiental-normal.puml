@@ -16,7 +16,7 @@ title CU-71 Consultando el indicador ambiental acumulado (flujo normal)
 actor Administrador
 participant "V_IndicadorAmbiental" as V
 participant "C_IndicadorAmbiental" as C
-participant ":IndicadorAmbiental" as IA
+participant ":trazabilidad_indicadorambiental" as IA
 
 Administrador -> V : abre el indicador y selecciona un periodo opcional
 V -> C : consultar(desde, hasta)

@@ -16,8 +16,8 @@ title CU-50 Proyectando la produccion mensual (excepcion: existente, sin volumen
 actor Administrador
 participant "V_Proyecciones" as V
 participant "C_Proyecciones" as C
-participant ":ParametroConversion" as PC
-participant ":Proyeccion" as P
+participant ":configuracion_parametroconversion" as PC
+participant ":proyecciones_proyeccion" as P
 
 Administrador -> V : elige el periodo y presiona "Calcular proyeccion"
 V -> C : proyectarMensual(periodo, volumenEntrada)

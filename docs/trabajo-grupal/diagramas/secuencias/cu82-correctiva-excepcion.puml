@@ -16,7 +16,7 @@ title CU-82 Registrar correctiva (excepcion: activo no disponible, sin falla o c
 actor Operador
 participant "V_ProgramarMantencion" as V
 participant "C_Mantencion" as C
-participant ":Maquinaria" as MQ
+participant ":mantenimiento_maquinaria" as MQ
 
 alt el activo no existe o fue dado de baja
   Operador -> V : selecciona un activo no disponible
