@@ -172,12 +172,27 @@ class AgregarComposicionSerializer(serializers.Serializer):
             )["total"] or CERO
             ya_aportado -= propio
             volumen = volumen + propio
-        if ya_aportado + volumen > detalle.volumen_m3:
+        # El material que se tritura entra a la pila como chip: su aporte se
+        # compara con el chip que produjo la descarga, no con la rama recibida.
+        if material.admite_chip:
+            if detalle.chip_derivado_m3 is None:
+                raise serializers.ValidationError(
+                    {
+                        "detalle_recepcion": (
+                            "La descarga aun no tiene calculado su chip derivado; "
+                            "configure el factor de reduccion antes de usarla como origen."
+                        )
+                    }
+                )
+            capacidad, unidad = detalle.chip_derivado_m3, "m3 de chip"
+        else:
+            capacidad, unidad = detalle.volumen_m3, "m3"
+        if ya_aportado + volumen > capacidad:
             raise serializers.ValidationError(
                 {
                     "detalle_recepcion": (
-                        f"La descarga trajo {detalle.volumen_m3} m3 y ya aporto "
-                        f"{ya_aportado} m3 a otras pilas; no alcanza para {volumen} m3."
+                        f"La descarga aporta {capacidad} {unidad} y ya aporto "
+                        f"{ya_aportado} a otras pilas; no alcanza para {volumen}."
                     )
                 }
             )

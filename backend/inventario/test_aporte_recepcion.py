@@ -19,7 +19,9 @@ from .models import AporteRecepcionPila, Pila
 from .tests import InventarioTestBase
 
 
-class AporteRecepcionPilaTests(InventarioTestBase):
+class AporteRecepcionPilaBase(InventarioTestBase):
+    """Datos y ayudas comunes a las pruebas de aportes."""
+
     @classmethod
     def setUpTestData(cls):
         super().setUpTestData()
@@ -51,6 +53,8 @@ class AporteRecepcionPilaTests(InventarioTestBase):
             reverse("pila-composicion", args=[(pila or self.pila).pk]), cuerpo, format="json"
         )
 
+
+class AporteRecepcionPilaTests(AporteRecepcionPilaBase):
     def test_sin_detalle_la_composicion_sigue_igual_que_antes(self):
         respuesta = self.componer()
         self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED)
@@ -116,3 +120,32 @@ class AporteRecepcionPilaTests(InventarioTestBase):
         respuesta = self.componer(pila=cerrada, detalle_recepcion=detalle.pk)
         self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertEqual(AporteRecepcionPila.objects.count(), 0)
+
+
+class AporteChipTests(AporteRecepcionPilaBase):
+    """La rama entra a la pila como chip: el aporte se mide contra el chip que produjo la descarga."""
+
+    def setUp(self):
+        super().setUp()
+        self.sembrar(self.rama, services.etapa_origen_para_pila(self.rama), 100)
+
+    def descarga_rama(self, volumen="12.00", chip="4.00"):
+        detalle = self.descarga(material=self.rama, volumen=volumen)
+        detalle.chip_derivado_m3 = Decimal(chip) if chip is not None else None
+        detalle.save(update_fields=["chip_derivado_m3"])
+        return detalle
+
+    def test_el_chip_aportado_no_supera_el_chip_derivado_de_la_descarga(self):
+        detalle = self.descarga_rama(volumen="12.00", chip="4.00")
+        respuesta = self.componer(material=self.rama.pk, volumen_m3="5.00", detalle_recepcion=detalle.pk)
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detalle_recepcion", respuesta.data)
+        self.assertEqual(AporteRecepcionPila.objects.count(), 0)
+        dentro = self.componer(material=self.rama.pk, volumen_m3="4.00", detalle_recepcion=detalle.pk)
+        self.assertEqual(dentro.status_code, status.HTTP_201_CREATED)
+
+    def test_descarga_sin_chip_calculado_no_puede_ser_origen(self):
+        detalle = self.descarga_rama(chip=None)
+        respuesta = self.componer(material=self.rama.pk, volumen_m3="1.00", detalle_recepcion=detalle.pk)
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("detalle_recepcion", respuesta.data)
