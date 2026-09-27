@@ -1,0 +1,42 @@
+@startuml cu67-declaracion-sinader-normal
+' CU-67 Exportando la declaracion para SINADER - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-67 Exportando la declaracion para SINADER (flujo normal)
+
+actor Administrador
+participant "V_ExportacionSinader" as V
+participant "C_Sinader" as C
+participant ":recepcion_recepcion" as R
+participant ":recepcion_detallerecepcion" as DR
+participant ":mantenedores_cliente" as CL
+participant ":trazabilidad_declaracionsinader" as DS
+
+Administrador -> V : abre "Exportacion SINADER" y selecciona el periodo
+Administrador -> V : presiona "Generar declaracion"
+V -> C : generarDeclaracion(periodo_inicio, periodo_fin)
+C -> R : obtener(estado=recibida, fecha en periodo)
+R --> C : descargas recibidas del periodo
+C -> CL : obtenerDatosObligatorios(clientes de las descargas)
+CL --> C : todos los clientes con datos completos
+C -> DR : obtenerDetalles(descargas)
+DR --> C : material, volumen y peso de cada linea
+C -> C : agrupar por cliente la cantidad de material recibido y su fecha
+C -> C : armar el archivo en el formato de carga manual
+C -> DS : crear(periodo_inicio, periodo_fin, fecha_generada, archivo, usuario)
+DS --> C : declaracion registrada
+C -> C : registrarAuditoria("Generacion de declaracion SINADER")
+C --> V : archivo listo
+V --> Administrador : descarga el archivo para cargarlo en la plataforma de la autoridad
+note over C : el sistema no se conecta con SINADER;\nsolo produce el archivo para carga manual
+
+@enduml

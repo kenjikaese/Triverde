@@ -16,8 +16,8 @@ title CU-60 Registrando un despacho de producto (flujo normal)
 actor Operador
 participant "V_Despacho" as V
 participant "C_Ventas" as C
-participant ":Venta" as VT
-participant ":Despacho" as D
+participant ":comercial_venta" as VT
+participant ":comercial_despacho" as D
 
 Operador -> V : desde una venta pendiente, presiona "Registrar despacho"
 V --> Operador : presenta la fecha actual editable y quien retira

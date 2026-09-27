@@ -1,0 +1,46 @@
+@startuml cu69-co2-recepcion-excepcion
+' CU-69 Calculando el CO2 evitado por un camion recibido - excepciones
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-69 Calcular CO2 de recepcion (excepcion: peso o factor faltante, correccion o rechazo)
+
+actor Sistema
+participant "C_IndicadorAmbiental" as C
+participant ":Recepcion" as R
+participant ":DetalleRecepcion" as DR
+participant ":ParametroConversion" as PC
+participant ":IndicadorAmbiental" as IA
+
+Sistema -> C : solicita recalcular(recepcion)
+alt no hay detalles con peso calculado
+  C -> DR : obtenerPesos(recepcion)
+  DR --> C : peso incompleto
+  C -> IA : retirarValorAnterior(recepcion)
+  C --> Sistema : calculo pendiente por falta de peso
+else no existe co2_evitado_camion positivo
+  C -> PC : obtener(co2_evitado_camion)
+  PC --> C : parametro ausente o invalido
+  C -> IA : retirarValorAnterior(recepcion)
+  C --> Sistema : calculo pendiente; configurar factor
+else la recepcion fue corregida
+  C -> DR : sumarPesoActualizado(recepcion)
+  DR --> C : nuevo peso total
+  C -> IA : actualizarSinDuplicar(recepcion, nuevo_co2)
+  IA --> C : acumulado ajustado
+else la recepcion fue rechazada
+  C -> R : consultarEstado(recepcion)
+  R --> C : rechazada
+  C -> IA : eliminarIndicador(recepcion)
+  C --> Sistema : acumulado ajustado sin la recepcion
+end
+
+@enduml

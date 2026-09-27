@@ -16,8 +16,8 @@ title CU-64 Consultando la cuenta corriente de un cliente (flujo normal)
 actor Administrador
 participant "V_CuentaCorriente" as V
 participant "C_CuentaCorriente" as C
-participant ":Venta" as VT
-participant ":Cobro" as CB
+participant ":comercial_venta" as VT
+participant ":comercial_cobro" as CB
 
 Administrador -> V : selecciona el cliente y abre su cuenta corriente
 V -> C : consultarCuentaCorriente(cliente)

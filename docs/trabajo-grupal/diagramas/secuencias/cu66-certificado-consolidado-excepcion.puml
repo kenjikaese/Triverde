@@ -1,0 +1,44 @@
+@startuml cu66-certificado-consolidado-excepcion
+' CU-66 Generando el certificado consolidado mensual de un cliente - excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-66 Generando el certificado consolidado mensual (excepcion: periodo sin descargas o consolidado previo)
+
+actor Administrador
+participant "V_Certificados" as V
+participant "C_Certificados" as C
+participant ":recepcion_recepcion" as R
+participant ":trazabilidad_certificadotrazabilidad" as CT
+
+Administrador -> V : selecciona cliente y periodo; presiona "Generar"
+V -> C : generarConsolidado(cliente, periodo_inicio, periodo_fin)
+C -> R : obtener(cliente, estado=recibida, fecha en periodo)
+alt el cliente no tiene descargas recibidas en el periodo
+  R --> C : sin descargas
+  C --> V : aviso: no hay descargas recibidas para el periodo
+  V --> Administrador : informa y no genera el certificado
+else ya existe un consolidado para el cliente y el periodo
+  R --> C : descargas recibidas del periodo
+  C -> CT : buscar(cliente, tipo=consolidado, periodo)
+  CT --> C : consolidado previo encontrado
+  C --> V : advertencia: existe un consolidado previo
+  V --> Administrador : pide confirmar la nueva version
+  Administrador -> V : confirma
+  V -> C : generarConsolidado(cliente, periodo, confirmar=si)
+  C -> CT : crear(nueva version; la anterior se conserva en el historial)
+  CT --> C : nueva version registrada
+  C -> C : registrarAuditoria("Generacion de certificado consolidado")
+  C --> V : nueva version lista
+  V --> Administrador : muestra el consolidado y el historial de versiones
+end
+
+@enduml

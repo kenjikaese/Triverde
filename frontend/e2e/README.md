@@ -1,7 +1,7 @@
-# Pruebas end-to-end — Módulo 8 (Comercial)
+# Pruebas end-to-end — Módulo 8 (Comercial) y Módulo 9 Parte A (Trazabilidad)
 
-Verifican los CU-55 a CU-64 sobre el sistema andando: navegador real, frontend
-real y backend real.
+Verifican los CU-55 a CU-64 y los CU-65 a CU-68 sobre el sistema andando:
+navegador real, frontend real y backend real.
 
 ## Cómo correrlas
 
@@ -27,6 +27,9 @@ y los apaga al terminar.
 | `03-cobro.spec.ts` | CU-61, CU-63 |
 | `04-cuenta-corriente.spec.ts` | CU-62, CU-64 |
 | `05-permisos.spec.ts` | Criterio de aceptación 5 |
+| `06-certificados.spec.ts` | CU-65, CU-66 y permisos del Módulo 9 |
+| `07-sinader.spec.ts` | CU-67 |
+| `08-trazabilidad-lote.spec.ts` | CU-68 (sobre el enlace Venta → Pila del CU-58) |
 
 ## Las tres capas de evidencia
 
@@ -65,7 +68,12 @@ Está comprobado: al desactivar la traza del cálculo dejando la vista intacta,
 - `manage.py seed_e2e` corre antes de cada sesión y deja el mismo estado
   inicial: usuarios `admin` y `operador` (clave `triverde-e2e-2026`), un
   cliente con datos completos y otro sin ellos, dos productos con precio, un
-  vehículo de 25 m³ y una recepción recibida lista para cobrar.
+  vehículo de 25 m³, una recepción recibida lista para cobrar (con 20 m³ de
+  rama verde y su peso derivado, certificable por el CU-65) y una pila cerrada
+  `P-E2E-01` con composición, que el CU-68 recorre.
+- La descarga del cliente sin datos que necesita el CU-67 la crea el propio
+  escenario por la API, para no alterar la lista de cobros pendientes de los
+  escenarios del Módulo 8; `seed_e2e` la limpia en la corrida siguiente.
 - Un solo worker y orden fijo: los escenarios comparten la base y el saldo de
   la cuenta corriente depende de la venta y el cobro de los anteriores.
 

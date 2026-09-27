@@ -83,6 +83,9 @@ class DetalleVentaSerializer(serializers.ModelSerializer):
     producto_nombre = serializers.CharField(
         source="producto.nombre", read_only=True
     )
+    pila_codigo = serializers.CharField(
+        source="pila.codigo", read_only=True, default=None
+    )
     unidad = serializers.CharField(read_only=True)
     precio_unitario = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
@@ -97,6 +100,8 @@ class DetalleVentaSerializer(serializers.ModelSerializer):
             "id",
             "producto",
             "producto_nombre",
+            "pila",
+            "pila_codigo",
             "cantidad",
             "unidad",
             "precio_unitario",
@@ -176,6 +181,7 @@ class VentaSerializer(serializers.ModelSerializer):
             DetalleVenta.objects.create(
                 venta=venta,
                 producto=producto,
+                pila=detalle.get("pila"),
                 cantidad=cantidad,
                 unidad=producto.unidad_de_venta,
                 precio_unitario=producto.precio,

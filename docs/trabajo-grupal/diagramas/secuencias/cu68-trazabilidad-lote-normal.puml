@@ -1,0 +1,45 @@
+@startuml cu68-trazabilidad-lote-normal
+' CU-68 Consultando el detalle trazable de un lote entregado - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-68 Consultando el detalle trazable de un lote entregado (flujo normal)
+
+actor Administrador
+participant "V_TrazabilidadLote" as V
+participant "C_Ventas" as C
+participant ":comercial_venta" as VT
+participant ":comercial_detalleventa" as DV
+participant ":inventario_pila" as PI
+participant ":inventario_composicionpila" as CP
+
+Administrador -> V : abre "Trazabilidad de lote"
+V -> C : listarVentas()
+C -> VT : obtener()
+VT --> C : ventas registradas
+C --> V : ventas seleccionables
+Administrador -> V : selecciona la venta a trazar
+V -> C : trazabilidad(venta)
+C -> VT : obtener(venta)
+VT --> C : cliente, fecha y estado de la venta
+C -> DV : obtenerLineas(venta)
+DV --> C : producto, cantidad y pila de origen de cada linea
+loop por cada linea con pila de origen
+  C -> PI : obtener(pila)
+  PI --> C : codigo, estado cerrada y fecha de inicio
+  C -> CP : obtenerComposicion(pila)
+  CP --> C : material y volumen incorporados
+end
+C -> C : armar la cadena venta, pila y composicion
+C --> V : cadena trazable del lote
+V --> Administrador : muestra la pila de origen y el material que la compuso
+
+@enduml

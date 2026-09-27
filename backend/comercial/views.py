@@ -30,7 +30,12 @@ from .serializers import (
     DocumentoTributarioSerializer,
     VentaSerializer,
 )
-from .services import costo_por_km_vigente, cuenta_corriente, tarifa_sugerida
+from .services import (
+    costo_por_km_vigente,
+    cuenta_corriente,
+    tarifa_sugerida,
+    trazabilidad_venta,
+)
 
 
 class RangoFechaMixin:
@@ -208,6 +213,17 @@ class VentaViewSet(RangoFechaMixin, viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         total = sum((venta.total for venta in queryset), 0)
         return Response({"cantidad": queryset.count(), "total": total})
+
+    @action(
+        detail=True, methods=["get"], permission_classes=[IsAdministrador]
+    )
+    def trazabilidad(self, request, pk=None):
+        """CU-68: cadena trazable del lote entregado (Venta -> Pila).
+
+        Solo lectura y solo Administrador (spec M9, Parte A).
+        """
+        venta = self.get_object()
+        return Response(trazabilidad_venta(venta))
 
     @action(detail=True, methods=["post"])
     def despachar(self, request, pk=None):
