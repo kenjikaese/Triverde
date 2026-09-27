@@ -1,0 +1,35 @@
+@startuml cu86-registrar-documento-normal
+' CU-86 Registrando un documento legal o permiso - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-86 Registrando un documento legal o permiso (flujo normal)
+
+actor Administrador
+participant "V_ListaDocumentos" as V
+participant "C_DocumentosLegales" as C
+participant ":documental_documentolegal" as DL
+participant ":acceso_bitacoraauditoria" as BA
+
+Administrador -> V : presiona "Nuevo documento"
+V --> Administrador : presenta el formulario de registro
+Administrador -> V : clasificacion, nombre, entidad emisora y "Registrar documento"
+V -> C : registrarDocumento(tipo, nombre, entidad_emisora)
+C -> C : valida los datos obligatorios
+C -> DL : buscar(nombre, entidad_emisora)
+DL --> C : sin coincidencias
+C -> DL : crear(tipo, nombre, entidad_emisora, estado = "sin_vigencia")
+DL --> C : documento creado
+C -> BA : registrar("Registro de documento legal")
+C --> V : documento registrado
+V --> Administrador : confirma y habilita adjuntar archivo y vigencia
+
+@enduml
