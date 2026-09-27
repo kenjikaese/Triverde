@@ -16,7 +16,7 @@ title CU-78 Registrar un activo (excepcion: habilitar vehiculo, dato faltante u 
 actor Administrador
 participant "V_FormularioMaquinaria" as V
 participant "C_Maquinaria" as C
-participant ":Vehiculo" as VH
+participant ":mantenedores_vehiculo" as VH
 
 alt habilita un vehiculo ya registrado en vez de crear una maquina
   Administrador -> V : elige habilitar un vehiculo existente

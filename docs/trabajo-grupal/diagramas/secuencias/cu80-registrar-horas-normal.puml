@@ -16,8 +16,8 @@ title CU-80 Registrando las horas de uso de una maquina (flujo normal)
 actor Operador
 participant "V_RegistroUso" as V
 participant "C_RegistroUso" as C
-participant ":RegistroUso" as RU
-participant ":Maquinaria" as MQ
+participant ":mantenimiento_registrouso" as RU
+participant ":mantenimiento_maquinaria" as MQ
 
 Operador -> V : selecciona el activo cuyo uso va a registrar
 V -> C : obtenerUltimaLectura(activo)

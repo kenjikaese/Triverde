@@ -16,8 +16,8 @@ title CU-50 Proyectando la produccion mensual (flujo normal)
 actor Administrador
 participant "V_Proyecciones" as V
 participant "C_Proyecciones" as C
-participant ":ParametroConversion" as PC
-participant ":Proyeccion" as P
+participant ":configuracion_parametroconversion" as PC
+participant ":proyecciones_proyeccion" as P
 
 Administrador -> V : abre proyecciones y elige "Produccion mensual"
 V --> Administrador : presenta el mes en curso, editable

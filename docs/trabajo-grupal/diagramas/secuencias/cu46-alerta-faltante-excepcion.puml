@@ -15,7 +15,7 @@ title CU-46 Generar la alerta de faltante (excepcion: faltante cubierto o alerta
 
 actor Sistema
 participant "C_Mezcla" as C
-participant ":Alerta" as A
+participant ":mezcla_alerta" as A
 
 Sistema -> C : entrega el resultado de la mezcla para evaluar la alerta
 alt el faltante es cero o el inventario alcanza a cubrirlo

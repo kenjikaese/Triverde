@@ -15,10 +15,10 @@ title CU-69 Calcular CO2 de recepcion (excepcion: peso o factor faltante, correc
 
 actor Sistema
 participant "C_IndicadorAmbiental" as C
-participant ":Recepcion" as R
-participant ":DetalleRecepcion" as DR
-participant ":ParametroConversion" as PC
-participant ":IndicadorAmbiental" as IA
+participant ":recepcion_recepcion" as R
+participant ":recepcion_detallerecepcion" as DR
+participant ":configuracion_parametroconversion" as PC
+participant ":trazabilidad_indicadorambiental" as IA
 
 Sistema -> C : solicita recalcular(recepcion)
 alt no hay detalles con peso calculado
