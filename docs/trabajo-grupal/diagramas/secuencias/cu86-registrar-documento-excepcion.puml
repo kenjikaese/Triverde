@@ -1,0 +1,48 @@
+@startuml cu86-registrar-documento-excepcion
+' CU-86 Registrando un documento legal o permiso - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-86 Registrar documento (excepcion: clasificacion otra, dato faltante o posible duplicado)
+
+actor Administrador
+participant "V_ListaDocumentos" as V
+participant "C_DocumentosLegales" as C
+participant ":documental_documentolegal" as DL
+
+alt la clasificacion no esta entre las predefinidas
+  Administrador -> V : elige "otro" y describe la clasificacion
+  V -> C : registrarDocumento(tipo = "otro", tipo_detalle, nombre, entidad)
+  C -> DL : crear(tipo = "otro", tipo_detalle, ...)
+  DL --> C : documento creado
+  C --> V : registro confirmado sin bloquear
+  V --> Administrador : confirma el documento
+else falta un dato obligatorio
+  Administrador -> V : "Registrar documento" sin nombre o sin entidad
+  V -> C : registrarDocumento(datos incompletos)
+  C -> C : valida los datos obligatorios
+  C --> V : senala el campo faltante
+  V --> Administrador : no se crea el documento
+else existe un documento con el mismo nombre y entidad
+  Administrador -> V : registra un documento repetido
+  V -> C : registrarDocumento(tipo, nombre, entidad)
+  C -> DL : buscar(nombre, entidad_emisora)
+  DL --> C : documento existente
+  C --> V : advierte posible duplicado y sugiere renovar
+  V --> Administrador : ofrece cancelar o continuar
+  Administrador -> V : "Continuar de todos modos"
+  V -> C : registrarDocumento(..., confirmar = verdadero)
+  C -> DL : crear(tipo, nombre, entidad_emisora)
+  DL --> C : documento creado
+  C --> V : registro confirmado
+end
+
+@enduml

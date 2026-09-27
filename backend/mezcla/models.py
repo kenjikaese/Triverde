@@ -82,6 +82,12 @@ class Alerta(models.Model):
         related_name="alertas",
     )
 
+    # --- Origen documento (Modulo 12 - Parte F / Ignacio) ---
+    documento = models.ForeignKey(
+        "documental.DocumentoLegal", on_delete=models.CASCADE, null=True, blank=True,
+        related_name="alertas",
+    )
+
     class Meta:
         ordering = ["-fecha_generada", "-id"]
         constraints = [
@@ -99,6 +105,11 @@ class Alerta(models.Model):
                 fields=["pila", "categoria"],
                 condition=models.Q(origen="mezcla", estado="activa"),
                 name="alerta_mezcla_activa_pila_categoria_unica",
+            ),
+            models.UniqueConstraint(
+                fields=["documento"],
+                condition=models.Q(origen="documento", estado="activa"),
+                name="alerta_documento_activa_unica",
             ),
         ]
 
