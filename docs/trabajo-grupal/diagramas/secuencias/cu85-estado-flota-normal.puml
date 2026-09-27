@@ -16,8 +16,8 @@ title CU-85 Consultando el estado de la flota y los equipos (flujo normal)
 actor Administrador
 participant "V_EstadoFlota" as V
 participant "C_Maquinaria" as C
-participant ":Maquinaria" as MQ
-participant ":Mantencion" as MNT
+participant ":mantenimiento_maquinaria" as MQ
+participant ":mantenimiento_mantencion" as MNT
 
 Administrador -> V : abre el estado de la flota y los equipos
 V -> C : consultarEstadoFlota()

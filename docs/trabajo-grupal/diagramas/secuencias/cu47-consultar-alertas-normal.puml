@@ -16,7 +16,7 @@ title CU-47 Consultando las alertas de mezcla activas (flujo normal)
 actor Operador
 participant "V_Alertas" as V
 participant "C_Alertas" as C
-participant ":Alerta" as A
+participant ":mezcla_alerta" as A
 
 Operador -> V : abre la bandeja de alertas
 V -> C : listarAlertas(estado=activa)

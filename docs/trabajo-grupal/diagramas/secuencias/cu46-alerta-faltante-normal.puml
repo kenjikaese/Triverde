@@ -15,7 +15,7 @@ title CU-46 Generando la alerta de faltante de material (flujo normal)
 
 actor Sistema
 participant "C_Mezcla" as C
-participant ":Alerta" as A
+participant ":mezcla_alerta" as A
 
 Sistema -> C : entrega el resultado de la mezcla con un faltante no cubierto
 C -> A : buscarActiva(pila, categoria)

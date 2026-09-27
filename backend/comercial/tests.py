@@ -724,6 +724,25 @@ class TrazabilidadVentaTests(ComercialTestBase):
         cls.pila_en_proceso = Pila.objects.create(
             codigo="P-0902", fecha_inicio=date(2026, 8, 1), estado=Pila.EN_PROCESO,
         )
+        # Origen de la composicion de la pila cerrada (propuesta Inc 3): los
+        # 40 m3 de rama salieron de una descarga recibida del cliente.
+        from datetime import time
+
+        from inventario.models import AporteRecepcionPila
+        from recepcion.models import DetalleRecepcion
+
+        cls.recepcion_origen = Recepcion.objects.create(
+            cliente=cls.cliente, fecha=date(2026, 5, 20), hora=time(8, 0),
+            estado=Recepcion.RECIBIDA, conductor="Origen",
+        )
+        cls.detalle_origen = DetalleRecepcion.objects.create(
+            recepcion=cls.recepcion_origen, material=cls.rama,
+            volumen_m3=Decimal("40.00"), peso_derivado_kg=Decimal("8800.00"),
+        )
+        AporteRecepcionPila.objects.create(
+            pila=cls.pila_cerrada, detalle_recepcion=cls.detalle_origen,
+            volumen_m3=Decimal("40.00"),
+        )
 
     def _vender(self, pila=None, cantidad="10"):
         self.autenticar(self.admin)
@@ -782,6 +801,29 @@ class TrazabilidadVentaTests(ComercialTestBase):
             materiales,
             {"Ramas de poda": "40.00", "Hojas y cesped": "20.00"},
         )
+        # La cadena llega hasta la descarga de origen y su cliente.
+        self.assertEqual(len(pila["recepciones_origen"]), 1)
+        origen = pila["recepciones_origen"][0]
+        self.assertEqual(origen["recepcion"], self.recepcion_origen.pk)
+        self.assertEqual(origen["cliente"], "Vivero Los Aromos")
+        self.assertEqual(origen["material"], "Ramas de poda")
+        self.assertEqual(origen["volumen_m3"], "40.00")
+
+    def test_pila_sin_descargas_de_origen_lo_advierte(self):
+        """Propuesta Inc 3: sin aportes registrados, la cadena para en la composicion."""
+        from inventario.models import ComposicionPila, Pila
+
+        sin_origen = Pila.objects.create(
+            codigo="P-0903", fecha_inicio=date(2026, 7, 1), estado=Pila.CERRADA,
+        )
+        ComposicionPila.objects.create(
+            pila=sin_origen, material=self.pasto, volumen_m3=Decimal("10.00"),
+        )
+        venta = self._vender(pila=sin_origen)
+        respuesta = self._trazar(venta["id"])
+        self.assertTrue(respuesta.data["trazable"])
+        self.assertEqual(respuesta.data["lineas"][0]["pila"]["recepciones_origen"], [])
+        self.assertIn("no tiene descargas de origen", respuesta.data["advertencias"][0])
 
     def test_venta_sin_pila_informa_sin_trazabilidad(self):
         """CU-68, Excepcion 1."""

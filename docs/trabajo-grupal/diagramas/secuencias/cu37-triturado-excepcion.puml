@@ -16,9 +16,9 @@ title CU-37 Registrando el triturado (excepcion: volumen invalido o sin factor)
 actor Operador
 participant "V_RegistroProceso" as V
 participant "C_ProcesosPila" as C
-participant ":Material" as M
-participant ":Inventario" as I
-participant ":ProcesoPila" as PP
+participant ":mantenedores_material" as M
+participant ":inventario_inventario" as I
+participant ":inventario_procesopila" as PP
 
 Operador -> V : ingresa el material y el volumen triturado
 V -> C : registrarProceso(tipo="triturado", material, volumen)

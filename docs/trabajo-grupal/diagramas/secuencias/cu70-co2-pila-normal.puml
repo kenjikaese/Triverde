@@ -15,11 +15,11 @@ title CU-70 Calculando el CO2 evitado por un lote compostado (flujo normal)
 
 actor Sistema
 participant "C_IndicadorAmbiental" as C
-participant ":Pila" as P
-participant ":ComposicionPila" as CP
-participant ":Material" as M
-participant ":ParametroConversion" as PC
-participant ":IndicadorAmbiental" as IA
+participant ":inventario_pila" as P
+participant ":inventario_composicionpila" as CP
+participant ":mantenedores_material" as M
+participant ":configuracion_parametroconversion" as PC
+participant ":trazabilidad_indicadorambiental" as IA
 
 Sistema -> C : detecta Pila en estado cerrada
 C -> P : obtener(pila)

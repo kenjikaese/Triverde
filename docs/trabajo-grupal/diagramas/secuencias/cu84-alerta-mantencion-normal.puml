@@ -15,9 +15,9 @@ title CU-84 Generando la alerta de mantencion proxima o vencida (flujo normal)
 
 actor Sistema
 participant "C_Mantencion" as C
-participant ":ParametroConversion" as PC
-participant ":Mantencion" as MNT
-participant ":Alerta" as A
+participant ":configuracion_parametroconversion" as PC
+participant ":mantenimiento_mantencion" as MNT
+participant ":mezcla_alerta" as A
 
 Sistema -> C : inicia la revision periodica de mantenciones programadas
 C -> PC : obtenerUmbralesAnticipacion(dias, horas)

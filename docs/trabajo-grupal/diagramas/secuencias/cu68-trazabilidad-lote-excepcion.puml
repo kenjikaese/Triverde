@@ -19,6 +19,7 @@ participant "C_Ventas" as C
 participant ":comercial_detalleventa" as DV
 participant ":inventario_pila" as PI
 participant ":inventario_composicionpila" as CP
+participant ":inventario_aporterecepcionpila" as AR
 
 Administrador -> V : selecciona la venta a trazar
 V -> C : trazabilidad(venta)
@@ -35,6 +36,16 @@ else la pila de origen sigue en proceso
   CP --> C : composicion registrada hasta ahora
   C --> V : cadena disponible y advertencia de composicion no definitiva
   V --> Administrador : muestra el detalle disponible con la advertencia
+else la pila se compuso sin indicar las descargas de origen
+  DV --> C : linea con pila de origen
+  C -> PI : obtener(pila)
+  PI --> C : pila cerrada
+  C -> CP : obtenerComposicion(pila)
+  CP --> C : composicion total por material
+  C -> AR : obtenerAportes(pila)
+  AR --> C : sin aportes registrados
+  C --> V : composicion y advertencia: sin descargas de origen
+  V --> Administrador : muestra la composicion e indica que la cadena llega hasta ahi
 end
 
 @enduml

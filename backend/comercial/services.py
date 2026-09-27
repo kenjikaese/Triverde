@@ -188,11 +188,9 @@ def trazabilidad_venta(venta):
     (CU-68, Excepcion 1). Si la pila no esta cerrada, se advierte que su
     composicion aun no es definitiva (CU-68, Excepcion 2).
 
-    Limite conocido del modelo de datos: `ComposicionPila` registra material y
-    volumen, pero no que recepcion aporto ese material, y el inventario se
-    lleva como saldo por material y etapa. Por eso la cadena llega con certeza
-    hasta la composicion de la pila; las recepciones de origen no se pueden
-    reconstruir sin inventar un vinculo que el modelo no tiene.
+    Las recepciones de origen salen de `AporteRecepcionPila` (propuesta Inc 3):
+    que descarga aporto material a la pila y cuanto. Si la pila no tiene
+    aportes registrados, la cadena se detiene en la composicion y se advierte.
     """
     Pila = apps.get_model("inventario", "Pila")
 
@@ -214,6 +212,18 @@ def trazabilidad_venta(venta):
                 }
                 for item in pila.composiciones.select_related("material").all()
             ]
+            recepciones_origen = [
+                {
+                    "recepcion": aporte.detalle_recepcion.recepcion_id,
+                    "cliente": aporte.detalle_recepcion.recepcion.cliente.razon_social,
+                    "fecha": aporte.detalle_recepcion.recepcion.fecha,
+                    "material": aporte.detalle_recepcion.material.nombre,
+                    "volumen_m3": f"{aporte.volumen_m3:.2f}",
+                }
+                for aporte in pila.aportes.select_related(
+                    "detalle_recepcion__recepcion__cliente", "detalle_recepcion__material"
+                ).order_by("detalle_recepcion__recepcion__fecha", "id")
+            ]
             linea["pila"] = {
                 "id": pila.pk,
                 "codigo": pila.codigo,
@@ -222,6 +232,7 @@ def trazabilidad_venta(venta):
                 "volumen_total_m3": f"{pila.volumen_composicion():.2f}",
                 "composicion": composicion,
                 "composicion_definitiva": pila.estado == Pila.CERRADA,
+                "recepciones_origen": recepciones_origen,
             }
         lineas.append(linea)
 
@@ -238,6 +249,11 @@ def trazabilidad_venta(venta):
                 f"La pila {linea['pila']['codigo']} sigue en estado "
                 f"'{linea['pila']['estado']}'; su composicion aun no es definitiva."
             )
+        if not linea["pila"]["recepciones_origen"]:
+            advertencias.append(
+                f"La pila {linea['pila']['codigo']} no tiene descargas de origen "
+                "registradas; la cadena llega hasta su composicion."
+            )
 
     traza(
         "CU-68",
@@ -245,6 +261,7 @@ def trazabilidad_venta(venta):
         venta=venta.pk,
         lineas=len(lineas),
         con_pila=len(con_pila),
+        recepciones=sum(len(l["pila"]["recepciones_origen"]) for l in con_pila),
     )
     return {
         "venta": venta.pk,

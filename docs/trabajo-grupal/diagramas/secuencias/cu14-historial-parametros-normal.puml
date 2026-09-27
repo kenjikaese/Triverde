@@ -16,7 +16,7 @@ title CU-14 Consultando el historial de parametros (flujo normal)
 actor Administrador
 participant "V_HistorialParametros" as V
 participant "C_Configuracion" as C
-participant ":HistorialCambioParametro" as H
+participant ":configuracion_historialcambioparametro" as H
 
 Administrador -> V : abre el historial de cambios de parametros
 V -> C : listarHistorial()

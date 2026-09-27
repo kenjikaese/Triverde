@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import ComposicionPila, Inventario, Pila, ProcesoPila
+from .models import AporteRecepcionPila, ComposicionPila, Inventario, Pila, ProcesoPila
 
 
 class ComposicionPilaInline(admin.TabularInline):
@@ -8,12 +8,18 @@ class ComposicionPilaInline(admin.TabularInline):
     extra = 0
 
 
+class AporteRecepcionPilaInline(admin.TabularInline):
+    model = AporteRecepcionPila
+    extra = 0
+    readonly_fields = ("fecha",)
+
+
 @admin.register(Pila)
 class PilaAdmin(admin.ModelAdmin):
     list_display = ("codigo", "fecha_inicio", "estado")
     list_filter = ("estado",)
     search_fields = ("codigo",)
-    inlines = [ComposicionPilaInline]
+    inlines = [ComposicionPilaInline, AporteRecepcionPilaInline]
 
 
 @admin.register(ProcesoPila)
