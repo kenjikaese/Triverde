@@ -16,8 +16,8 @@ title CU-38 Registrando un volteo de la pila (flujo normal)
 actor Operador
 participant "V_RegistroProceso" as V
 participant "C_ProcesosPila" as C
-participant ":Pila" as P
-participant ":ProcesoPila" as PP
+participant ":inventario_pila" as P
+participant ":inventario_procesopila" as PP
 
 Operador -> V : mide la temperatura y presiona "Registrar volteo"
 V --> Operador : muestra el formulario con la fecha actual

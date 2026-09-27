@@ -17,8 +17,8 @@ actor Operador
 participant "V_ListaPilas" as VL
 participant "V_TrazabilidadPila" as V
 participant "C_Pilas" as C
-participant ":Pila" as P
-participant ":ProcesoPila" as PP
+participant ":inventario_pila" as P
+participant ":inventario_procesopila" as PP
 
 Operador -> VL : abre el listado de pilas
 VL -> C : listarPilas()

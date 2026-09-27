@@ -16,9 +16,9 @@ title CU-41 Registrando el reposo (excepcion: sin harneado o pila ya en reposo)
 actor Operador
 participant "V_RegistroProceso" as V
 participant "C_ProcesosPila" as C
-participant ":Pila" as P
-participant ":ProcesoPila" as PP
-participant ":Inventario" as I
+participant ":inventario_pila" as P
+participant ":inventario_procesopila" as PP
+participant ":inventario_inventario" as I
 
 Operador -> V : presiona "Iniciar reposo" sobre una pila
 V -> C : registrarProceso(tipo="reposo", pila, fecha)

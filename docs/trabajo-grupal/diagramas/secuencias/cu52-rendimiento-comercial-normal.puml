@@ -16,10 +16,10 @@ title CU-52 Proyectando el rendimiento comercial de un camion (flujo normal)
 actor Administrador
 participant "V_Proyecciones" as V
 participant "C_Proyecciones" as C
-participant ":DetalleRecepcion" as DR
-participant ":Material" as M
-participant ":ParametroConversion" as PC
-participant ":Proyeccion" as P
+participant ":recepcion_detallerecepcion" as DR
+participant ":mantenedores_material" as M
+participant ":configuracion_parametroconversion" as PC
+participant ":proyecciones_proyeccion" as P
 
 Administrador -> V : abre proyecciones y elige "Rendimiento comercial de un camion"
 Administrador -> V : selecciona un DetalleRecepcion registrado

@@ -16,9 +16,9 @@ title CU-53 Comparar con lo real (excepcion: periodo en curso, sin datos o venta
 actor Administrador
 participant "V_Proyecciones" as V
 participant "C_Proyecciones" as C
-participant ":DetalleRecepcion" as DR
-participant ":Inventario" as I
-participant ":Venta" as VT
+participant ":recepcion_detallerecepcion" as DR
+participant ":inventario_inventario" as I
+participant ":comercial_venta" as VT
 
 Administrador -> V : selecciona una proyeccion y presiona "Comparar con lo real"
 V -> C : compararConReal(proyeccion)

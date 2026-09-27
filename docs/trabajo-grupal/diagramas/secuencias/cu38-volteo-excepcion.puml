@@ -16,8 +16,8 @@ title CU-38 Registrando un volteo (excepcion: sin temperatura o sobre el techo)
 actor Operador
 participant "V_RegistroProceso" as V
 participant "C_ProcesosPila" as C
-participant ":ParametroConversion" as PC
-participant ":ProcesoPila" as PP
+participant ":configuracion_parametroconversion" as PC
+participant ":inventario_procesopila" as PP
 
 Operador -> V : confirma el volteo de la pila
 V -> C : registrarProceso(tipo="volteo", pila, temperatura)
