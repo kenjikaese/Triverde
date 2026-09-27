@@ -54,11 +54,11 @@ class Command(BaseCommand):
         # que mantiene el vigente + el historico versionado (M02 Incremento 2).
         parametros = [
             ("factor_reduccion_rama", "Factor de reduccion al triturar rama", Decimal("5.00"), ":1",
-             "Rama ~5:1 (docs/02). Confirmar con Javier."),
+             "Volumen de rama que se reduce a 1 volumen de chip al triturar."),
             ("factor_reduccion_tronco", "Factor de reduccion al triturar tronco", Decimal("2.00"), ":1",
-             "Tronco ~2:1 (docs/02). Confirmar con Javier."),
+             "Volumen de tronco que se reduce a 1 volumen de chip al triturar."),
             ("factor_multa", "Factor de multa por material contaminado", Decimal("1.00"), ":1",
-             "Multa 1:1 sobre el volumen contaminado (docs/02)."),
+             "Multa proporcional al volumen de material contaminado."),
             ("alerta_mantenimiento_dias", "Anticipacion de mantenimiento por fecha", Decimal("7"), "dias",
              "Valor predeterminado acordado para M11; editable por el administrador."),
             ("alerta_mantenimiento_horas", "Anticipacion de mantenimiento por horometro", Decimal("50"), "horas",
