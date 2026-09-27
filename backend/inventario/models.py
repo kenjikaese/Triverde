@@ -123,6 +123,48 @@ class ComposicionPila(models.Model):
         return f"{self.pila} - {self.material} ({self.volumen_m3} m3)"
 
 
+class AporteRecepcionPila(models.Model):
+    """Que descarga aporto material a la pila y cuanto (propuesta Inc 3, CU-68).
+
+    `ComposicionPila` lleva el total por material; este objeto conserva de que
+    `DetalleRecepcion` salio ese material. Es opcional: se registra cuando el
+    operador indica la descarga de origen al componer la pila (CU-36). Con el,
+    la trazabilidad del lote entregado (CU-68) llega hasta las recepciones y
+    sus clientes; sin el, se detiene en la composicion.
+
+    Reglas: una misma descarga se registra una sola vez por pila (si se
+    repite, se suma), y no se puede aportar mas volumen del que descargo.
+    PROTECT hacia el detalle: una descarga que alimento una pila es evidencia
+    de trazabilidad y no se borra.
+    """
+
+    pila = models.ForeignKey(Pila, on_delete=models.CASCADE, related_name="aportes")
+    detalle_recepcion = models.ForeignKey(
+        "recepcion.DetalleRecepcion",
+        on_delete=models.PROTECT,
+        related_name="aportes_pila",
+    )
+    volumen_m3 = models.DecimalField(max_digits=8, decimal_places=2)
+    fecha = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Aporte de recepcion a pila"
+        verbose_name_plural = "Aportes de recepcion a pila"
+        ordering = ["pila", "id"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["pila", "detalle_recepcion"],
+                name="aporte_unico_por_pila_y_detalle",
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f"{self.pila} <- recepcion {self.detalle_recepcion.recepcion_id} "
+            f"({self.volumen_m3} m3)"
+        )
+
+
 class ProcesoPila(SincronizableModel):
     """Movimiento aplicado a la planta o a una pila (CU-37 a CU-42).
 

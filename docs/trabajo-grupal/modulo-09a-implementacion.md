@@ -49,15 +49,27 @@ del detalle de venta.
   `trazable=false` con la advertencia "sin trazabilidad"; con pila no cerrada
   advierte que la composicion no es definitiva.
 
-## Limite conocido del modelo de datos (CU-68)
+## Origen de la composicion (propuesta en PR aparte, pendiente del grupo)
 
-La spec pide listar las recepciones de origen de la pila con la cantidad
-aportada por cada una. `ComposicionPila` registra material y volumen, pero no
-que `DetalleRecepcion` aporto ese material, y el inventario se lleva como
-saldo por material y etapa. Por eso la cadena llega con certeza hasta la
-composicion de la pila y no lista recepciones. Reconstruirlas exige agregar en
-el Modulo 5 una FK opcional de `ComposicionPila` a `DetalleRecepcion`; queda
-como decision pendiente del grupo. La vista lo indica explicitamente.
+La spec del CU-68 pide listar las recepciones de origen de la pila con la
+cantidad aportada por cada una. `ComposicionPila` lleva un solo registro por
+material y pila, asi que una FK simple no sirve cuando varias descargas
+aportan el mismo material. La propuesta agrega en el Modulo 5 el objeto
+`AporteRecepcionPila(id, pila_id, detalle_recepcion_id, volumen_m3, fecha)`:
+
+- Se registra desde la accion de composicion (CU-36) con el campo opcional
+  `detalle_recepcion`. Si no se indica, la composicion funciona igual que hoy.
+- Reglas: la descarga debe estar `recibida` y ser del mismo material; no se
+  puede aportar mas volumen del que trajo, contando lo ya aportado a otras
+  pilas; la misma descarga se suma, no se duplica, dentro de una pila.
+  `PROTECT` hacia el detalle: una descarga que alimento una pila no se borra.
+- El CU-68 devuelve `recepciones_origen` por pila (recepcion, cliente, fecha,
+  material, volumen) y advierte cuando una pila se compuso sin indicar origen.
+- No existe pantalla de composicion en el frontend, asi que la captura queda
+  en la API; la vista de trazabilidad de lote muestra la tabla de descargas.
+- Este objeto no esta en `docs/referencia/Modelo de datos.pdf` §11.3/§11.6:
+  si el grupo lo acepta, hay que agregarlo al modelo de datos (Kenji regenera
+  el documento) y actualizar el diagrama del CU-36, ya incluido en el PR.
 
 ## API
 

@@ -152,28 +152,69 @@ export function TrazabilidadLote() {
                 }
               />
               {linea.pila && (
-                <Table>
-                  <thead>
-                    <tr>
-                      <Th>Material incorporado a la pila</Th>
-                      <Th>Volumen</Th>
-                    </tr>
-                  </thead>
-                  <TBody>
-                    {linea.pila.composicion.length === 0 ? (
-                      <EmptyRow colSpan={2} texto="La pila aún no tiene composición registrada." />
-                    ) : (
-                      linea.pila.composicion.map((item) => (
-                        <tr key={item.material} data-testid="composicion-pila">
-                          <Td className="font-medium text-slate-800">{item.material}</Td>
-                          <Td className="font-medium text-brand-800">
-                            {formatoCantidad(item.volumen_m3)} m³
-                          </Td>
-                        </tr>
-                      ))
-                    )}
-                  </TBody>
-                </Table>
+                <>
+                  <Table>
+                    <thead>
+                      <tr>
+                        <Th>Descarga de origen</Th>
+                        <Th>Cliente generador</Th>
+                        <Th>Fecha</Th>
+                        <Th>Material</Th>
+                        <Th>Volumen aportado</Th>
+                      </tr>
+                    </thead>
+                    <TBody>
+                      {linea.pila.recepciones_origen.length === 0 ? (
+                        <EmptyRow
+                          colSpan={5}
+                          texto="Sin descargas de origen registradas: la cadena llega hasta la composición de la pila."
+                        />
+                      ) : (
+                        linea.pila.recepciones_origen.map((origen, indice) => (
+                          <tr
+                            key={`${origen.recepcion}-${indice}`}
+                            data-testid="recepcion-origen"
+                          >
+                            <Td className="font-medium text-slate-800">
+                              Recepción #{origen.recepcion}
+                            </Td>
+                            <Td>{origen.cliente}</Td>
+                            <Td>{formatoFecha(origen.fecha)}</Td>
+                            <Td>{origen.material}</Td>
+                            <Td className="font-medium text-brand-800">
+                              {formatoCantidad(origen.volumen_m3)} m³
+                            </Td>
+                          </tr>
+                        ))
+                      )}
+                    </TBody>
+                  </Table>
+                  <div className="border-t border-slate-100 px-5 py-3 text-xs font-medium uppercase tracking-wide text-slate-400">
+                    Composición total de la pila
+                  </div>
+                  <Table>
+                    <thead>
+                      <tr>
+                        <Th>Material incorporado a la pila</Th>
+                        <Th>Volumen</Th>
+                      </tr>
+                    </thead>
+                    <TBody>
+                      {linea.pila.composicion.length === 0 ? (
+                        <EmptyRow colSpan={2} texto="La pila aún no tiene composición registrada." />
+                      ) : (
+                        linea.pila.composicion.map((item) => (
+                          <tr key={item.material} data-testid="composicion-pila">
+                            <Td className="font-medium text-slate-800">{item.material}</Td>
+                            <Td className="font-medium text-brand-800">
+                              {formatoCantidad(item.volumen_m3)} m³
+                            </Td>
+                          </tr>
+                        ))
+                      )}
+                    </TBody>
+                  </Table>
+                </>
               )}
             </Card>
           ))}
@@ -181,9 +222,9 @@ export function TrazabilidadLote() {
           {lineasConPila.length > 0 && (
             <div className="flex items-start gap-2 rounded-lg bg-slate-50 px-4 py-3 text-xs text-slate-600">
               <Info className="mt-0.5 h-4 w-4 shrink-0" />
-              La cadena llega hasta el material que compuso cada pila. El sistema
-              aún no registra qué descarga aportó el material a cada pila, por lo
-              que las recepciones de origen no se listan.
+              Las descargas de origen se registran al componer la pila indicando
+              de qué recepción sale el material. Una pila compuesta sin ese dato
+              solo muestra su composición total.
             </div>
           )}
         </div>
