@@ -537,3 +537,36 @@ export interface MezclaObjetivo {
   faltantes: MezclaCategoria[];
   disponibles: MezclaCategoria[];
 }
+
+// Modulo 12 - Gestion documental (CU-86 a CU-92).
+export type EstadoDocumento = "sin_vigencia" | "vigente" | "por_vencer" | "vencido";
+export type TipoDocumento = "permiso" | "certificado" | "resolucion" | "seguro" | "otro";
+
+export interface VersionDocumento {
+  id: number;
+  documento: number;
+  version: number;
+  archivo: string;
+  nombre_archivo: string;
+  fecha_carga: string;
+  usuario: number | null;
+  usuario_nombre: string | null;
+  vigente: boolean;
+  fecha_emision: string | null;
+  fecha_vencimiento: string | null;
+}
+
+export interface DocumentoLegal {
+  id: number;
+  nombre: string;
+  tipo: TipoDocumento;
+  tipo_display: string;
+  tipo_detalle: string;
+  entidad_emisora: string;
+  fecha_emision: string | null;
+  fecha_vencimiento: string | null;
+  estado: EstadoDocumento;
+  estado_display: string;
+  fecha_registro: string;
+  version_vigente: VersionDocumento | null;
+}

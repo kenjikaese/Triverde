@@ -1,18 +1,19 @@
 from django.contrib import admin
+
 from .models import DocumentoLegal, VersionDocumento
+
+
+class VersionDocumentoInline(admin.TabularInline):
+    model = VersionDocumento
+    extra = 0
+    readonly_fields = ["version", "archivo", "fecha_carga", "usuario", "vigente"]
+    can_delete = False
 
 
 @admin.register(DocumentoLegal)
 class DocumentoLegalAdmin(admin.ModelAdmin):
-    list_display = ['nombre', 'tipo', 'fecha_emision', 'fecha_vencimiento', 'estado']
-    list_filter = ['tipo', 'estado']
-    search_fields = ['nombre', 'descripcion']
-    readonly_fields = ['fecha_creacion']
-
-
-@admin.register(VersionDocumento)
-class VersionDocumentoAdmin(admin.ModelAdmin):
-    list_display = ['documento', 'numero_version', 'fecha_creacion']
-    list_filter = ['documento']
-    search_fields = ['documento__nombre']
-    readonly_fields = ['fecha_creacion']
+    list_display = ["nombre", "tipo", "entidad_emisora", "fecha_vencimiento", "estado"]
+    list_filter = ["tipo", "estado"]
+    search_fields = ["nombre", "entidad_emisora"]
+    readonly_fields = ["fecha_registro"]
+    inlines = [VersionDocumentoInline]
