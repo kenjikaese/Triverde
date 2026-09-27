@@ -1,0 +1,33 @@
+@startuml cu88-renovar-documento-normal
+' CU-88 Renovando un documento legal - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-88 Renovando un documento legal (flujo normal)
+
+actor Sistema
+participant "V_Documentos" as V
+participant "C_DocumentosLegales" as C
+participant ":DocumentoLegal" as D
+participant ":VersionDocumento" as VD
+
+Sistema -> V : selecciona documento y pulsa renovar
+V -> C : renovarDocumento(id, fechaEmision, fechaVencimiento, usuario)
+C -> D : obtenerDocumento(id)
+D --> C : documento actual
+C -> VD : crearVersion(documento, numero, archivo, cambios, usuario)
+VD --> C : version guardada
+C -> D : actualizarFechas(fechaEmision, fechaVencimiento)
+D --> C : documento actualizado
+C --> V : documento renovado con nueva vigencia
+V --> Sistema : confirmacion de renovacion
+
+@enduml
