@@ -15,7 +15,7 @@ title CU-86 Registrando un documento legal o permiso (flujo normal)
 
 actor Administrador
 participant "V_ListaDocumentos" as V
-participant "C_DocumentosLegales" as C
+participant "C_Documentos" as C
 participant ":documental_documentolegal" as DL
 participant ":acceso_bitacoraauditoria" as BA
 

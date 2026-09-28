@@ -15,9 +15,9 @@ title CU-92 Consultando el historial de versiones de un documento (flujo normal)
 
 actor Administrador
 participant "V_VersionesDocumento" as V
-participant "C_DocumentosLegales" as C
-participant ":DocumentoLegal" as D
-participant ":VersionDocumento" as VD
+participant "C_Documentos" as C
+participant ":documental_documentolegal" as D
+participant ":documental_versiondocumento" as VD
 
 Administrador -> V : selecciona el documento y abre su historial
 V -> C : obtenerHistorial(documento)

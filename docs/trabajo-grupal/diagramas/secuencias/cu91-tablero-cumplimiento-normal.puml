@@ -15,8 +15,8 @@ title CU-91 Consultando el tablero de cumplimiento documental (flujo normal)
 
 actor Administrador
 participant "V_TableroCumplimiento" as V
-participant "C_CumplimientoDocumental" as C
-participant ":DocumentoLegal" as D
+participant "C_Documentos" as C
+participant ":documental_documentolegal" as D
 
 Administrador -> V : abre el tablero de cumplimiento
 V -> C : consultarTablero()

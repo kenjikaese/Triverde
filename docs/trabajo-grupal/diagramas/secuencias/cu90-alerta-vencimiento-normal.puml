@@ -14,15 +14,15 @@ skinparam ArrowColor #4B7A46
 title CU-90 Generando la alerta de vencimiento de un documento (flujo normal)
 
 actor Sistema
-participant "C_CumplimientoDocumental" as C
-participant ":ParametroConversion" as P
-participant ":DocumentoLegal" as D
-participant ":Alerta" as A
+participant "C_Documentos" as C
+participant ":configuracion_parametroconversion" as P
+participant ":documental_documentolegal" as D
+participant ":mezcla_alerta" as A
 
 Sistema -> C : inicia la revision periodica de vigencias
 C -> P : obtenerUmbralAnticipacion()
 P --> C : dias de anticipacion configurados
-C -> D : obtenerPorEstado("vigente", "por vencer")
+C -> D : obtenerPorEstado("vigente", "por vencer", "vencido")
 D --> C : documentos con su fecha de vencimiento
 loop por cada documento revisado
   C -> C : comparar(vencimiento, fecha actual, umbral)

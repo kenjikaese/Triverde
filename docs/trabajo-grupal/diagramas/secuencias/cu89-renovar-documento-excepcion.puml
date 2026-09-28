@@ -15,7 +15,7 @@ title CU-89 Renovar documento (excepcion: vigente sin vencimiento proximo, archi
 
 actor Administrador
 participant "V_ListaDocumentos" as V
-participant "C_DocumentosLegales" as C
+participant "C_Documentos" as C
 participant ":documental_documentolegal" as DL
 participant ":documental_versiondocumento" as VD
 

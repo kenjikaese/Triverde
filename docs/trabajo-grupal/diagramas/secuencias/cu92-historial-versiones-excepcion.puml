@@ -15,9 +15,9 @@ title CU-92 Consultando el historial (excepcion: documento inexistente, version 
 
 actor Administrador
 participant "V_VersionesDocumento" as V
-participant "C_DocumentosLegales" as C
-participant ":DocumentoLegal" as D
-participant ":VersionDocumento" as VD
+participant "C_Documentos" as C
+participant ":documental_documentolegal" as D
+participant ":documental_versiondocumento" as VD
 
 Administrador -> V : abre el historial de un documento
 V -> C : obtenerHistorial(documento)

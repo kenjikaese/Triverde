@@ -14,10 +14,10 @@ skinparam ArrowColor #4B7A46
 title CU-90 Generando la alerta de vencimiento (excepcion: sin umbral, alerta ya activa o documento renovado)
 
 actor Sistema
-participant "C_CumplimientoDocumental" as C
-participant ":ParametroConversion" as P
-participant ":DocumentoLegal" as D
-participant ":Alerta" as A
+participant "C_Documentos" as C
+participant ":configuracion_parametroconversion" as P
+participant ":documental_documentolegal" as D
+participant ":mezcla_alerta" as A
 
 Sistema -> C : inicia la revision periodica de vigencias
 C -> P : obtenerUmbralAnticipacion()
@@ -28,7 +28,7 @@ alt no hay umbral configurado
 else umbral configurado
   P --> C : dias de anticipacion
 end
-C -> D : obtenerPorEstado("vigente", "por vencer")
+C -> D : obtenerPorEstado("vigente", "por vencer", "vencido")
 D --> C : documentos a revisar
 alt ya existe una alerta activa para el documento
   C -> A : buscarActiva(origen="documento", documento)
