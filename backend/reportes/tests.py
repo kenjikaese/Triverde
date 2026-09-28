@@ -107,3 +107,39 @@ class ReportesTests(APITestCase):
             else:
                 self.assertIn("por_material", exportacion.content.decode())
         self.assertTrue(BitacoraAuditoria.objects.filter(entidad_afectada="Reporte").exists())
+
+    def test_recepciones_solo_cuenta_descargas_recibidas(self):
+        for estado, volumen in ((Recepcion.RECIBIDA, "12"), (Recepcion.RECHAZADA, "30"), (Recepcion.EN_CURSO, "7")):
+            recepcion = Recepcion.objects.create(
+                cliente=self.cliente, fecha=date(2026, 9, 10), hora="10:00", estado=estado
+            )
+            DetalleRecepcion.objects.create(
+                recepcion=recepcion, material=self.material, volumen_m3=Decimal(volumen),
+                peso_derivado_kg=Decimal(volumen) * 250,
+            )
+        respuesta = self.generar(Reporte.RECEPCIONES)
+        self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED, respuesta.data)
+        self.assertEqual(respuesta.data["contenido"]["totales"]["volumen_m3"], 12.0)
+
+    def test_filtros_quedan_en_el_reporte_y_en_la_exportacion(self):
+        respuesta = self.generar(Reporte.RECEPCIONES, formato=Reporte.CSV, cliente=self.cliente.pk)
+        self.assertEqual(respuesta.data["contenido"]["filtros"], {"cliente": "Cliente Prueba"})
+        exportacion = self.client.get(reverse("reporte-exportar", args=[respuesta.data["id"]]))
+        self.assertIn("cliente: Cliente Prueba", exportacion.content.decode("utf-8-sig"))
+
+    def test_exportar_en_otro_formato_sin_regenerar(self):
+        respuesta = self.generar(Reporte.VENTAS_COBROS, formato=Reporte.PDF)
+        url = reverse("reporte-exportar", args=[respuesta.data["id"]])
+        exportacion = self.client.get(url, {"formato": Reporte.EXCEL})
+        self.assertEqual(exportacion.status_code, status.HTTP_200_OK)
+        self.assertIn(".xlsx", exportacion["Content-Disposition"])
+        self.assertEqual(self.client.get(url, {"formato": "docx"}).status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Reporte.objects.count(), 1)
+
+    def test_solo_administrador_genera_reportes(self):
+        operador = Usuario.objects.create_user(
+            username="operador", password="operador12345", nombre_completo="Operador",
+            rol=Rol.objects.create(nombre=Rol.OPERADOR, descripcion="o"),
+        )
+        self.client.force_authenticate(operador)
+        self.assertEqual(self.generar(Reporte.RECEPCIONES).status_code, status.HTTP_403_FORBIDDEN)

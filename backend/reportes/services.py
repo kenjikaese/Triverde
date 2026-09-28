@@ -4,6 +4,7 @@ import csv
 import io
 from collections import defaultdict
 from decimal import Decimal
+from xml.sax.saxutils import escape
 
 from django.db.models import Prefetch
 from django.http import HttpResponse
@@ -16,7 +17,8 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, Tabl
 
 from comercial.models import Cobro, Venta
 from inventario.models import Inventario, Pila, ProcesoPila
-from recepcion.models import DetalleRecepcion
+from mantenedores.models import Cliente, Material
+from recepcion.models import DetalleRecepcion, Recepcion
 
 from .models import Reporte
 
@@ -27,10 +29,17 @@ def _numero(valor):
 
 
 def _reporte_recepciones(inicio, fin, filtros):
-    """CU-73: agrega volumen y peso por material y por cliente."""
+    """CU-73: agrega volumen y peso por material y por cliente.
+
+    Solo cuentan las descargas recibidas: una rechazada o aun en curso no
+    ingreso material a la planta (mismo criterio que los certificados del M9).
+    """
     detalles = DetalleRecepcion.objects.select_related(
         "recepcion__cliente", "material"
-    ).filter(recepcion__fecha__range=(inicio, fin))
+    ).filter(
+        recepcion__fecha__range=(inicio, fin),
+        recepcion__estado=Recepcion.RECIBIDA,
+    )
     if filtros.get("cliente"):
         detalles = detalles.filter(recepcion__cliente_id=filtros["cliente"])
     if filtros.get("material"):
@@ -58,7 +67,17 @@ def _reporte_recepciones(inicio, fin, filtros):
 
     total_volumen = sum((v["volumen_m3"] for v in por_material.values()), Decimal("0"))
     total_peso = sum((v["peso_kg"] for v in por_material.values()), Decimal("0"))
+    # Se guardan los filtros por nombre: al exportar, el documento debe decir
+    # que el total corresponde a un cliente o material y no a toda la planta.
+    aplicados = {}
+    if filtros.get("cliente"):
+        cliente = Cliente.objects.filter(pk=filtros["cliente"]).first()
+        aplicados["cliente"] = cliente.razon_social if cliente else str(filtros["cliente"])
+    if filtros.get("material"):
+        material = Material.objects.filter(pk=filtros["material"]).first()
+        aplicados["material"] = material.nombre if material else str(filtros["material"])
     return {
+        "filtros": aplicados,
         "totales": {"volumen_m3": _numero(total_volumen), "peso_kg": _numero(total_peso)},
         "por_material": filas(por_material, "material", "material_nombre"),
         "por_cliente": filas(por_cliente, "cliente", "cliente_nombre"),
@@ -187,15 +206,23 @@ def generar_reporte(tipo, inicio, fin, usuario, formato=Reporte.PDF, filtros=Non
     )
 
 
-def exportar_reporte(reporte):
-    """CU-76: transforma el contenido guardado en un archivo descargable."""
+def exportar_reporte(reporte, formato=None):
+    """CU-76: transforma el contenido guardado en un archivo descargable.
+
+    `formato` permite exportar un reporte ya generado en otro formato sin
+    recalcularlo; por defecto usa el que se eligio al generarlo.
+    """
     contenido = reporte.contenido
-    if reporte.formato == Reporte.CSV:
+    formato = formato or reporte.formato
+    filtros = [f"{clave}: {valor}" for clave, valor in contenido.get("filtros", {}).items()]
+    if formato == Reporte.CSV:
         salida = io.StringIO()
         writer = csv.writer(salida)
         writer.writerow(["reporte", reporte.get_tipo_display()])
         writer.writerow(["periodo_inicio", reporte.periodo_inicio])
         writer.writerow(["periodo_fin", reporte.periodo_fin])
+        if filtros:
+            writer.writerow(["filtros", "; ".join(filtros)])
         writer.writerow([])
         for seccion, filas in contenido.items():
             if not isinstance(filas, list):
@@ -204,15 +231,20 @@ def exportar_reporte(reporte):
             if filas:
                 writer.writerow(list(filas[0].keys()))
                 writer.writerows([fila.values() for fila in filas])
-        response = HttpResponse(salida.getvalue(), content_type="text/csv; charset=utf-8")
+        # Con BOM para que Excel abra bien las tildes y la enie de los nombres.
+        response = HttpResponse(
+            salida.getvalue().encode("utf-8-sig"), content_type="text/csv; charset=utf-8"
+        )
         extension = "csv"
-    elif reporte.formato == Reporte.EXCEL:
+    elif formato == Reporte.EXCEL:
         libro = Workbook()
         hoja = libro.active
         hoja.title = "Reporte"
         hoja.append(["Reporte", reporte.get_tipo_display()])
         hoja.append(["Periodo inicio", str(reporte.periodo_inicio)])
         hoja.append(["Periodo fin", str(reporte.periodo_fin)])
+        if filtros:
+            hoja.append(["Filtros", "; ".join(filtros)])
         hoja.append([])
         for seccion, filas in contenido.items():
             if not isinstance(filas, list):
@@ -257,8 +289,11 @@ def exportar_reporte(reporte):
                 f"Periodo: {reporte.periodo_inicio} a {reporte.periodo_fin}",
                 estilos["ReporteMeta"],
             ),
-            Spacer(1, 0.2 * inch),
         ]
+        if filtros:
+            # Paragraph interpreta marcado: se escapa por si un nombre trae "&".
+            elementos.append(Paragraph(escape("Filtros: " + "; ".join(filtros)), estilos["ReporteMeta"]))
+        elementos.append(Spacer(1, 0.2 * inch))
         totales = contenido.get("totales", {})
         if totales:
             resumen = [[clave.replace("_", " ").title(), str(valor)] for clave, valor in totales.items()]
