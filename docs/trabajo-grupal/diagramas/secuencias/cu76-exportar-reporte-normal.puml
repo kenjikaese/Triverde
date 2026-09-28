@@ -1,0 +1,14 @@
+@startuml cu76-exportar-reporte-normal
+title CU-76 Exportando un reporte a documento (flujo normal)
+actor Administrador
+participant "V_Reportes" as V
+participant "C_Reportes" as C
+participant ":reportes_reporte" as REP
+Administrador -> V : presiona Exportar
+V -> C : exportar(reporte)
+C -> REP : obtener contenido guardado
+REP --> C : periodo, totales y detalle
+C -> C : convertir contenido a documento
+C --> V : documento descargable
+V --> Administrador : descarga el documento
+@enduml

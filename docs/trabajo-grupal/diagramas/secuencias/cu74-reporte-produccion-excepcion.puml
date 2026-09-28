@@ -1,0 +1,13 @@
+@startuml cu74-reporte-produccion-excepcion
+title CU-74 Consultando el reporte de produccion (excepcion)
+actor Administrador
+participant "V_Reportes" as V
+participant "C_Reportes" as C
+participant ":reportes_reporte" as REP
+Administrador -> V : define periodo incompleto o invertido
+V -> C : generar(produccion, periodo)
+C -> C : validar rango de fechas
+C --> V : rechaza solicitud con detalle
+V --> Administrador : solicita un periodo valido
+note over REP : no se modifica pila ni inventario
+@enduml

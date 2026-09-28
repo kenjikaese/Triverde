@@ -1,0 +1,26 @@
+@startuml cu74-reporte-produccion-normal
+title CU-74 Consultando el reporte de produccion (flujo normal)
+actor Administrador
+participant "V_Reportes" as V
+participant "C_Reportes" as C
+participant ":inventario_pila" as P
+participant ":inventario_procesopila" as PP
+participant ":inventario_composicionpila" as CP
+participant ":inventario_inventario" as I
+participant ":reportes_reporte" as REP
+Administrador -> V : define periodo de produccion
+V -> C : generar(produccion, periodo)
+C -> PP : consultar procesos del periodo
+PP --> C : procesos con su volumen
+C -> P : consultar estado de cada pila
+P --> C : pilas cerradas y en proceso
+C -> CP : consultar composicion de la pila
+CP --> C : volumen por material
+C -> C : separar procesado de en curso por material
+C -> I : consultar inventario resultante
+I --> C : existencias por material y etapa
+C -> REP : guardar resultado agregado
+REP --> C : reporte generado
+C --> V : reporte con procesado y en curso
+V --> Administrador : muestra el reporte
+@enduml

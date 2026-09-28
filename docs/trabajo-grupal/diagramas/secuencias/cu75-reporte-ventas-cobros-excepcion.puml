@@ -1,0 +1,14 @@
+@startuml cu75-reporte-ventas-cobros-excepcion
+title CU-75 Consultando el reporte de ventas y cobros (excepcion)
+actor Administrador
+participant "V_Reportes" as V
+participant "C_Reportes" as C
+participant ":reportes_reporte" as REP
+Administrador -> V : define periodo sin ventas
+V -> C : generar(ventas_cobros, periodo)
+C -> C : consultar ventas del periodo
+C -> REP : guardar totales en cero
+REP --> C : reporte generado
+C --> V : reporte sin actividad
+V --> Administrador : muestra ceros y permite exportar
+@enduml

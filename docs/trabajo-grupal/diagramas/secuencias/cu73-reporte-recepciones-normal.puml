@@ -1,0 +1,19 @@
+@startuml cu73-reporte-recepciones-normal
+title CU-73 Consultando el reporte de recepciones por periodo (flujo normal)
+actor Administrador
+participant "V_Reportes" as V
+participant "C_Reportes" as C
+participant ":recepcion_recepcion" as R
+participant ":recepcion_detallerecepcion" as D
+participant ":reportes_reporte" as REP
+Administrador -> V : define periodo y filtros
+V -> C : generar(recepciones, periodo, filtros)
+C -> R : consultar recepciones recibidas del periodo
+R --> C : recepciones encontradas
+C -> D : agregar volumen y peso por material y cliente
+D --> C : totales agregados
+C -> REP : guardar resultado y periodo
+REP --> C : reporte generado
+C --> V : reporte con tabla resumen
+V --> Administrador : muestra el reporte
+@enduml
