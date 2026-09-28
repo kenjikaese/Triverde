@@ -1,4 +1,4 @@
-"""C_CumplimientoDocumental (docs/13): Parte F del modulo 12 (CU-91).
+"""C_Documentos (docs/13): Parte F del modulo 12 (CU-91).
 
 Solo lectura: consultar el tablero no modifica ningun documento. La consulta es
 de Administrador, igual que el resto de la gestion documental.
