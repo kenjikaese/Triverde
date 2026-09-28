@@ -1,0 +1,40 @@
+@startuml cu90-alerta-vencimiento-normal
+' CU-90 Generando la alerta de vencimiento de un documento - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-90 Generando la alerta de vencimiento de un documento (flujo normal)
+
+actor Sistema
+participant "C_Documentos" as C
+participant ":configuracion_parametroconversion" as P
+participant ":documental_documentolegal" as D
+participant ":mezcla_alerta" as A
+
+Sistema -> C : inicia la revision periodica de vigencias
+C -> P : obtenerUmbralAnticipacion()
+P --> C : dias de anticipacion configurados
+C -> D : obtenerPorEstado("vigente", "por vencer", "vencido")
+D --> C : documentos con su fecha de vencimiento
+loop por cada documento revisado
+  C -> C : comparar(vencimiento, fecha actual, umbral)
+  alt el vencimiento cae dentro del umbral
+    C -> D : actualizar(estado="por vencer")
+    C -> A : crearOMantener(origen="documento", documento, nivel="advertencia")
+  else el vencimiento ya paso
+    C -> D : actualizar(estado="vencido")
+    C -> A : crearOMantener(origen="documento", documento, nivel="critica")
+  end
+  A --> C : alerta activa vinculada al documento
+end
+C --> Sistema : revision terminada; las alertas quedan en el tablero
+
+@enduml

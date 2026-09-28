@@ -1,0 +1,37 @@
+@startuml cu92-historial-versiones-normal
+' CU-92 Consultando el historial de versiones de un documento - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-92 Consultando el historial de versiones de un documento (flujo normal)
+
+actor Administrador
+participant "V_VersionesDocumento" as V
+participant "C_Documentos" as C
+participant ":documental_documentolegal" as D
+participant ":documental_versiondocumento" as VD
+
+Administrador -> V : selecciona el documento y abre su historial
+V -> C : obtenerHistorial(documento)
+C -> D : obtener(documento)
+D --> C : nombre, tipo y entidad emisora
+C -> VD : obtenerVersiones(documento, de la mas reciente a la mas antigua)
+VD --> C : versiones con fecha de carga, usuario y cual es la vigente
+C --> V : ficha del documento y su historial
+V --> Administrador : muestra las versiones en orden, marcando la vigente
+Administrador -> V : presiona una version para descargar su archivo
+V -> C : descargarVersion(version)
+C -> VD : obtenerArchivo(version)
+VD --> C : archivo de esa version
+C --> V : archivo
+V --> Administrador : entrega el archivo, sin modificar el documento
+
+@enduml

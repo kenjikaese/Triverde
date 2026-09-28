@@ -1,0 +1,37 @@
+@startuml cu91-tablero-cumplimiento-normal
+' CU-91 Consultando el tablero de cumplimiento documental - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-91 Consultando el tablero de cumplimiento documental (flujo normal)
+
+actor Administrador
+participant "V_TableroCumplimiento" as V
+participant "C_Documentos" as C
+participant ":documental_documentolegal" as D
+
+Administrador -> V : abre el tablero de cumplimiento
+V -> C : consultarTablero()
+C -> D : obtenerDocumentos()
+D --> C : documentos con su estado y vencimiento
+C -> C : agruparPorEstado()
+C -> C : ordenarPorProximidadDeVencimiento()
+C -> C : separarLosSinVigenciaDefinida()
+C --> V : resumen por estado, detalle y pendientes de vigencia
+V --> Administrador : muestra los conteos y el detalle priorizado
+Administrador -> V : filtra por tipo de documento
+V -> C : consultarTablero(tipo)
+C -> D : obtenerDocumentos(tipo)
+D --> C : documentos de ese tipo
+C --> V : tablero acotado al tipo
+V --> Administrador : muestra el tablero filtrado, sin modificar nada
+
+@enduml
