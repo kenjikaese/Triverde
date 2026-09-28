@@ -1,4 +1,4 @@
-"""Controlador C_Reportes."""
+"""Controladores C_Reportes y C_PanelControl."""
 
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
@@ -8,8 +8,14 @@ from common.auditoria import registrar_auditoria
 from common.permissions import IsAdministrador
 from common.trazas import traza
 
-from .models import Reporte
-from .serializers import GenerarReporteSerializer, ReporteSerializer
+from .models import PanelControl, Reporte
+from .serializers import (
+    GenerarReporteSerializer,
+    PanelControlSerializer,
+    PreferenciasPanelSerializer,
+    ReporteSerializer,
+)
+from . import services
 from .services import exportar_reporte, generar_reporte
 
 
@@ -58,3 +64,43 @@ CU_POR_TIPO = {
     Reporte.PRODUCCION: "CU-74",
     Reporte.VENTAS_COBROS: "CU-75",
 }
+
+
+class C_PanelControl(viewsets.ViewSet):
+    """Panel de control (CU-72) y su personalizacion (CU-77)."""
+
+    permission_classes = [IsAdministrador]
+
+    def list(self, request):
+        panel = services.armar_panel(request.user)
+        traza("CU-72", "panel.armado", usuario=request.user.pk, indicadores=panel["indicadores_visibles"])
+        return Response(panel)
+
+    @action(detail=False, methods=["get", "post"], url_path="preferencias")
+    def preferencias(self, request):
+        if request.method == "GET":
+            panel = PanelControl.objects.filter(usuario=request.user).first()
+            if not panel:
+                return Response(
+                    {"indicadores_visibles": list(PanelControl.DEFECTO), "configuracion": {}}
+                )
+            return Response(PanelControlSerializer(panel).data)
+
+        entrada = PreferenciasPanelSerializer(data=request.data)
+        entrada.is_valid(raise_exception=True)
+        try:
+            panel, hubo_cambio = services.guardar_preferencias(
+                usuario=request.user,
+                indicadores_visibles=entrada.validated_data["indicadores_visibles"],
+                configuracion=entrada.validated_data.get("configuracion"),
+            )
+        except services.SinIndicadores as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+        if hubo_cambio:
+            registrar_auditoria(
+                request.user, "Preferencias de panel", "PanelControl", panel.pk,
+                f"indicadores_visibles: {panel.indicadores_visibles}",
+            )
+            traza("CU-77", "panel.preferencias_guardadas", panel=panel.pk, indicadores=panel.indicadores_visibles)
+        return Response(PanelControlSerializer(panel).data)

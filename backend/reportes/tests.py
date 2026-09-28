@@ -13,7 +13,7 @@ from inventario.models import ComposicionPila, Inventario, Pila, ProcesoPila
 from mantenedores.models import Cliente, Material, Producto
 from recepcion.models import DetalleRecepcion, Recepcion
 
-from .models import Reporte
+from .models import PanelControl, Reporte
 
 
 class ReportesTests(APITestCase):
@@ -143,3 +143,96 @@ class ReportesTests(APITestCase):
         )
         self.client.force_authenticate(operador)
         self.assertEqual(self.generar(Reporte.RECEPCIONES).status_code, status.HTTP_403_FORBIDDEN)
+
+
+class PanelControlTests(APITestCase):
+    """Criterios de aceptacion de Parte D (CU-72, CU-77)."""
+
+    @classmethod
+    def setUpTestData(cls):
+        cls.rol = Rol.objects.create(nombre=Rol.ADMINISTRADOR, descripcion="a")
+        cls.admin = Usuario.objects.create_user(
+            username="admin-panel", password="admin12345", nombre_completo="Admin", rol=cls.rol
+        )
+        cls.cliente = Cliente.objects.create(razon_social="Vivero Sur")
+        cls.material = Material.objects.create(nombre="Poda", categoria=Material.VERDE)
+        cls.producto = Producto.objects.create(
+            nombre="Compost premium", tipo=Producto.COMPOST, unidad_de_venta=Producto.SACO,
+            precio=Decimal("50000"),
+        )
+
+        pila_procesada = Pila.objects.create(
+            codigo="P-0001", fecha_inicio=date(2026, 9, 6), estado=Pila.CERRADA
+        )
+        ComposicionPila.objects.create(pila=pila_procesada, material=cls.material, volumen_m3=Decimal("4.5"))
+
+        pila_en_proceso = Pila.objects.create(
+            codigo="P-0002", fecha_inicio=date(2026, 9, 12), estado=Pila.EN_PROCESO
+        )
+        ComposicionPila.objects.create(pila=pila_en_proceso, material=cls.material, volumen_m3=Decimal("1.8"))
+
+        venta = Venta.objects.create(cliente=cls.cliente, fecha=date(2026, 9, 15), total=Decimal("50000"))
+        DetalleVenta.objects.create(
+            venta=venta, producto=cls.producto, cantidad=Decimal("1"), unidad="saco",
+            precio_unitario=Decimal("50000"), subtotal=Decimal("50000"),
+        )
+
+        Inventario.objects.create(material=cls.material, etapa=Inventario.CURADO, volumen_m3=Decimal("12"))
+
+    def setUp(self):
+        self.client.force_authenticate(self.admin)
+
+    def test_sin_panelcontrol_previo_usa_set_por_defecto(self):
+        respuesta = self.client.get(reverse("panel-list"))
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK, respuesta.data)
+        self.assertEqual(
+            sorted(respuesta.data["indicadores_visibles"]), ["inventario", "produccion", "ventas"]
+        )
+        self.assertIn("inventario", respuesta.data["bloques"])
+        self.assertIn("produccion", respuesta.data["bloques"])
+        self.assertIn("ventas", respuesta.data["bloques"])
+
+    def test_bloque_sin_datos_aparece_en_cero_y_pila_en_proceso_marcada(self):
+        Inventario.objects.all().delete()
+        respuesta = self.client.get(reverse("panel-list"))
+        self.assertEqual(respuesta.data["bloques"]["inventario"], [])
+        estados = {fila["estado"] for fila in respuesta.data["bloques"]["produccion"]}
+        self.assertIn("en_proceso", estados)
+
+    def test_guardar_preferencias_crea_o_actualiza_panelcontrol_y_panel_refleja_seleccion(self):
+        respuesta = self.client.post(
+            reverse("panel-preferencias"), {"indicadores_visibles": ["ventas"]}, format="json"
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK, respuesta.data)
+        self.assertEqual(respuesta.data["indicadores_visibles"], ["ventas"])
+
+        panel = self.client.get(reverse("panel-list"))
+        self.assertEqual(panel.data["indicadores_visibles"], ["ventas"])
+        self.assertEqual(set(panel.data["bloques"].keys()), {"ventas"})
+        self.assertTrue(BitacoraAuditoria.objects.filter(entidad_afectada="PanelControl").exists())
+
+    def test_guardar_sin_indicadores_se_rechaza(self):
+        respuesta = self.client.post(reverse("panel-preferencias"), {"indicadores_visibles": []}, format="json")
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_guardar_con_indicador_invalido_se_rechaza(self):
+        respuesta = self.client.post(
+            reverse("panel-preferencias"), {"indicadores_visibles": ["hackerman"]}, format="json"
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_guardar_sin_cambios_no_genera_nueva_actualizacion(self):
+        self.client.post(reverse("panel-preferencias"), {"indicadores_visibles": ["ventas"]}, format="json")
+        actualizado_antes = PanelControl.objects.get(usuario=self.admin).actualizado
+
+        self.client.post(reverse("panel-preferencias"), {"indicadores_visibles": ["ventas"]}, format="json")
+        actualizado_despues = PanelControl.objects.get(usuario=self.admin).actualizado
+        self.assertEqual(actualizado_antes, actualizado_despues)
+
+    def test_sin_rol_administrador_no_accede(self):
+        operador = Usuario.objects.create_user(
+            username="operador-panel", password="operador12345", nombre_completo="Operador",
+            rol=Rol.objects.create(nombre=Rol.OPERADOR, descripcion="o"),
+        )
+        self.client.force_authenticate(operador)
+        self.assertEqual(self.client.get(reverse("panel-list")).status_code, status.HTTP_403_FORBIDDEN)

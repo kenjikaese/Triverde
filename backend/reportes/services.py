@@ -20,7 +20,7 @@ from inventario.models import Inventario, Pila, ProcesoPila
 from mantenedores.models import Cliente, Material
 from recepcion.models import DetalleRecepcion, Recepcion
 
-from .models import Reporte
+from .models import PanelControl, Reporte
 
 
 def _numero(valor):
@@ -345,3 +345,103 @@ def exportar_reporte(reporte, formato=None):
         extension = "pdf"
     response["Content-Disposition"] = f'attachment; filename="reporte-{reporte.pk}.{extension}"'
     return response
+
+
+# --- Panel de control (CU-72, CU-77) ----------------------------------------
+
+INDICADORES_VALIDOS = {"inventario", "produccion", "ventas"}
+
+
+def _indicadores_activos(usuario):
+    """Indicadores activos del `PanelControl` del usuario, o el set por defecto."""
+    panel = PanelControl.objects.filter(usuario=usuario).first()
+    if panel and panel.indicadores_visibles:
+        return panel.indicadores_visibles
+    return list(PanelControl.DEFECTO)
+
+
+def _bloque_inventario():
+    """CU-72: saldo de inventario por material y etapa."""
+    filas = Inventario.objects.select_related("material").order_by("material__nombre", "etapa")
+    return [
+        {"material": fila.material.nombre, "etapa": fila.etapa, "volumen_m3": _numero(fila.volumen_m3)}
+        for fila in filas
+    ]
+
+
+def _bloque_produccion():
+    """CU-72: pilas recientes; una en proceso se marca como tal."""
+    pilas = Pila.objects.order_by("-fecha_inicio", "-id")[:20]
+    return [
+        {
+            "pila_id": pila.pk,
+            "codigo": pila.codigo,
+            "estado": "en_proceso" if pila.estado == Pila.EN_PROCESO else pila.estado,
+            "volumen_m3": _numero(pila.volumen_composicion()),
+        }
+        for pila in pilas
+    ]
+
+
+def _bloque_ventas():
+    """CU-72: total vendido en las ventas mas recientes."""
+    recientes = Venta.objects.order_by("-fecha", "-id")[:20]
+    total = sum((venta.total for venta in recientes), Decimal("0"))
+    return {"total_reciente": _numero(total)}
+
+
+CONSTRUCTORES_BLOQUE_PANEL = {
+    "inventario": _bloque_inventario,
+    "produccion": _bloque_produccion,
+    "ventas": _bloque_ventas,
+}
+
+
+def armar_panel(usuario):
+    """CU-72: arma el panel segun los indicadores activos del usuario.
+
+    Reusa las consultas de los modulos de origen (inventario, produccion,
+    comercial); no reimplementa su logica. Cada bloque sin datos queda con
+    una lista/total vacio (en cero), nunca como un error.
+    """
+    indicadores = _indicadores_activos(usuario)
+    bloques = {
+        clave: CONSTRUCTORES_BLOQUE_PANEL[clave]()
+        for clave in indicadores
+        if clave in CONSTRUCTORES_BLOQUE_PANEL
+    }
+    return {"indicadores_visibles": indicadores, "bloques": bloques}
+
+
+class SinIndicadores(ValueError):
+    """El administrador intento guardar preferencias sin ningun indicador."""
+
+
+def guardar_preferencias(usuario, indicadores_visibles, configuracion=None):
+    """CU-77: crea o actualiza el `PanelControl`; exige al menos un indicador.
+
+    Si la seleccion (y la configuracion, cuando se envia) no cambio respecto
+    de lo ya guardado, no genera una actualizacion nueva.
+    """
+    if not indicadores_visibles:
+        raise SinIndicadores("Debe seleccionar al menos un indicador")
+
+    panel, creado = PanelControl.objects.get_or_create(
+        usuario=usuario,
+        defaults={"indicadores_visibles": indicadores_visibles, "configuracion": configuracion or {}},
+    )
+    if creado:
+        return panel, True
+
+    sin_cambios = (
+        list(panel.indicadores_visibles) == list(indicadores_visibles)
+        and (configuracion is None or panel.configuracion == configuracion)
+    )
+    if sin_cambios:
+        return panel, False
+
+    panel.indicadores_visibles = indicadores_visibles
+    if configuracion is not None:
+        panel.configuracion = configuracion
+    panel.save()
+    return panel, True

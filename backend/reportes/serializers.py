@@ -2,7 +2,8 @@
 
 from rest_framework import serializers
 
-from .models import Reporte
+from .models import PanelControl, Reporte
+from .services import INDICADORES_VALIDOS
 
 
 class ReporteSerializer(serializers.ModelSerializer):
@@ -39,3 +40,27 @@ class GenerarReporteSerializer(serializers.Serializer):
                 "Los filtros de cliente y material solo aplican al reporte de recepciones."
             )
         return attrs
+
+
+class PanelControlSerializer(serializers.ModelSerializer):
+    """Preferencia de indicadores guardada (CU-77)."""
+
+    class Meta:
+        model = PanelControl
+        fields = ["id", "usuario", "indicadores_visibles", "configuracion", "actualizado"]
+        read_only_fields = ["id", "usuario", "actualizado"]
+
+
+class PreferenciasPanelSerializer(serializers.Serializer):
+    """Entrada para guardar la seleccion de indicadores del panel (CU-77)."""
+
+    indicadores_visibles = serializers.ListField(child=serializers.CharField(), allow_empty=True)
+    configuracion = serializers.JSONField(required=False)
+
+    def validate_indicadores_visibles(self, value):
+        invalidos = sorted(set(value) - INDICADORES_VALIDOS)
+        if invalidos:
+            raise serializers.ValidationError(
+                f"Indicadores no validos: {', '.join(invalidos)}"
+            )
+        return value
