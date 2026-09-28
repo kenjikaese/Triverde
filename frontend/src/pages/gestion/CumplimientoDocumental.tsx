@@ -170,7 +170,7 @@ export function CumplimientoDocumental() {
                     {dias(documento)}
                   </Td>
                   <Td>
-                    <Badge tono={tonoEstado(documento.estado)}>
+                    <Badge tono={tonoEstado(documento.estado_display)}>
                       {documento.estado_display}
                     </Badge>
                   </Td>
