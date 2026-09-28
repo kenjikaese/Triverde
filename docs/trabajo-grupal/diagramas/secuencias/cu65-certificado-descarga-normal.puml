@@ -1,0 +1,42 @@
+@startuml cu65-certificado-descarga-normal
+' CU-65 Generando un certificado de trazabilidad por descarga - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-65 Generando un certificado de trazabilidad por descarga (flujo normal)
+
+actor Administrador
+participant "V_Certificados" as V
+participant "C_Certificados" as C
+participant ":recepcion_recepcion" as R
+participant ":recepcion_detallerecepcion" as DR
+participant ":trazabilidad_certificadotrazabilidad" as CT
+
+Administrador -> V : abre "Certificados" y elige "Por descarga"
+V -> C : listarRecepcionesRecibidas()
+C -> R : obtener(estado=recibida)
+R --> C : descargas recibidas con cliente, transportista y fecha
+C --> V : descargas certificables
+Administrador -> V : selecciona la descarga y presiona "Generar certificado"
+V -> C : generarCertificadoDescarga(recepcion)
+C -> R : obtener(recepcion)
+R --> C : cliente, transportista, fecha y estado recibida
+C -> DR : obtenerDetalles(recepcion)
+DR --> C : material, volumen y peso calculado de cada linea
+C -> C : compilar contenido (cliente, transportista, fecha, material, volumen, peso)
+C -> C : generar codigo unico del certificado
+C -> CT : crear(tipo=descarga, cliente, recepcion, fecha_emision, codigo, contenido)
+CT --> C : certificado registrado
+C -> C : registrarAuditoria("Generacion de certificado")
+C --> V : certificado listo para descarga
+V --> Administrador : muestra el certificado y habilita su descarga
+
+@enduml

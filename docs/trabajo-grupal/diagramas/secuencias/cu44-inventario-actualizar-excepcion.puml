@@ -15,8 +15,8 @@ title CU-44 Actualizando el inventario (excepcion: datos invalidos o saldo insuf
 
 actor Sistema
 participant "C_ProcesosPila" as C
-participant ":ProcesoPila" as PP
-participant ":Inventario" as I
+participant ":inventario_procesopila" as PP
+participant ":inventario_inventario" as I
 
 Sistema -> C : detecta el registro que deberia mover material
 C -> PP : obtener(material, cantidad)

@@ -16,7 +16,7 @@ title CU-34 Consultando el inventario (excepcion: sin movimientos o sin coincide
 actor Operador
 participant "V_Inventario" as V
 participant "C_Inventario" as C
-participant ":Inventario" as I
+participant ":inventario_inventario" as I
 
 Operador -> V : consulta el inventario con un filtro
 V -> C : listarInventario(material, etapa)

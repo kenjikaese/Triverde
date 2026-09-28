@@ -16,7 +16,7 @@ title CU-79 Editando o dando de baja una maquina (flujo normal)
 actor Administrador
 participant "V_ListaMaquinaria" as V
 participant "C_Maquinaria" as C
-participant ":Maquinaria" as MQ
+participant ":mantenimiento_maquinaria" as MQ
 
 Administrador -> V : selecciona un activo del listado
 V -> C : obtener(activo)

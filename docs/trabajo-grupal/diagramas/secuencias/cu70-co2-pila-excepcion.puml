@@ -1,0 +1,49 @@
+@startuml cu70-co2-pila-excepcion
+' CU-70 Calculando el CO2 evitado por un lote compostado - excepciones
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-70 Calcular CO2 de pila (excepcion: composicion, densidad o factor faltante y recalculo)
+
+actor Sistema
+participant "C_IndicadorAmbiental" as C
+participant ":inventario_pila" as P
+participant ":inventario_composicionpila" as CP
+participant ":mantenedores_material" as M
+participant ":configuracion_parametroconversion" as PC
+participant ":trazabilidad_indicadorambiental" as IA
+
+Sistema -> C : solicita recalcular(pila)
+alt la pila no esta cerrada o no tiene composicion
+  C -> P : consultarEstadoYComposicion(pila)
+  P --> C : ciclo o composicion incompleta
+  C -> IA : retirarValorAnterior(pila)
+  C --> Sistema : calculo pendiente
+else un material no tiene densidad
+  C -> CP : obtenerComposiciones(pila)
+  CP --> C : material sin peso derivable
+  C -> M : obtenerDensidad(material)
+  M --> C : densidad ausente
+  C -> IA : retirarValorAnterior(pila)
+  C --> Sistema : calculo pendiente; completar densidad
+else no existe co2_evitado_compostaje positivo
+  C -> PC : obtener(co2_evitado_compostaje)
+  PC --> C : parametro ausente o invalido
+  C -> IA : retirarValorAnterior(pila)
+  C --> Sistema : calculo pendiente; configurar factor
+else se corrige la composicion despues del calculo
+  C -> CP : obtenerComposicionActual(pila)
+  CP --> C : cantidades actualizadas
+  C -> IA : actualizarSinDuplicar(pila, nuevo_co2)
+  IA --> C : acumulado ajustado
+end
+
+@enduml

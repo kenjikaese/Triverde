@@ -16,7 +16,7 @@ title CU-10 Editando una receta (excepcion: eliminada, mismo material o proporci
 actor Administrador
 participant "V_FormularioReceta" as V
 participant "C_Configuracion" as C
-participant ":RecetaMezcla" as RM
+participant ":configuracion_recetamezcla" as RM
 
 Administrador -> V : selecciona una receta y ajusta sus componentes
 V -> C : guardarReceta(receta, materialSeco, materialVerde, proporcion)

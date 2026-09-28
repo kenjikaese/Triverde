@@ -16,7 +16,7 @@ title CU-39 Registrando el riego (excepcion: sin humedad o fecha futura)
 actor Operador
 participant "V_RegistroProceso" as V
 participant "C_ProcesosPila" as C
-participant ":ProcesoPila" as PP
+participant ":inventario_procesopila" as PP
 
 Operador -> V : confirma el riego de la pila
 V -> C : registrarProceso(tipo="riego", pila, fecha, humedad)

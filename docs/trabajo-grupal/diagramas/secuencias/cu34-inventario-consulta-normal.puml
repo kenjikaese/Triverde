@@ -16,8 +16,8 @@ title CU-34 Consultando el inventario por material y estado (flujo normal)
 actor Operador
 participant "V_Inventario" as V
 participant "C_Inventario" as C
-participant ":Inventario" as I
-participant ":Material" as M
+participant ":inventario_inventario" as I
+participant ":mantenedores_material" as M
 
 Operador -> V : abre la pantalla de inventario
 V -> C : listarInventario()

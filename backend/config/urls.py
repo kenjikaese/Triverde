@@ -14,24 +14,28 @@ from rest_framework.routers import DefaultRouter
 from acceso.urls import router as acceso_router
 from comercial.urls import router as comercial_router
 from configuracion.urls import router as configuracion_router
+from documental.urls import router as documental_router
 from inventario.urls import router as inventario_router
 from mezcla.urls import router as mezcla_router
 from mantenedores.urls import router as mantenedores_router
 from recepcion.urls import router as recepcion_router
 from mantenimiento.urls import router as mantenimiento_router
 from proyecciones.urls import router as proyecciones_router
+from trazabilidad.urls import router as trazabilidad_router
 
 router = DefaultRouter()
 for app_router in (
     acceso_router,
     comercial_router,
     configuracion_router,
+    documental_router,
     mantenedores_router,
     recepcion_router,
     inventario_router,
     mezcla_router,
     proyecciones_router,
     mantenimiento_router,
+    trazabilidad_router,
 ):
     router.registry.extend(app_router.registry)
 

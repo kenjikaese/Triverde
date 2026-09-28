@@ -15,9 +15,9 @@ title CU-48 Sugerir el destino (excepcion: material sin configurar, varias alert
 
 actor Sistema
 participant "C_Mezcla" as C
-participant ":DetalleRecepcion" as DR
-participant ":Material" as M
-participant ":Alerta" as A
+participant ":recepcion_detallerecepcion" as DR
+participant ":mantenedores_material" as M
+participant ":mezcla_alerta" as A
 
 Sistema -> C : detecta que se confirmo un detalle de recepcion
 alt el material no tiene categoria ni conversion a chip configuradas

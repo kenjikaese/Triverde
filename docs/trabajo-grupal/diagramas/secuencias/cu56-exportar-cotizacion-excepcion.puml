@@ -16,7 +16,7 @@ title CU-56 Exportar la cotizacion (excepcion: datos de contacto incompletos o d
 actor Administrador
 participant "V_ListaCotizaciones" as V
 participant "C_Cotizaciones" as C
-participant ":Cliente" as CL
+participant ":mantenedores_cliente" as CL
 
 Administrador -> V : presiona "Exportar cotizacion"
 V -> C : exportar(cotizacion)

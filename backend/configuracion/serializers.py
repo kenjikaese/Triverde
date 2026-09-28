@@ -27,10 +27,15 @@ class ParametroConversionSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         clave = attrs.get("clave", getattr(self.instance, "clave", ""))
         valor = attrs.get("valor", getattr(self.instance, "valor", None))
-        if clave in {"alerta_mantenimiento_dias", "alerta_mantenimiento_horas"}:
+        if clave in {
+            "alerta_mantenimiento_dias",
+            "alerta_mantenimiento_horas",
+            "co2_evitado_camion",
+            "co2_evitado_compostaje",
+        }:
             if valor is None or valor <= 0:
                 raise serializers.ValidationError(
-                    {"valor": "La anticipacion debe ser mayor que cero."}
+                    {"valor": "El valor del parametro debe ser mayor que cero."}
                 )
             if clave == "alerta_mantenimiento_dias" and valor != valor.to_integral_value():
                 raise serializers.ValidationError(

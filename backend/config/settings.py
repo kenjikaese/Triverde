@@ -46,6 +46,9 @@ INSTALLED_APPS = [
     "proyecciones",    # Modulo 7 - Proyecciones
     "comercial",       # Modulo 8 - Comercial
     "mantenimiento",   # Modulo 11 - Mantenimiento
+    # Modulos del sistema (Incremento 3)
+    "trazabilidad",    # Modulo 9 - Trazabilidad e indicador ambiental
+    "documental",      # Modulo 12 - Gestion documental
 ]
 
 MIDDLEWARE = [

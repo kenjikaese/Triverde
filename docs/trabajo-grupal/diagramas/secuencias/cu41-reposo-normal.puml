@@ -16,10 +16,10 @@ title CU-41 Registrando el reposo y curado de una pila (flujo normal)
 actor Operador
 participant "V_RegistroProceso" as V
 participant "C_ProcesosPila" as C
-participant ":Pila" as P
-participant ":ComposicionPila" as CP
-participant ":ProcesoPila" as PP
-participant ":Inventario" as I
+participant ":inventario_pila" as P
+participant ":inventario_composicionpila" as CP
+participant ":inventario_procesopila" as PP
+participant ":inventario_inventario" as I
 
 Operador -> V : abre la pila harneada y presiona "Iniciar reposo"
 V --> Operador : muestra el formulario con la fecha actual

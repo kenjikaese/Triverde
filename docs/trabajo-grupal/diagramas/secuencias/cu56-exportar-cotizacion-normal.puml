@@ -16,8 +16,8 @@ title CU-56 Exportando la cotizacion como documento (flujo normal)
 actor Administrador
 participant "V_ListaCotizaciones" as V
 participant "C_Cotizaciones" as C
-participant ":Cotizacion" as COT
-participant ":Cliente" as CL
+participant ":comercial_cotizacion" as COT
+participant ":mantenedores_cliente" as CL
 
 Administrador -> V : desde el detalle de una cotizacion, presiona "Exportar cotizacion"
 V -> C : exportar(cotizacion)

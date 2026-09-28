@@ -1,0 +1,38 @@
+@startuml cu65-certificado-descarga-excepcion
+' CU-65 Generando un certificado de trazabilidad por descarga - excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-65 Generando un certificado de trazabilidad por descarga (excepcion: descarga no recibida o sin peso)
+
+actor Administrador
+participant "V_Certificados" as V
+participant "C_Certificados" as C
+participant ":recepcion_recepcion" as R
+participant ":recepcion_detallerecepcion" as DR
+
+Administrador -> V : selecciona una descarga y presiona "Generar certificado"
+V -> C : generarCertificadoDescarga(recepcion)
+C -> R : obtener(recepcion)
+alt la descarga no esta en estado recibida (en curso o rechazada)
+  R --> C : estado distinto de recibida
+  C --> V : error: solo se certifican descargas recibidas
+  V --> Administrador : informa que la descarga aun no se puede certificar
+else alguna linea no tiene su peso calculado
+  R --> C : descarga recibida
+  C -> DR : obtenerDetalles(recepcion)
+  DR --> C : linea con peso pendiente de calculo
+  C --> V : error: falta el peso calculado del material
+  V --> Administrador : informa que debe completarse la conversion a peso
+end
+note over C : no se crea ningun certificado
+
+@enduml

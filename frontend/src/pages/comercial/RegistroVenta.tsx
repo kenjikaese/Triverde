@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
-import type { Cliente, Producto, Venta } from "@/lib/types";
+import type { Cliente, PilaResumen, Producto, Venta } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { Table, TBody, Td, Th, EmptyRow } from "@/components/ui/Table";
@@ -14,6 +14,7 @@ import { mensajeDeError } from "@/lib/errores";
 interface Linea {
   producto: Producto;
   cantidad: string;
+  pila: PilaResumen | null;
 }
 
 // CU-58: registra una venta con una o mas lineas producto+cantidad. El monto
@@ -27,6 +28,9 @@ export function RegistroVenta() {
   const [lineas, setLineas] = useState<Linea[]>([]);
   const [productoSel, setProductoSel] = useState("");
   const [cantidadSel, setCantidadSel] = useState("");
+  // CU-68: pila de origen opcional; los servicios y productos sin lote no la tienen.
+  const [pilas, setPilas] = useState<PilaResumen[]>([]);
+  const [pilaSel, setPilaSel] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,6 +46,12 @@ export function RegistroVenta() {
       .then((res) => setProductos(res.data))
       .catch((err) =>
         setError(mensajeDeError(err, "No se pudo cargar el catálogo de productos.")),
+      );
+    api
+      .get<PilaResumen[]>("/pilas/")
+      .then((res) => setPilas(res.data.filter((p) => p.estado !== "en formacion")))
+      .catch((err) =>
+        setError(mensajeDeError(err, "No se pudo cargar la lista de pilas.")),
       );
   }, []);
 
@@ -72,9 +82,11 @@ export function RegistroVenta() {
       );
       return;
     }
-    setLineas([...lineas, { producto, cantidad: cantidadSel }]);
+    const pila = pilas.find((p) => p.id === Number(pilaSel)) ?? null;
+    setLineas([...lineas, { producto, cantidad: cantidadSel, pila }]);
     setProductoSel("");
     setCantidadSel("");
+    setPilaSel("");
   }
 
   async function registrar(e: FormEvent) {
@@ -95,6 +107,7 @@ export function RegistroVenta() {
         detalles: lineas.map((linea) => ({
           producto: linea.producto.id,
           cantidad: linea.cantidad,
+          pila: linea.pila?.id ?? null,
         })),
       });
       navegar(`/ventas?registrada=${res.data.id}`);
@@ -162,7 +175,7 @@ export function RegistroVenta() {
             descripcion="La cantidad va en sacos o metros cúbicos según la unidad configurada del producto."
           />
           <CardBody>
-            <div className="mb-4 grid gap-3 md:grid-cols-[2fr_1fr_auto] md:items-end">
+            <div className="mb-4 grid gap-3 md:grid-cols-[2fr_1fr_1fr_auto] md:items-end">
               <Campo label="Producto" htmlFor="venta_producto">
                 <Select
                   id="venta_producto"
@@ -190,6 +203,21 @@ export function RegistroVenta() {
                   disabled={sinProductos}
                 />
               </Campo>
+              <Campo label="Pila de origen" htmlFor="venta_pila">
+                <Select
+                  id="venta_pila"
+                  value={pilaSel}
+                  onChange={(e) => setPilaSel(e.target.value)}
+                  disabled={sinProductos}
+                >
+                  <option value="">Sin pila (opcional)</option>
+                  {pilas.map((pila) => (
+                    <option key={pila.id} value={pila.id}>
+                      {pila.codigo} · {pila.estado}
+                    </option>
+                  ))}
+                </Select>
+              </Campo>
               <Button
                 type="button"
                 variante="secundario"
@@ -206,6 +234,7 @@ export function RegistroVenta() {
                 <tr>
                   <Th>Producto</Th>
                   <Th>Cantidad</Th>
+                  <Th>Pila de origen</Th>
                   <Th>Precio unitario</Th>
                   <Th>Subtotal</Th>
                   <Th>Quitar</Th>
@@ -213,7 +242,7 @@ export function RegistroVenta() {
               </thead>
               <TBody>
                 {lineas.length === 0 ? (
-                  <EmptyRow colSpan={5} texto="Aún no agregas productos." />
+                  <EmptyRow colSpan={6} texto="Aún no agregas productos." />
                 ) : (
                   lineas.map((linea, indice) => (
                     <tr key={indice} data-testid="linea-venta">
@@ -224,6 +253,7 @@ export function RegistroVenta() {
                         {formatoCantidad(linea.cantidad)}{" "}
                         {linea.producto.unidad_de_venta}
                       </Td>
+                      <Td>{linea.pila?.codigo ?? "Sin pila"}</Td>
                       <Td>{clp(linea.producto.precio)}</Td>
                       <Td className="font-medium">
                         {clp(

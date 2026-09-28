@@ -16,7 +16,7 @@ title CU-35 Creando una pila (excepcion: codigo en conflicto o fecha futura)
 actor Operador
 participant "V_FormularioPila" as V
 participant "C_Pilas" as C
-participant ":Pila" as P
+participant ":inventario_pila" as P
 
 Operador -> V : presiona "Nueva pila"
 V -> C : obtenerCodigoSugerido()

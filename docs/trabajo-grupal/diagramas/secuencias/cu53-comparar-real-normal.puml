@@ -16,10 +16,10 @@ title CU-53 Comparando el proyectado con el real (flujo normal)
 actor Administrador
 participant "V_Proyecciones" as V
 participant "C_Proyecciones" as C
-participant ":Proyeccion" as P
-participant ":DetalleRecepcion" as DR
-participant ":Inventario" as I
-participant ":Venta" as VT
+participant ":proyecciones_proyeccion" as P
+participant ":recepcion_detallerecepcion" as DR
+participant ":inventario_inventario" as I
+participant ":comercial_venta" as VT
 
 Administrador -> V : selecciona una proyeccion y presiona "Comparar con lo real"
 V -> C : compararConReal(proyeccion)

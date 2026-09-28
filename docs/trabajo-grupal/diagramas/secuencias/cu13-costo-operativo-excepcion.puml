@@ -16,7 +16,7 @@ title CU-13 Registrando un costo operativo (excepcion: duplicado, nombre vacio o
 actor Administrador
 participant "V_CostosOperativos" as V
 participant "C_Configuracion" as C
-participant ":CostoOperativo" as CO
+participant ":configuracion_costooperativo" as CO
 
 Administrador -> V : ingresa un concepto y presiona "Guardar costo"
 V -> C : guardarCostoOperativo(nombre, valor, unidad)

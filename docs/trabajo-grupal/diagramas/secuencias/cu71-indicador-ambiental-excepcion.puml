@@ -1,0 +1,38 @@
+@startuml cu71-indicador-ambiental-excepcion
+' CU-71 Consultando el indicador ambiental acumulado - excepciones
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-71 Consultar indicador (excepcion: sin datos, periodo vacio o invalido)
+
+actor Administrador
+participant "V_IndicadorAmbiental" as V
+participant "C_IndicadorAmbiental" as C
+participant ":trazabilidad_indicadorambiental" as IA
+
+Administrador -> V : consulta el indicador ambiental
+V -> C : consultar(desde, hasta)
+alt el periodo es invalido
+  C --> V : 400 con validacion del rango
+  V --> Administrador : solicita corregir las fechas
+else no existe ningun indicador calculado
+  C -> IA : filtrarPorFecha(desde, hasta)
+  IA --> C : listado vacio
+  C --> V : acumulado cero y calculos pendientes
+  V --> Administrador : muestra cero sin tratarlo como error
+else el periodo seleccionado no contiene datos
+  C -> IA : filtrarPorFecha(desde, hasta)
+  IA --> C : listado vacio para el rango
+  C --> V : acumulado cero para el periodo
+  V --> Administrador : informa que no hay datos en ese periodo
+end
+
+@enduml
