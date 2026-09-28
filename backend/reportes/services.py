@@ -1,4 +1,4 @@
-"""Agregaciones y exportacion de reportes (CU-73 a CU-76)."""
+"""Agregaciones y exportacion de reportes (CU-73 a CU-76) y panel de control (CU-72, CU-77)."""
 
 import csv
 import io
@@ -6,8 +6,9 @@ from collections import defaultdict
 from decimal import Decimal
 from xml.sax.saxutils import escape
 
-from django.db.models import Prefetch
+from django.db.models import Count, Prefetch, Sum
 from django.http import HttpResponse
+from django.utils import timezone
 from openpyxl import Workbook
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -20,7 +21,7 @@ from inventario.models import Inventario, Pila, ProcesoPila
 from mantenedores.models import Cliente, Material
 from recepcion.models import DetalleRecepcion, Recepcion
 
-from .models import Reporte
+from .models import PanelControl, Reporte
 
 
 def _numero(valor):
@@ -345,3 +346,171 @@ def exportar_reporte(reporte, formato=None):
         extension = "pdf"
     response["Content-Disposition"] = f'attachment; filename="reporte-{reporte.pk}.{extension}"'
     return response
+
+
+# --- Panel de control (CU-72, CU-77) ----------------------------------------
+
+# Orden canonico: el panel muestra y guarda los indicadores en este orden.
+INDICADORES = {
+    "inventario": "Inventario por material y etapa",
+    "produccion": "Produccion reciente (pilas y procesos)",
+    "ventas": "Ventas del mes en curso",
+}
+INDICADORES_VALIDOS = set(INDICADORES)
+
+PILAS_EN_PANEL = 10
+PROCESOS_EN_PANEL = 8
+
+
+def normalizar_indicadores(indicadores):
+    """Quita repetidos y deja la seleccion en el orden canonico.
+
+    Asi `["ventas", "inventario"]` y `["inventario", "ventas", "ventas"]` son
+    la misma seleccion y no cuentan como un cambio (CU-77 Excepcion 2).
+    """
+    elegidos = set(indicadores)
+    return [clave for clave in INDICADORES if clave in elegidos]
+
+
+def indicadores_disponibles():
+    """Listado completo de indicadores que ofrece la personalizacion (CU-77)."""
+    return [{"clave": clave, "nombre": nombre} for clave, nombre in INDICADORES.items()]
+
+
+def indicadores_activos(usuario):
+    """Indicadores del `PanelControl` del usuario, o el set por defecto (CU-72 Excepcion 1)."""
+    panel = PanelControl.objects.filter(usuario=usuario).first()
+    if panel and panel.indicadores_visibles:
+        return normalizar_indicadores(panel.indicadores_visibles)
+    return list(PanelControl.DEFECTO)
+
+
+def _bloque_inventario():
+    """CU-72: saldo vigente del Inventario por material y etapa (CU-34)."""
+    orden_etapa = {etapa: i for i, (etapa, _) in enumerate(Inventario.ETAPA_CHOICES)}
+    filas = sorted(
+        Inventario.objects.select_related("material").filter(volumen_m3__gt=0),
+        key=lambda fila: (fila.material.nombre, orden_etapa.get(fila.etapa, len(orden_etapa))),
+    )
+    detalle = [
+        {
+            "material": fila.material.nombre,
+            "etapa": fila.etapa,
+            "etapa_nombre": fila.get_etapa_display(),
+            "volumen_m3": _numero(fila.volumen_m3),
+        }
+        for fila in filas
+    ]
+    return {"total_m3": sum(fila["volumen_m3"] for fila in detalle), "filas": detalle}
+
+
+def _bloque_produccion():
+    """CU-72: pilas y procesos recientes.
+
+    Una pila que no completo su ciclo (cualquier estado distinto de cerrada)
+    va marcada `en_proceso` con el volumen que lleva a la fecha (Excepcion 3).
+    """
+    pilas = Pila.objects.annotate(volumen=Sum("composiciones__volumen_m3")).order_by(
+        "-fecha_inicio", "-id"
+    )[:PILAS_EN_PANEL]
+    procesos = ProcesoPila.objects.select_related("pila", "material").order_by(
+        "-fecha", "-id"
+    )[:PROCESOS_EN_PANEL]
+    return {
+        "pilas_en_proceso": Pila.objects.exclude(estado=Pila.CERRADA).count(),
+        "pilas": [
+            {
+                "pila_id": pila.pk,
+                "codigo": pila.codigo,
+                "fecha_inicio": pila.fecha_inicio.isoformat(),
+                "estado": pila.estado,
+                "estado_nombre": pila.get_estado_display(),
+                "en_proceso": pila.estado != Pila.CERRADA,
+                "volumen_m3": _numero(pila.volumen),
+            }
+            for pila in pilas
+        ],
+        "procesos": [
+            {
+                "proceso_id": proceso.pk,
+                "tipo": proceso.tipo,
+                "tipo_nombre": proceso.get_tipo_display(),
+                "fecha": proceso.fecha.isoformat(),
+                "pila": proceso.pila.codigo if proceso.pila else None,
+                "material": proceso.material.nombre if proceso.material else None,
+                "volumen_m3": _numero(proceso.volumen_m3) if proceso.volumen_m3 is not None else None,
+            }
+            for proceso in procesos
+        ],
+    }
+
+
+def _bloque_ventas(hoy=None):
+    """CU-72: total vendido en el mes en curso (mismo criterio de periodo que CU-59)."""
+    hoy = hoy or timezone.localdate()
+    desde = hoy.replace(day=1)
+    ventas = Venta.objects.filter(fecha__gte=desde, fecha__lte=hoy)
+    resumen = ventas.aggregate(total=Sum("total"), cantidad=Count("id"))
+    return {
+        "desde": desde.isoformat(),
+        "hasta": hoy.isoformat(),
+        "cantidad": resumen["cantidad"],
+        "total_vendido": _numero(resumen["total"]),
+    }
+
+
+CONSTRUCTORES_BLOQUE_PANEL = {
+    "inventario": _bloque_inventario,
+    "produccion": _bloque_produccion,
+    "ventas": _bloque_ventas,
+}
+
+
+def armar_panel(usuario):
+    """CU-72: arma el panel segun los indicadores activos del usuario.
+
+    Solo lee: consulta Inventario, Pila/ProcesoPila y Venta sin modificarlos.
+    Un bloque sin datos queda en cero o vacio, nunca como error (Excepcion 2).
+    """
+    indicadores = indicadores_activos(usuario)
+    bloques = {clave: CONSTRUCTORES_BLOQUE_PANEL[clave]() for clave in indicadores}
+    return {
+        "indicadores_visibles": indicadores,
+        "bloques": bloques,
+        "generado": timezone.localtime().isoformat(),
+    }
+
+
+class SinIndicadores(ValueError):
+    """El administrador intento guardar preferencias sin ningun indicador."""
+
+
+def guardar_preferencias(usuario, indicadores_visibles, configuracion=None):
+    """CU-77: crea o actualiza el `PanelControl`; exige al menos un indicador.
+
+    Si la seleccion (y la configuracion, cuando se envia) no cambio respecto
+    de lo ya guardado, no genera una actualizacion nueva (Excepcion 2).
+    """
+    indicadores = normalizar_indicadores(indicadores_visibles)
+    if not indicadores:
+        raise SinIndicadores("Debe seleccionar al menos un indicador.")
+
+    panel, creado = PanelControl.objects.get_or_create(
+        usuario=usuario,
+        defaults={"indicadores_visibles": indicadores, "configuracion": configuracion or {}},
+    )
+    if creado:
+        return panel, True
+
+    sin_cambios = (
+        normalizar_indicadores(panel.indicadores_visibles) == indicadores
+        and (configuracion is None or panel.configuracion == configuracion)
+    )
+    if sin_cambios:
+        return panel, False
+
+    panel.indicadores_visibles = indicadores
+    if configuracion is not None:
+        panel.configuracion = configuracion
+    panel.save()
+    return panel, True

@@ -1,0 +1,36 @@
+@startuml cu77-personalizar-panel-excepcion
+' CU-77 Personalizando los indicadores del panel - excepciones 1 y 2
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-77 Personalizando los indicadores del panel (excepcion: sin indicadores o sin cambios)
+
+actor Administrador
+participant "V_PanelControl" as V
+participant "C_Reportes" as C
+participant ":reportes_panelcontrol" as PC
+
+Administrador -> V : ajusta la seleccion y "Guardar preferencias"
+V -> C : guardarPreferencias(indicadores)
+alt ningun indicador activo
+  C -> C : valida al menos un indicador
+  C --> V : rechaza: debe seleccionar al menos un indicador
+  V --> Administrador : muestra el error y mantiene el modal abierto
+else seleccion igual a la vigente
+  C -> PC : buscar(usuario)
+  PC --> C : misma seleccion guardada
+  C --> V : sin cambios, no se actualiza
+  V --> Administrador : informa que el panel se mantiene igual
+end
+
+note over PC : el objeto PanelControl no se modifica en ninguno de los dos casos
+
+@enduml

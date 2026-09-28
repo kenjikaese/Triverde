@@ -624,3 +624,63 @@ export interface HistorialVersiones {
   documento: DocumentoLegal;
   versiones: VersionDocumento[];
 }
+
+// Panel de control (CU-72) y su personalizacion (CU-77).
+export type ClaveIndicador = "inventario" | "produccion" | "ventas";
+
+export interface IndicadorPanel {
+  clave: ClaveIndicador;
+  nombre: string;
+}
+
+export interface PanelInventario {
+  total_m3: number;
+  filas: Array<{ material: string; etapa: string; etapa_nombre: string; volumen_m3: number }>;
+}
+
+export interface PanelProduccion {
+  pilas_en_proceso: number;
+  pilas: Array<{
+    pila_id: number;
+    codigo: string;
+    fecha_inicio: string;
+    estado: string;
+    estado_nombre: string;
+    en_proceso: boolean;
+    volumen_m3: number;
+  }>;
+  procesos: Array<{
+    proceso_id: number;
+    tipo: string;
+    tipo_nombre: string;
+    fecha: string;
+    pila: string | null;
+    material: string | null;
+    volumen_m3: number | null;
+  }>;
+}
+
+export interface PanelVentas {
+  desde: string;
+  hasta: string;
+  cantidad: number;
+  total_vendido: number;
+}
+
+export interface Panel {
+  indicadores_visibles: ClaveIndicador[];
+  bloques: {
+    inventario?: PanelInventario;
+    produccion?: PanelProduccion;
+    ventas?: PanelVentas;
+  };
+  generado: string;
+}
+
+export interface PreferenciasPanel {
+  indicadores_visibles: ClaveIndicador[];
+  configuracion: Record<string, unknown>;
+  actualizado: string | null;
+  disponibles: IndicadorPanel[];
+  cambio?: boolean;
+}

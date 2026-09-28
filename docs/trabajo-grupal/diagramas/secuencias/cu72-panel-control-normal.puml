@@ -1,0 +1,42 @@
+@startuml cu72-panel-control-normal
+' CU-72 Consultando el panel de control general - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-72 Consultando el panel de control general (flujo normal)
+
+actor Administrador
+participant "V_PanelControl" as V
+participant "C_Reportes" as C
+participant ":reportes_panelcontrol" as PC
+participant ":inventario_inventario" as INV
+participant ":inventario_pila" as P
+participant ":inventario_procesopila" as PP
+participant ":comercial_venta" as VE
+
+Administrador -> V : abre el panel de control
+V -> C : armarPanel()
+C -> PC : buscar(usuario)
+PC --> C : indicadores activos (inventario, produccion, ventas)
+C -> INV : saldos con volumen por material y etapa
+INV --> C : filas de inventario
+C -> P : pilas recientes con su volumen de composicion
+P --> C : pilas (en proceso si no cerraron su ciclo)
+C -> PP : procesos recientes
+PP --> C : procesos
+C -> VE : ventas del mes en curso
+VE --> C : cantidad y total vendido
+C --> V : bloques del panel
+V --> Administrador : muestra indicadores, inventario, pilas, procesos y ventas
+
+note over PC, VE : la consulta es de solo lectura, no modifica ningun objeto
+
+@enduml

@@ -1,0 +1,41 @@
+@startuml cu77-personalizar-panel-normal
+' CU-77 Personalizando los indicadores del panel - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-77 Personalizando los indicadores del panel (flujo normal)
+
+actor Administrador
+participant "V_PanelControl" as V
+participant "C_Reportes" as C
+participant ":reportes_panelcontrol" as PC
+participant ":acceso_bitacoraauditoria" as BA
+
+Administrador -> V : presiona "Personalizar"
+V -> C : obtenerPreferencias()
+C -> PC : buscar(usuario)
+PC --> C : indicadores activos vigentes
+C --> V : indicadores disponibles y activos
+V --> Administrador : presenta el listado con los activos marcados
+Administrador -> V : activa o desactiva indicadores y "Guardar preferencias"
+V -> C : guardarPreferencias(indicadores)
+C -> C : valida al menos un indicador y normaliza la seleccion
+C -> PC : buscar(usuario)
+PC --> C : seleccion vigente distinta
+C -> PC : actualizar(indicadores_visibles)
+PC --> C : preferencia guardada
+C -> BA : registrar("Preferencias de panel")
+C --> V : preferencias guardadas
+V -> C : armarPanel()
+C --> V : bloques de los indicadores elegidos
+V --> Administrador : confirma y muestra el panel con la nueva seleccion
+
+@enduml
