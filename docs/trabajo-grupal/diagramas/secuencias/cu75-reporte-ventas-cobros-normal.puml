@@ -3,13 +3,16 @@ title CU-75 Consultando el reporte de ventas y cobros (flujo normal)
 actor Administrador
 participant "V_Reportes" as V
 participant "C_Reportes" as C
-participant ":Venta" as VEN
-participant ":Cobro" as COB
-participant ":Reporte" as REP
+participant ":comercial_venta" as VEN
+participant ":comercial_detalleventa" as DV
+participant ":comercial_cobro" as COB
+participant ":reportes_reporte" as REP
 Administrador -> V : define periodo de ventas
 V -> C : generar(ventas_cobros, periodo)
 C -> VEN : consultar ventas del periodo
-VEN --> C : ventas por cliente y producto
+VEN --> C : ventas por cliente
+C -> DV : consultar lineas de cada venta
+DV --> C : subtotales por producto
 C -> COB : consultar cobros asociados
 COB --> C : montos cobrados
 C -> C : calcular vendido, cobrado y pendiente

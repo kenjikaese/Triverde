@@ -3,7 +3,7 @@ title CU-74 Consultando el reporte de produccion (excepcion)
 actor Administrador
 participant "V_Reportes" as V
 participant "C_Reportes" as C
-participant ":Reporte" as REP
+participant ":reportes_reporte" as REP
 Administrador -> V : define periodo incompleto o invertido
 V -> C : generar(produccion, periodo)
 C -> C : validar rango de fechas

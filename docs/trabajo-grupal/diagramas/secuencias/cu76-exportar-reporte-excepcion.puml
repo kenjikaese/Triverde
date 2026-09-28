@@ -3,7 +3,7 @@ title CU-76 Exportando un reporte a documento (excepcion)
 actor Administrador
 participant "V_Reportes" as V
 participant "C_Reportes" as C
-participant ":Reporte" as REP
+participant ":reportes_reporte" as REP
 Administrador -> V : presiona Exportar
 V -> C : exportar(reporte)
 C -> REP : obtener contenido guardado
