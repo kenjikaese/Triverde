@@ -1,0 +1,36 @@
+@startuml cu87-adjuntar-archivo-normal
+' CU-87 Adjuntando el archivo de un documento - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-87 Adjuntando el archivo de un documento (flujo normal)
+
+actor Administrador
+participant "V_ListaDocumentos" as V
+participant "C_DocumentosLegales" as C
+participant ":documental_documentolegal" as DL
+participant ":documental_versiondocumento" as VD
+participant ":configuracion_parametroconversion" as PC
+
+Administrador -> V : selecciona el documento y presiona "Archivo"
+Administrador -> V : elige el archivo y presiona "Adjuntar archivo"
+V -> C : adjuntarArchivo(documento, archivo)
+C -> PC : obtener("documento_tamano_max_mb")
+PC --> C : tamano maximo configurado
+C -> C : valida formato y tamano del archivo
+C -> DL : obtener(documento)
+DL --> C : documento
+C -> VD : crear(documento, archivo, version = 1, usuario, vigente = verdadero)
+VD --> C : version creada
+C --> V : archivo adjuntado como version vigente
+V --> Administrador : muestra la version vigente disponible para descarga
+
+@enduml

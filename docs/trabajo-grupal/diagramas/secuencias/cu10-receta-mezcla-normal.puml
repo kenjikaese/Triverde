@@ -16,8 +16,8 @@ title CU-10 Creando una receta de mezcla (flujo normal)
 actor Administrador
 participant "V_FormularioReceta" as V
 participant "C_Configuracion" as C
-participant ":Material" as M
-participant ":RecetaMezcla" as RM
+participant ":mantenedores_material" as M
+participant ":configuracion_recetamezcla" as RM
 
 Administrador -> V : abre recetas y presiona "Nueva receta"
 V -> C : listarMateriales()

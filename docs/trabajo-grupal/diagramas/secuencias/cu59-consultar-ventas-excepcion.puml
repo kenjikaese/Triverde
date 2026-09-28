@@ -16,7 +16,7 @@ title CU-59 Consultar las ventas (excepcion: sin ventas en el periodo o filtro s
 actor Administrador
 participant "V_ListaVentas" as V
 participant "C_Ventas" as C
-participant ":Venta" as VT
+participant ":comercial_venta" as VT
 
 Administrador -> V : abre "Ventas del periodo"
 alt no hay ventas en el periodo por defecto

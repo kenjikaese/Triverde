@@ -16,7 +16,7 @@ title CU-59 Consultando las ventas del periodo (flujo normal)
 actor Administrador
 participant "V_ListaVentas" as V
 participant "C_Ventas" as C
-participant ":Venta" as VT
+participant ":comercial_venta" as VT
 
 Administrador -> V : abre "Ventas del periodo"
 V -> C : listarVentas(periodo vigente)

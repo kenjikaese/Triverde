@@ -16,9 +16,9 @@ title CU-61 Registrando el cobro de una recepcion (flujo normal)
 actor Operador
 participant "V_Cobros" as V
 participant "C_Cobros" as C
-participant ":Recepcion" as R
-participant ":TarifaRecepcion" as T
-participant ":Cobro" as CB
+participant ":recepcion_recepcion" as R
+participant ":configuracion_tarifarecepcion" as T
+participant ":comercial_cobro" as CB
 
 Operador -> V : sobre una recepcion recibida, presiona "Registrar cobro"
 V -> C : sugerenciaCobro(recepcion)

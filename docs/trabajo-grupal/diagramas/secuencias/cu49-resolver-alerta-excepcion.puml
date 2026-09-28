@@ -16,7 +16,7 @@ title CU-49 Marcar una alerta como resuelta (excepcion: ya resuelta o faltante p
 actor Operador
 participant "V_Alertas" as V
 participant "C_Alertas" as C
-participant ":Alerta" as A
+participant ":mezcla_alerta" as A
 
 Operador -> V : selecciona una alerta y presiona "Marcar como resuelta"
 alt la alerta ya fue resuelta por otro usuario

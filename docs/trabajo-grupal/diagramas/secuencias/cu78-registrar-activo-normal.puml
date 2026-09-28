@@ -16,7 +16,7 @@ title CU-78 Registrando una maquina o vehiculo mantenible (flujo normal)
 actor Administrador
 participant "V_FormularioMaquinaria" as V
 participant "C_Maquinaria" as C
-participant ":Maquinaria" as MQ
+participant ":mantenimiento_maquinaria" as MQ
 
 Administrador -> V : "Nuevo activo"; elige maquina o equipo nuevo
 V --> Administrador : presenta el formulario de datos tecnicos y horometro

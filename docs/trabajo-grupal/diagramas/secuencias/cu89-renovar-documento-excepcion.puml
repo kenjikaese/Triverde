@@ -1,0 +1,47 @@
+@startuml cu89-renovar-documento-excepcion
+' CU-89 Renovando o actualizando un documento - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-89 Renovar documento (excepcion: vigente sin vencimiento proximo, archivo invalido o fecha no posterior)
+
+actor Administrador
+participant "V_ListaDocumentos" as V
+participant "C_DocumentosLegales" as C
+participant ":documental_documentolegal" as DL
+participant ":documental_versiondocumento" as VD
+
+alt el documento esta vigente y lejos de vencer
+  V -> C : renovar(documento, archivo, emision, vencimiento)
+  C -> DL : obtener(documento)
+  DL --> C : estado "vigente"
+  C --> V : advierte que no es necesaria la renovacion
+  V --> Administrador : ofrece cancelar o continuar
+  Administrador -> V : "Continuar de todos modos"
+  V -> C : renovar(..., confirmar = verdadero)
+  C -> VD : crear(documento, archivo, version + 1, vigente = verdadero)
+  VD --> C : nueva version vigente
+  C --> V : renovacion confirmada
+else formato no soportado o tamano excedido
+  V -> C : renovar(documento, archivo, emision, vencimiento)
+  C -> C : valida el archivo
+  C --> V : rechaza el archivo con la restriccion
+  V --> Administrador : el documento no se modifica
+else el nuevo vencimiento no es posterior a la vigencia actual
+  V -> C : renovar(documento, archivo, emision, vencimiento)
+  C -> DL : obtener(documento)
+  DL --> C : vencimiento vigente
+  C -> C : compara con el nuevo vencimiento
+  C --> V : rechaza la fecha
+  V --> Administrador : solicita una fecha posterior a la vigencia actual
+end
+
+@enduml

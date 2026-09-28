@@ -1,0 +1,36 @@
+@startuml cu88-registrar-vigencia-normal
+' CU-88 Registrando la vigencia de un documento - flujo normal
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-88 Registrando la vigencia de un documento (flujo normal)
+
+actor Administrador
+participant "V_ListaDocumentos" as V
+participant "C_DocumentosLegales" as C
+participant ":documental_documentolegal" as DL
+participant ":configuracion_parametroconversion" as PC
+participant ":acceso_bitacoraauditoria" as BA
+
+Administrador -> V : selecciona el documento y presiona "Vigencia"
+Administrador -> V : ingresa emision, vencimiento y "Registrar vigencia"
+V -> C : registrarVigencia(documento, fecha_emision, fecha_vencimiento)
+C -> C : valida que el vencimiento no sea anterior a la emision
+C -> PC : obtener("alerta_documento_dias")
+PC --> C : umbral de proximidad
+C -> C : derivarEstado(vencimiento, hoy, umbral)
+C -> DL : actualizar(fecha_emision, fecha_vencimiento, estado = "vigente" o "por_vencer")
+DL --> C : documento actualizado
+C -> BA : registrar("Registro de vigencia de documento")
+C --> V : vigencia registrada con su estado
+V --> Administrador : muestra el estado derivado
+
+@enduml

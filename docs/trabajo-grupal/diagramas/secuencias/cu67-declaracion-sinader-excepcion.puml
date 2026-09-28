@@ -1,0 +1,42 @@
+@startuml cu67-declaracion-sinader-excepcion
+' CU-67 Exportando la declaracion para SINADER - excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-67 Exportando la declaracion para SINADER (excepcion: periodo vacio o clientes sin datos obligatorios)
+
+actor Administrador
+participant "V_ExportacionSinader" as V
+participant "C_Sinader" as C
+participant ":recepcion_recepcion" as R
+participant ":mantenedores_cliente" as CL
+participant ":trazabilidad_declaracionsinader" as DS
+
+Administrador -> V : selecciona el periodo y presiona "Generar declaracion"
+V -> C : generarDeclaracion(periodo_inicio, periodo_fin)
+C -> R : obtener(estado=recibida, fecha en periodo)
+alt no hay descargas recibidas en el periodo
+  R --> C : sin descargas
+  C --> V : aviso: no hay material que declarar en el periodo
+  V --> Administrador : informa y no genera la declaracion
+else hay clientes sin los datos obligatorios
+  R --> C : descargas recibidas del periodo
+  C -> CL : obtenerDatosObligatorios(clientes de las descargas)
+  CL --> C : clientes con datos incompletos
+  C -> C : excluir las descargas de esos clientes
+  C -> DS : crear(periodo, archivo solo con los clientes completos, usuario)
+  DS --> C : declaracion registrada
+  C -> C : registrarAuditoria("Generacion de declaracion SINADER")
+  C --> V : archivo listo y listado de clientes excluidos
+  V --> Administrador : advierte que clientes completar antes de declarar
+end
+
+@enduml

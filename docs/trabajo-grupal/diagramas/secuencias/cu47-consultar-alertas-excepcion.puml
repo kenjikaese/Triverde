@@ -16,7 +16,7 @@ title CU-47 Consultar las alertas activas (excepcion: sin alertas o filtro sin r
 actor Operador
 participant "V_Alertas" as V
 participant "C_Alertas" as C
-participant ":Alerta" as A
+participant ":mezcla_alerta" as A
 
 Operador -> V : abre la bandeja de alertas
 alt no existe ninguna alerta activa

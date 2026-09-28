@@ -16,8 +16,8 @@ title CU-64 Consultar la cuenta corriente (excepcion: cliente sin movimientos o 
 actor Administrador
 participant "V_CuentaCorriente" as V
 participant "C_CuentaCorriente" as C
-participant ":Venta" as VT
-participant ":Cobro" as CB
+participant ":comercial_venta" as VT
+participant ":comercial_cobro" as CB
 
 Administrador -> V : abre la cuenta corriente del cliente
 alt el cliente no tiene ventas ni cobros asociados

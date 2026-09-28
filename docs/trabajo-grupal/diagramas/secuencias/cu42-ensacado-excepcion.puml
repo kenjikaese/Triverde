@@ -16,9 +16,9 @@ title CU-42 Registrando el ensacado (excepcion: cantidad invalida o sobre el cur
 actor Operador
 participant "V_RegistroProceso" as V
 participant "C_ProcesosPila" as C
-participant ":Pila" as P
-participant ":ProcesoPila" as PP
-participant ":Inventario" as I
+participant ":inventario_pila" as P
+participant ":inventario_procesopila" as PP
+participant ":inventario_inventario" as I
 
 Operador -> V : ingresa la cantidad ensacada y confirma
 V -> C : registrarProceso(tipo="ensacado", pila, volumen)

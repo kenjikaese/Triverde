@@ -688,3 +688,170 @@ class PermisosTests(ComercialTestBase):
             respuesta.status_code, status.HTTP_405_METHOD_NOT_ALLOWED
         )
         self.assertTrue(Venta.objects.filter(pk=venta["id"]).exists())
+
+
+class TrazabilidadVentaTests(ComercialTestBase):
+    """CU-68 (Modulo 9, Parte A): enlace Venta -> Pila y cadena trazable.
+
+    Criterio de aceptacion 4 de la spec M9: una venta con pila de origen
+    devuelve la cadena; sin pila, informa "sin trazabilidad".
+    """
+
+    @classmethod
+    def setUpTestData(cls):
+        super().setUpTestData()
+        from inventario.models import ComposicionPila, Pila
+        from mantenedores.models import Material
+
+        cls.rama = Material.objects.create(
+            nombre="Ramas de poda", categoria=Material.SECA,
+            densidad_kg_m3=Decimal("220.00"),
+            factor_reduccion_chip=Decimal("3.00"), admite_chip=True,
+        )
+        cls.pasto = Material.objects.create(
+            nombre="Hojas y cesped", categoria=Material.VERDE,
+            densidad_kg_m3=Decimal("350.00"),
+        )
+        cls.pila_cerrada = Pila.objects.create(
+            codigo="P-0901", fecha_inicio=date(2026, 6, 1), estado=Pila.CERRADA,
+        )
+        ComposicionPila.objects.create(
+            pila=cls.pila_cerrada, material=cls.rama, volumen_m3=Decimal("40.00"),
+        )
+        ComposicionPila.objects.create(
+            pila=cls.pila_cerrada, material=cls.pasto, volumen_m3=Decimal("20.00"),
+        )
+        cls.pila_en_proceso = Pila.objects.create(
+            codigo="P-0902", fecha_inicio=date(2026, 8, 1), estado=Pila.EN_PROCESO,
+        )
+        # Origen de la composicion de la pila cerrada (propuesta Inc 3): los
+        # 40 m3 de rama salieron de una descarga recibida del cliente.
+        from datetime import time
+
+        from inventario.models import AporteRecepcionPila
+        from recepcion.models import DetalleRecepcion
+
+        cls.recepcion_origen = Recepcion.objects.create(
+            cliente=cls.cliente, fecha=date(2026, 5, 20), hora=time(8, 0),
+            estado=Recepcion.RECIBIDA, conductor="Origen",
+        )
+        cls.detalle_origen = DetalleRecepcion.objects.create(
+            recepcion=cls.recepcion_origen, material=cls.rama,
+            volumen_m3=Decimal("40.00"), peso_derivado_kg=Decimal("8800.00"),
+        )
+        AporteRecepcionPila.objects.create(
+            pila=cls.pila_cerrada, detalle_recepcion=cls.detalle_origen,
+            volumen_m3=Decimal("40.00"),
+        )
+
+    def _vender(self, pila=None, cantidad="10"):
+        self.autenticar(self.admin)
+        linea = {"producto": self.producto.pk, "cantidad": cantidad}
+        if pila is not None:
+            linea["pila"] = pila.pk
+        respuesta = self.client.post(
+            reverse("venta-list"),
+            {"cliente": self.cliente.pk, "detalles": [linea]},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED)
+        return respuesta.data
+
+    def _trazar(self, venta_id):
+        return self.client.get(reverse("venta-trazabilidad", args=[venta_id]))
+
+    def test_la_linea_de_venta_guarda_la_pila_de_origen(self):
+        venta = self._vender(pila=self.pila_cerrada)
+        linea = venta["detalles"][0]
+        self.assertEqual(linea["pila"], self.pila_cerrada.pk)
+        self.assertEqual(linea["pila_codigo"], "P-0901")
+
+    def test_la_pila_es_opcional(self):
+        venta = self._vender()
+        self.assertIsNone(venta["detalles"][0]["pila"])
+        self.assertIsNone(venta["detalles"][0]["pila_codigo"])
+
+    def test_pila_inexistente_se_rechaza(self):
+        self.autenticar(self.admin)
+        respuesta = self.client.post(
+            reverse("venta-list"),
+            {
+                "cliente": self.cliente.pk,
+                "detalles": [
+                    {"producto": self.producto.pk, "cantidad": "5", "pila": 99999}
+                ],
+            },
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(Venta.objects.count(), 0)
+
+    def test_venta_con_pila_cerrada_devuelve_la_cadena(self):
+        venta = self._vender(pila=self.pila_cerrada)
+        respuesta = self._trazar(venta["id"])
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertTrue(respuesta.data["trazable"])
+        self.assertEqual(respuesta.data["advertencias"], [])
+        pila = respuesta.data["lineas"][0]["pila"]
+        self.assertEqual(pila["codigo"], "P-0901")
+        self.assertTrue(pila["composicion_definitiva"])
+        self.assertEqual(pila["volumen_total_m3"], "60.00")
+        materiales = {c["material"]: c["volumen_m3"] for c in pila["composicion"]}
+        self.assertEqual(
+            materiales,
+            {"Ramas de poda": "40.00", "Hojas y cesped": "20.00"},
+        )
+        # La cadena llega hasta la descarga de origen y su cliente.
+        self.assertEqual(len(pila["recepciones_origen"]), 1)
+        origen = pila["recepciones_origen"][0]
+        self.assertEqual(origen["recepcion"], self.recepcion_origen.pk)
+        self.assertEqual(origen["cliente"], "Vivero Los Aromos")
+        self.assertEqual(origen["material"], "Ramas de poda")
+        self.assertEqual(origen["volumen_m3"], "40.00")
+
+    def test_pila_sin_descargas_de_origen_lo_advierte(self):
+        """Propuesta Inc 3: sin aportes registrados, la cadena para en la composicion."""
+        from inventario.models import ComposicionPila, Pila
+
+        sin_origen = Pila.objects.create(
+            codigo="P-0903", fecha_inicio=date(2026, 7, 1), estado=Pila.CERRADA,
+        )
+        ComposicionPila.objects.create(
+            pila=sin_origen, material=self.pasto, volumen_m3=Decimal("10.00"),
+        )
+        venta = self._vender(pila=sin_origen)
+        respuesta = self._trazar(venta["id"])
+        self.assertTrue(respuesta.data["trazable"])
+        self.assertEqual(respuesta.data["lineas"][0]["pila"]["recepciones_origen"], [])
+        self.assertIn("no tiene descargas de origen", respuesta.data["advertencias"][0])
+
+    def test_venta_sin_pila_informa_sin_trazabilidad(self):
+        """CU-68, Excepcion 1."""
+        venta = self._vender()
+        respuesta = self._trazar(venta["id"])
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertFalse(respuesta.data["trazable"])
+        self.assertIn("no cuenta con trazabilidad", respuesta.data["advertencias"][0])
+
+    def test_pila_en_proceso_advierte_composicion_no_definitiva(self):
+        """CU-68, Excepcion 2: se muestra lo disponible, con advertencia."""
+        venta = self._vender(pila=self.pila_en_proceso)
+        respuesta = self._trazar(venta["id"])
+        self.assertTrue(respuesta.data["trazable"])
+        self.assertFalse(respuesta.data["lineas"][0]["pila"]["composicion_definitiva"])
+        self.assertIn("aun no es definitiva", respuesta.data["advertencias"][0])
+
+    def test_solo_el_administrador_consulta_la_trazabilidad(self):
+        venta = self._vender(pila=self.pila_cerrada)
+        self.autenticar(self.operador)
+        self.assertEqual(
+            self._trazar(venta["id"]).status_code, status.HTTP_403_FORBIDDEN
+        )
+
+    def test_una_pila_con_ventas_no_se_puede_borrar(self):
+        """PROTECT: la pila vendida es evidencia de trazabilidad."""
+        from django.db.models import ProtectedError
+
+        self._vender(pila=self.pila_cerrada)
+        with self.assertRaises(ProtectedError):
+            self.pila_cerrada.delete()

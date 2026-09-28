@@ -16,7 +16,7 @@ title CU-54 Ajustando los supuestos de una proyeccion (flujo normal)
 actor Administrador
 participant "V_Proyecciones" as V
 participant "C_Proyecciones" as C
-participant ":Proyeccion" as P
+participant ":proyecciones_proyeccion" as P
 
 Administrador -> V : selecciona una proyeccion y abre sus supuestos
 V -> C : obtenerSupuestos(proyeccion)

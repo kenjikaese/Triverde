@@ -16,7 +16,7 @@ title CU-57 Consultando el historial de cotizaciones (flujo normal)
 actor Administrador
 participant "V_ListaCotizaciones" as V
 participant "C_Cotizaciones" as C
-participant ":Cotizacion" as COT
+participant ":comercial_cotizacion" as COT
 
 Administrador -> V : abre "Historial de cotizaciones"
 V -> C : listarCotizaciones()

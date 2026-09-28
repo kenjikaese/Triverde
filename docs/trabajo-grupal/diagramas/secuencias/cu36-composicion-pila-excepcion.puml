@@ -16,9 +16,9 @@ title CU-36 Registrando la composicion (excepcion: cantidad, repetido o sin mate
 actor Operador
 participant "V_ComposicionPila" as V
 participant "C_Pilas" as C
-participant ":Inventario" as I
-participant ":ComposicionPila" as CP
-participant ":Pila" as P
+participant ":inventario_inventario" as I
+participant ":inventario_composicionpila" as CP
+participant ":inventario_pila" as P
 
 Operador -> V : agrega un material a la pila
 V -> C : agregarComposicion(pila, material, volumen)

@@ -16,8 +16,8 @@ title CU-63 Registrando un documento tributario pendiente (flujo normal)
 actor Administrador
 participant "V_ListaVentas" as V
 participant "C_Documentos" as C
-participant ":Venta" as VT
-participant ":DocumentoTributario" as DT
+participant ":comercial_venta" as VT
+participant ":comercial_documentotributario" as DT
 
 Administrador -> V : desde el detalle de una venta o un cobro, presiona "Registrar documento tributario"
 V -> C : prepararDocumento(origen)

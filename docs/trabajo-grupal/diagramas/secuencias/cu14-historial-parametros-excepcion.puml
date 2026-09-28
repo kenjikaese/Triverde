@@ -16,7 +16,7 @@ title CU-14 Consultando el historial (excepcion: filtro sin resultados o paramet
 actor Administrador
 participant "V_HistorialParametros" as V
 participant "C_Configuracion" as C
-participant ":HistorialCambioParametro" as H
+participant ":configuracion_historialcambioparametro" as H
 
 Administrador -> V : aplica un filtro sobre el historial
 V -> C : listarHistorial(filtro)

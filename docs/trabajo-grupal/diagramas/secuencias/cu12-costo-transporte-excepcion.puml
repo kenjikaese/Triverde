@@ -16,7 +16,7 @@ title CU-12 Configurando el costo por kilometro (excepcion: valor invalido o sin
 actor Administrador
 participant "V_FormularioTarifa" as V
 participant "C_Configuracion" as C
-participant ":CostoTransporte" as CT
+participant ":configuracion_costotransporte" as CT
 
 Administrador -> V : ingresa un valor y presiona "Guardar costo"
 V -> C : guardarCostoTransporte(valor)

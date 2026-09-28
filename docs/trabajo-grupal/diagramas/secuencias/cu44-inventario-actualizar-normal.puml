@@ -15,9 +15,9 @@ title CU-44 Actualizando el inventario tras un proceso (flujo normal)
 
 actor Sistema
 participant "C_ProcesosPila" as C
-participant ":ComposicionPila" as CP
-participant ":ProcesoPila" as PP
-participant ":Inventario" as I
+participant ":inventario_composicionpila" as CP
+participant ":inventario_procesopila" as PP
+participant ":inventario_inventario" as I
 
 Sistema -> C : detecta que se creo una ComposicionPila o un ProcesoPila que traslada material
 alt el disparador es una composicion de pila

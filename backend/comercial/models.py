@@ -81,6 +81,12 @@ class DetalleVenta(models.Model):
     `precio_unitario` se copia del producto al momento de vender (precio
     historico: cambiar el catalogo despues no altera ventas ya registradas) y
     `subtotal` es su producto por la cantidad.
+
+    `pila` es el enlace Venta -> Pila que necesita el CU-68 (Modulo 9, punto de
+    integracion 1 del Inc 3): indica de que lote salio el producto vendido. Es
+    opcional porque los servicios y los productos sin lote no tienen pila de
+    origen. PROTECT porque una pila con ventas asociadas es evidencia de
+    trazabilidad y no debe desaparecer.
     """
 
     venta = models.ForeignKey(
@@ -88,6 +94,13 @@ class DetalleVenta(models.Model):
     )
     producto = models.ForeignKey(
         Producto, on_delete=models.PROTECT, related_name="detalles_venta"
+    )
+    pila = models.ForeignKey(
+        "inventario.Pila",
+        on_delete=models.PROTECT,
+        related_name="detalles_venta",
+        null=True,
+        blank=True,
     )
     cantidad = models.DecimalField(max_digits=10, decimal_places=2)
     unidad = models.CharField(max_length=6, choices=Producto.UNIDAD_VENTA_CHOICES)

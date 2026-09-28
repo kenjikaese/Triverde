@@ -16,8 +16,8 @@ title CU-61 Registrar el cobro (excepcion: sin tarifa del tramo, monto invalido 
 actor Operador
 participant "V_Cobros" as V
 participant "C_Cobros" as C
-participant ":TarifaRecepcion" as T
-participant ":Cobro" as CB
+participant ":configuracion_tarifarecepcion" as T
+participant ":comercial_cobro" as CB
 
 Operador -> V : presiona "Registrar cobro"
 alt no hay tarifa configurada para el tramo del vehiculo

@@ -1,0 +1,44 @@
+@startuml cu88-registrar-vigencia-excepcion
+' CU-88 Registrando la vigencia de un documento - flujo de excepcion
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-88 Registrar vigencia (excepcion: documento inexistente, rango invalido o ya vencido)
+
+actor Administrador
+participant "V_ListaDocumentos" as V
+participant "C_DocumentosLegales" as C
+participant ":documental_documentolegal" as DL
+participant ":configuracion_parametroconversion" as PC
+
+alt el documento no existe
+  V -> C : registrarVigencia(documento, emision, vencimiento)
+  C -> DL : obtener(documento)
+  DL --> C : no encontrado
+  C --> V : documento no disponible
+  V --> Administrador : informa que el documento no esta disponible
+else vencimiento anterior a la emision o fecha incompleta
+  V -> C : registrarVigencia(documento, emision, vencimiento)
+  C -> C : valida el rango de fechas
+  C --> V : rechaza el rango
+  V --> Administrador : solicita fechas validas
+else el vencimiento ya paso
+  V -> C : registrarVigencia(documento, emision, vencimiento pasado)
+  C -> PC : obtener("alerta_documento_dias")
+  PC --> C : umbral de proximidad
+  C -> C : derivarEstado() = "vencido"
+  C -> DL : actualizar(fechas, estado = "vencido")
+  DL --> C : documento actualizado
+  C --> V : vigencia registrada como vencida
+  V --> Administrador : muestra el documento vencido
+end
+
+@enduml
