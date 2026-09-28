@@ -20,6 +20,7 @@ from mantenedores.urls import router as mantenedores_router
 from recepcion.urls import router as recepcion_router
 from mantenimiento.urls import router as mantenimiento_router
 from proyecciones.urls import router as proyecciones_router
+from reportes.urls import router as reportes_router
 
 router = DefaultRouter()
 for app_router in (
@@ -32,6 +33,7 @@ for app_router in (
     mezcla_router,
     proyecciones_router,
     mantenimiento_router,
+    reportes_router,
 ):
     router.registry.extend(app_router.registry)
 

@@ -1,0 +1,13 @@
+@startuml cu73-reporte-recepciones-excepcion
+title CU-73 Consultando el reporte de recepciones por periodo (excepcion)
+actor Administrador
+participant "V_Reportes" as V
+participant "C_Reportes" as C
+participant ":Reporte" as REP
+Administrador -> V : define periodo incompleto o invalido
+V -> C : generar(recepciones, periodo)
+C -> C : validar rango de fechas
+C --> V : rechaza solicitud con detalle
+V --> Administrador : solicita un periodo valido
+note over REP : no se crea Reporte
+@enduml

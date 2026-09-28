@@ -1,0 +1,15 @@
+@startuml cu76-exportar-reporte-excepcion
+title CU-76 Exportando un reporte a documento (excepcion)
+actor Administrador
+participant "V_Reportes" as V
+participant "C_Reportes" as C
+participant ":Reporte" as REP
+Administrador -> V : presiona Exportar
+V -> C : exportar(reporte)
+C -> REP : obtener contenido guardado
+REP --> C : reporte disponible
+C -> C : intenta generar documento
+C --> V : informa falla temporal de exportacion
+V --> Administrador : muestra error y permite reintentar
+note over REP : el reporte original se conserva
+@enduml

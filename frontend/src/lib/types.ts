@@ -359,6 +359,21 @@ export interface ComparacionProyeccion {
   ingreso_real?: number | null;
 }
 
+export type TipoReporte = "recepciones" | "produccion" | "ventas_cobros";
+export type FormatoReporte = "pdf" | "excel" | "csv";
+
+export interface Reporte {
+  id: number;
+  tipo: TipoReporte;
+  tipo_display: string;
+  periodo_inicio: string;
+  periodo_fin: string;
+  formato: FormatoReporte;
+  fecha_generado: string;
+  usuario: number | null;
+  contenido: Record<string, unknown>;
+}
+
 export interface PilaResumen {
   id: number;
   codigo: string;
