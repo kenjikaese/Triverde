@@ -1,6 +1,6 @@
-# Pruebas end-to-end — Módulo 8 (Comercial) y Módulo 9 Parte A (Trazabilidad)
+# Pruebas end-to-end — Módulos 8 (Comercial), 9 (Trazabilidad), 10 (Reportes y panel) y 12 (Gestión documental)
 
-Verifican los CU-55 a CU-64 y los CU-65 a CU-68 sobre el sistema andando:
+Verifican los CU-55 a CU-64, CU-65 a CU-68, CU-72, 73, 76 y 77, y CU-86, 87, 88 y 91 sobre el sistema andando:
 navegador real, frontend real y backend real.
 
 ## Cómo correrlas
@@ -30,6 +30,8 @@ y los apaga al terminar.
 | `06-certificados.spec.ts` | CU-65, CU-66 y permisos del Módulo 9 |
 | `07-sinader.spec.ts` | CU-67 |
 | `08-trazabilidad-lote.spec.ts` | CU-68 (sobre el enlace Venta → Pila del CU-58) |
+| `09-reportes-panel.spec.ts` | CU-73, CU-76, CU-72, CU-77 y permisos del panel |
+| `10-documentos.spec.ts` | CU-86, CU-87, CU-88, CU-91 y permisos del tablero |
 
 ## Las tres capas de evidencia
 

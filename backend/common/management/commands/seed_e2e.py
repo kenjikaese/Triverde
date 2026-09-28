@@ -1,4 +1,4 @@
-"""Siembra los datos que necesitan las pruebas end-to-end del Modulo 8.
+"""Siembra los datos que necesitan las pruebas end-to-end (Modulos 8, 9, 10 y 12).
 
 Se apoya en `seed_inicial` (roles, admin, parametros y tarifas por tramo) y
 agrega lo propio del ciclo comercial: un operador, un cliente con datos de
@@ -28,9 +28,12 @@ from comercial.models import (
     DocumentoTributario,
     Venta,
 )
+from documental.models import DocumentoLegal, VersionDocumento
 from inventario.models import AporteRecepcionPila, ComposicionPila, Pila
 from mantenedores.models import Cliente, Material, Producto, Vehiculo
+from mezcla.models import Alerta
 from recepcion.models import DetalleRecepcion, Recepcion
+from reportes.models import PanelControl
 from trazabilidad.models import (
     CertificadoTrazabilidad,
     DeclaracionSinader,
@@ -60,6 +63,16 @@ class Command(BaseCommand):
         DetalleVenta.objects.all().delete()
         Venta.objects.all().delete()
         Cotizacion.objects.all().delete()
+
+        # --- Estado limpio de gestion documental y del panel (Inc 3) -------
+        # Las versiones protegen (PROTECT) a su documento: se borran primero.
+        # Sin esto, el registro del CU-86 chocaria con su propio duplicado en
+        # la corrida siguiente.
+        Alerta.objects.filter(origen=Alerta.DOCUMENTO).delete()
+        VersionDocumento.objects.all().delete()
+        DocumentoLegal.objects.all().delete()
+        # El panel parte del conjunto por defecto (CU-72 Excepcion 1).
+        PanelControl.objects.all().delete()
 
         # --- Usuarios con clave conocida -----------------------------------
         rol_admin = Rol.objects.get(nombre=Rol.ADMINISTRADOR)

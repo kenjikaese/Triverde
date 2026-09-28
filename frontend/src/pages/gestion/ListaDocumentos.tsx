@@ -41,7 +41,7 @@ interface Aviso {
   confirmar: () => void;
 }
 
-// C_DocumentosLegales (CU-86 a CU-89): registro, adjunto de archivo, vigencia y
+// V_ListaDocumentos sobre C_Documentos (CU-86 a CU-89): registro, adjunto de archivo, vigencia y
 // renovacion. El estado lo deriva el servidor desde la vigencia; el historial de
 // versiones (CU-92) se consulta en su vista propia.
 export function ListaDocumentos() {
