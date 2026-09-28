@@ -1,0 +1,39 @@
+@startuml cu72-panel-control-excepcion
+' CU-72 Consultando el panel de control general - excepciones 1 y 2
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName Helvetica
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #EAF3E7
+skinparam ParticipantBorderColor #2E5E2A
+skinparam ActorBackgroundColor #EAF3E7
+skinparam ActorBorderColor #2E5E2A
+skinparam sequenceLifeLineBorderColor #9CC49A
+skinparam ArrowColor #4B7A46
+
+title CU-72 Consultando el panel de control general (excepcion: sin personalizar y bloque sin datos)
+
+actor Administrador
+participant "V_PanelControl" as V
+participant "C_Reportes" as C
+participant ":reportes_panelcontrol" as PC
+participant ":inventario_inventario" as INV
+participant ":inventario_pila" as P
+participant ":comercial_venta" as VE
+
+Administrador -> V : abre el panel de control
+V -> C : armarPanel()
+C -> PC : buscar(usuario)
+PC --> C : sin preferencia guardada
+C -> C : usa el conjunto por defecto (inventario, produccion, ventas)
+C -> INV : saldos con volumen por material y etapa
+INV --> C : filas de inventario
+C -> P : pilas recientes con su volumen de composicion
+P --> C : pilas recientes
+C -> VE : ventas del mes en curso
+VE --> C : sin ventas en el mes
+C -> C : deja el bloque de ventas en cero
+C --> V : bloques del panel
+V --> Administrador : muestra el panel por defecto con ventas en cero, sin error
+
+@enduml
