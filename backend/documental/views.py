@@ -14,7 +14,7 @@ from common.permissions import IsAdministrador
 from common.trazas import traza
 from common.views import fecha_o_none
 
-from . import services
+from . import cumplimiento, services
 from .models import DocumentoLegal
 from .serializers import DocumentoLegalSerializer, VersionDocumentoSerializer
 
@@ -114,6 +114,30 @@ class DocumentoLegalViewSet(viewsets.ModelViewSet):
         return Response(
             VersionDocumentoSerializer(version, context=self.get_serializer_context()).data,
             status=status.HTTP_201_CREATED,
+        )
+
+    @action(detail=True, methods=["get"])
+    def historial(self, request, pk=None):
+        """CU-92 (Parte F): versiones de la mas reciente a la mas antigua.
+
+        Solo lectura: ni el documento ni sus versiones cambian. Cada version
+        trae la URL de su archivo, para poder descargar las anteriores.
+        """
+        documento = self.get_object()
+        versiones = cumplimiento.historial(documento)
+        traza(
+            "CU-92",
+            "historial.consultado",
+            documento=documento.pk,
+            versiones=versiones.count(),
+        )
+        return Response(
+            {
+                "documento": self.get_serializer(documento).data,
+                "versiones": VersionDocumentoSerializer(
+                    versiones, many=True, context=self.get_serializer_context()
+                ).data,
+            }
         )
 
     @action(detail=True, methods=["post"])

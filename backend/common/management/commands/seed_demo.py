@@ -162,4 +162,55 @@ class Command(BaseCommand):
         except Exception as e:  # noqa: BLE001
             self._warn(f"Proyeccion: {e}")
 
+        # --- M12: documentos legales en los cuatro estados -------------------
+        # Uno por estado para que el tablero de cumplimiento (CU-91) y la
+        # bandeja de alertas muestren algo real en la demo. Las fechas se
+        # calculan contra el umbral configurado, no fijas, para que el estado
+        # derivado siga siendo el esperado aunque pase el tiempo.
+        try:
+            from django.core.files.base import ContentFile
+
+            from documental.cumplimiento import revisar_vencimientos
+            from documental.models import DocumentoLegal, VersionDocumento
+            from documental.services import registrar_vigencia, umbral_dias
+
+            if not DocumentoLegal.objects.exists():
+                hoy = date.today()
+                umbral = umbral_dias()
+                documentos = [
+                    ("Autorizacion sanitaria de la planta", DocumentoLegal.RESOLUCION,
+                     "SEREMI de Salud", hoy + timedelta(days=umbral * 12)),
+                    ("Seguro de responsabilidad civil", DocumentoLegal.SEGURO,
+                     "Compania de Seguros", hoy + timedelta(days=max(umbral // 3, 1))),
+                    ("Declaracion SINADER del periodo anterior", DocumentoLegal.CERTIFICADO,
+                     "Ministerio del Medio Ambiente", hoy - timedelta(days=20)),
+                    ("Patente comercial en tramite", DocumentoLegal.PERMISO,
+                     "Municipalidad de Colina", None),
+                ]
+                for nombre, tipo, entidad, vencimiento in documentos:
+                    documento = DocumentoLegal.objects.create(
+                        nombre=nombre, tipo=tipo, entidad_emisora=entidad
+                    )
+                    VersionDocumento.objects.create(
+                        documento=documento,
+                        archivo=ContentFile(
+                            b"%PDF-1.4 documento de demostracion",
+                            name=f"{documento.pk}-v1.pdf",
+                        ),
+                        nombre_archivo=f"{nombre[:40]}.pdf",
+                        version=1,
+                        vigente=True,
+                    )
+                    if vencimiento:
+                        registrar_vigencia(
+                            documento, vencimiento - timedelta(days=365), vencimiento
+                        )
+            resumen = revisar_vencimientos()
+            self._ok(
+                "Documentos legales listos "
+                f"(alertas de vencimiento: {resumen['alertas_creadas']})."
+            )
+        except Exception as e:  # noqa: BLE001
+            self._warn(f"Documental: {e}")
+
         self._ok("seed_demo completado.")

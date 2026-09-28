@@ -579,3 +579,33 @@ export interface DocumentoLegal {
   fecha_registro: string;
   version_vigente: VersionDocumento | null;
 }
+
+// Parte F (CU-91 y CU-92). `dias_restantes` va en negativo cuando el documento
+// ya vencio; el servidor lo calcula junto con el orden por proximidad.
+export type NivelAlerta = "informativa" | "advertencia" | "critica";
+
+export interface DocumentoPendiente {
+  id: number;
+  nombre: string;
+  tipo: TipoDocumento;
+  tipo_display: string;
+  entidad_emisora: string;
+  fecha_vencimiento: string | null;
+  dias_restantes: number | null;
+  estado: EstadoDocumento;
+  estado_display: string;
+  alerta_nivel: NivelAlerta | null;
+}
+
+export interface TableroCumplimiento {
+  resumen: Record<EstadoDocumento, number>;
+  total: number;
+  umbral_dias: number;
+  pendientes: DocumentoPendiente[];
+  sin_vigencia: DocumentoPendiente[];
+}
+
+export interface HistorialVersiones {
+  documento: DocumentoLegal;
+  versiones: VersionDocumento[];
+}
