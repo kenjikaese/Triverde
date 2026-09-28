@@ -47,7 +47,7 @@ class PanelControl(models.Model):
     """Preferencia de indicadores del panel de un administrador (CU-77).
 
     Uno por usuario; `indicadores_visibles` es la lista de claves de
-    indicador activas (subconjunto de `services.INDICADORES_VALIDOS`).
+    indicador activas (subconjunto de `services.INDICADORES`, en su orden).
     """
 
     DEFECTO = ["inventario", "produccion", "ventas"]

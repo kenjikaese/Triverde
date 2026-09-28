@@ -1,8 +1,9 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from io import BytesIO
 
 from django.urls import reverse
+from django.utils import timezone
 from openpyxl import load_workbook
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -156,6 +157,7 @@ class PanelControlTests(APITestCase):
         )
         cls.cliente = Cliente.objects.create(razon_social="Vivero Sur")
         cls.material = Material.objects.create(nombre="Poda", categoria=Material.VERDE)
+        cls.pasto = Material.objects.create(nombre="Pasto", categoria=Material.VERDE)
         cls.producto = Producto.objects.create(
             nombre="Compost premium", tipo=Producto.COMPOST, unidad_de_venta=Producto.SACO,
             precio=Decimal("50000"),
@@ -170,64 +172,117 @@ class PanelControlTests(APITestCase):
             codigo="P-0002", fecha_inicio=date(2026, 9, 12), estado=Pila.EN_PROCESO
         )
         ComposicionPila.objects.create(pila=pila_en_proceso, material=cls.material, volumen_m3=Decimal("1.8"))
+        ComposicionPila.objects.create(pila=pila_en_proceso, material=cls.pasto, volumen_m3=Decimal("0.7"))
+        Pila.objects.create(codigo="P-0003", fecha_inicio=date(2026, 9, 14), estado=Pila.EN_REPOSO)
 
-        venta = Venta.objects.create(cliente=cls.cliente, fecha=date(2026, 9, 15), total=Decimal("50000"))
+        ProcesoPila.objects.create(
+            pila=pila_en_proceso, tipo=ProcesoPila.VOLTEO, fecha=timezone.now(), operador=cls.admin
+        )
+
+        venta = Venta.objects.create(cliente=cls.cliente, total=Decimal("50000"))
         DetalleVenta.objects.create(
             venta=venta, producto=cls.producto, cantidad=Decimal("1"), unidad="saco",
             precio_unitario=Decimal("50000"), subtotal=Decimal("50000"),
         )
+        # Venta del mes anterior: no entra al total del mes en curso.
+        antigua = Venta.objects.create(cliente=cls.cliente, total=Decimal("99000"))
+        Venta.objects.filter(pk=antigua.pk).update(
+            fecha=timezone.localdate().replace(day=1) - timedelta(days=1)
+        )
 
         Inventario.objects.create(material=cls.material, etapa=Inventario.CURADO, volumen_m3=Decimal("12"))
+        Inventario.objects.create(material=cls.material, etapa=Inventario.CHIP, volumen_m3=Decimal("0"))
 
     def setUp(self):
         self.client.force_authenticate(self.admin)
 
+    def guardar(self, indicadores):
+        return self.client.post(
+            reverse("panel-preferencias"), {"indicadores_visibles": indicadores}, format="json"
+        )
+
     def test_sin_panelcontrol_previo_usa_set_por_defecto(self):
         respuesta = self.client.get(reverse("panel-list"))
         self.assertEqual(respuesta.status_code, status.HTTP_200_OK, respuesta.data)
-        self.assertEqual(
-            sorted(respuesta.data["indicadores_visibles"]), ["inventario", "produccion", "ventas"]
-        )
-        self.assertIn("inventario", respuesta.data["bloques"])
-        self.assertIn("produccion", respuesta.data["bloques"])
-        self.assertIn("ventas", respuesta.data["bloques"])
+        self.assertEqual(respuesta.data["indicadores_visibles"], ["inventario", "produccion", "ventas"])
+        self.assertEqual(set(respuesta.data["bloques"]), {"inventario", "produccion", "ventas"})
 
-    def test_bloque_sin_datos_aparece_en_cero_y_pila_en_proceso_marcada(self):
+    def test_bloques_con_datos(self):
+        bloques = self.client.get(reverse("panel-list")).data["bloques"]
+
+        self.assertEqual(bloques["inventario"]["total_m3"], 12.0)
+        self.assertEqual(len(bloques["inventario"]["filas"]), 1)  # el saldo en cero no se lista
+
+        pilas = {fila["codigo"]: fila for fila in bloques["produccion"]["pilas"]}
+        self.assertFalse(pilas["P-0001"]["en_proceso"])
+        self.assertTrue(pilas["P-0002"]["en_proceso"])
+        self.assertTrue(pilas["P-0003"]["en_proceso"])  # en reposo: aun no completa su ciclo
+        self.assertEqual(pilas["P-0002"]["volumen_m3"], 2.5)
+        self.assertEqual(bloques["produccion"]["pilas_en_proceso"], 2)
+        self.assertEqual(bloques["produccion"]["procesos"][0]["pila"], "P-0002")
+
+        self.assertEqual(bloques["ventas"]["cantidad"], 1)
+        self.assertEqual(bloques["ventas"]["total_vendido"], 50000.0)
+
+    def test_bloque_sin_datos_aparece_en_cero(self):
         Inventario.objects.all().delete()
-        respuesta = self.client.get(reverse("panel-list"))
-        self.assertEqual(respuesta.data["bloques"]["inventario"], [])
-        estados = {fila["estado"] for fila in respuesta.data["bloques"]["produccion"]}
-        self.assertIn("en_proceso", estados)
+        Venta.objects.all().delete()
+        bloques = self.client.get(reverse("panel-list")).data["bloques"]
+        self.assertEqual(bloques["inventario"], {"total_m3": 0, "filas": []})
+        self.assertEqual(bloques["ventas"]["cantidad"], 0)
+        self.assertEqual(bloques["ventas"]["total_vendido"], 0.0)
+
+    def test_consultar_panel_no_modifica_datos(self):
+        antes = (Inventario.objects.get(etapa=Inventario.CURADO).volumen_m3, Pila.objects.count())
+        self.client.get(reverse("panel-list"))
+        despues = (Inventario.objects.get(etapa=Inventario.CURADO).volumen_m3, Pila.objects.count())
+        self.assertEqual(antes, despues)
+        self.assertFalse(PanelControl.objects.filter(usuario=self.admin).exists())
+
+    def test_preferencias_sin_panel_lista_disponibles_y_defecto(self):
+        respuesta = self.client.get(reverse("panel-preferencias"))
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(respuesta.data["indicadores_visibles"], ["inventario", "produccion", "ventas"])
+        self.assertEqual([d["clave"] for d in respuesta.data["disponibles"]], ["inventario", "produccion", "ventas"])
+        self.assertIsNone(respuesta.data["actualizado"])
 
     def test_guardar_preferencias_crea_o_actualiza_panelcontrol_y_panel_refleja_seleccion(self):
-        respuesta = self.client.post(
-            reverse("panel-preferencias"), {"indicadores_visibles": ["ventas"]}, format="json"
-        )
+        respuesta = self.guardar(["ventas"])
         self.assertEqual(respuesta.status_code, status.HTTP_200_OK, respuesta.data)
         self.assertEqual(respuesta.data["indicadores_visibles"], ["ventas"])
+        self.assertTrue(respuesta.data["cambio"])
 
         panel = self.client.get(reverse("panel-list"))
         self.assertEqual(panel.data["indicadores_visibles"], ["ventas"])
-        self.assertEqual(set(panel.data["bloques"].keys()), {"ventas"})
+        self.assertEqual(set(panel.data["bloques"]), {"ventas"})
         self.assertTrue(BitacoraAuditoria.objects.filter(entidad_afectada="PanelControl").exists())
 
+        self.assertTrue(self.guardar(["ventas", "inventario"]).data["cambio"])
+        self.assertEqual(PanelControl.objects.count(), 1)
+
     def test_guardar_sin_indicadores_se_rechaza(self):
-        respuesta = self.client.post(reverse("panel-preferencias"), {"indicadores_visibles": []}, format="json")
+        respuesta = self.guardar([])
         self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("indicadores_visibles", respuesta.data)
+        self.assertFalse(PanelControl.objects.exists())
 
     def test_guardar_con_indicador_invalido_se_rechaza(self):
-        respuesta = self.client.post(
-            reverse("panel-preferencias"), {"indicadores_visibles": ["hackerman"]}, format="json"
-        )
-        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(self.guardar(["hackerman"]).status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_guardar_sin_cambios_no_genera_nueva_actualizacion(self):
-        self.client.post(reverse("panel-preferencias"), {"indicadores_visibles": ["ventas"]}, format="json")
+        self.guardar(["ventas", "inventario"])
         actualizado_antes = PanelControl.objects.get(usuario=self.admin).actualizado
+        auditorias_antes = BitacoraAuditoria.objects.filter(entidad_afectada="PanelControl").count()
 
-        self.client.post(reverse("panel-preferencias"), {"indicadores_visibles": ["ventas"]}, format="json")
-        actualizado_despues = PanelControl.objects.get(usuario=self.admin).actualizado
-        self.assertEqual(actualizado_antes, actualizado_despues)
+        # Mismo conjunto en otro orden y con un repetido: no es un cambio real.
+        respuesta = self.guardar(["inventario", "ventas", "ventas"])
+        self.assertFalse(respuesta.data["cambio"])
+        panel = PanelControl.objects.get(usuario=self.admin)
+        self.assertEqual(panel.actualizado, actualizado_antes)
+        self.assertEqual(panel.indicadores_visibles, ["inventario", "ventas"])
+        self.assertEqual(
+            BitacoraAuditoria.objects.filter(entidad_afectada="PanelControl").count(), auditorias_antes
+        )
 
     def test_sin_rol_administrador_no_accede(self):
         operador = Usuario.objects.create_user(
@@ -236,3 +291,4 @@ class PanelControlTests(APITestCase):
         )
         self.client.force_authenticate(operador)
         self.assertEqual(self.client.get(reverse("panel-list")).status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(self.guardar(["ventas"]).status_code, status.HTTP_403_FORBIDDEN)

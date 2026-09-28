@@ -55,7 +55,7 @@ class PreferenciasPanelSerializer(serializers.Serializer):
     """Entrada para guardar la seleccion de indicadores del panel (CU-77)."""
 
     indicadores_visibles = serializers.ListField(child=serializers.CharField(), allow_empty=True)
-    configuracion = serializers.JSONField(required=False)
+    configuracion = serializers.DictField(required=False)
 
     def validate_indicadores_visibles(self, value):
         invalidos = sorted(set(value) - INDICADORES_VALIDOS)
