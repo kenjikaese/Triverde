@@ -15,7 +15,7 @@ title CU-66 Generando el certificado consolidado mensual de un cliente (flujo no
 
 actor Administrador
 participant "V_Certificados" as V
-participant "C_Certificados" as C
+participant "C_Trazabilidad" as C
 participant ":mantenedores_cliente" as CL
 participant ":recepcion_recepcion" as R
 participant ":recepcion_detallerecepcion" as DR

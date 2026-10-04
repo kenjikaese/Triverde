@@ -220,6 +220,9 @@ class VentaViewSet(RangoFechaMixin, viewsets.ModelViewSet):
     def trazabilidad(self, request, pk=None):
         """CU-68: cadena trazable del lote entregado (Venta -> Pila).
 
+        Controlador de diseño C_Trazabilidad (docs/13), expuesto sobre la venta
+        porque la cadena parte de ella.
+
         Solo lectura y solo Administrador (spec M9, Parte A).
         """
         venta = self.get_object()

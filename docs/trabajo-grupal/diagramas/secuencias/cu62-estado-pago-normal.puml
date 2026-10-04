@@ -15,7 +15,7 @@ title CU-62 Registrando el estado de pago de un cliente (flujo normal)
 
 actor Administrador
 participant "V_CuentaCorriente" as V
-participant "C_CuentaCorriente" as C
+participant "C_Cobros" as C
 participant ":mantenedores_cliente" as CL
 
 Administrador -> V : consulta la cuenta corriente del cliente y presiona "Actualizar estado de pago"

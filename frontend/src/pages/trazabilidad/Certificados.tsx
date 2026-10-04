@@ -17,7 +17,7 @@ interface ConsolidadoPrevio {
 }
 
 // CU-65 y CU-66: emision de certificados por descarga y consolidado mensual,
-// mas el historial (C_Certificados). El contenido lo compila el servidor; la
+// mas el historial (C_Trazabilidad). El contenido lo compila el servidor; la
 // exportacion descarga ese contenido como archivo, igual que el CU-56.
 export function Certificados() {
   const periodo = periodoVigente();

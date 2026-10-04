@@ -14,7 +14,7 @@ skinparam ArrowColor #4B7A46
 title CU-70 Calcular CO2 de pila (excepcion: composicion, densidad o factor faltante y recalculo)
 
 actor Sistema
-participant "C_IndicadorAmbiental" as C
+participant "C_Ambiental" as C
 participant ":inventario_pila" as P
 participant ":inventario_composicionpila" as CP
 participant ":mantenedores_material" as M

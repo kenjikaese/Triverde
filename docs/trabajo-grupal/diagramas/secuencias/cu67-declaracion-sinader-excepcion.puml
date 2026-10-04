@@ -15,7 +15,7 @@ title CU-67 Exportando la declaracion para SINADER (excepcion: periodo vacio o c
 
 actor Administrador
 participant "V_ExportacionSinader" as V
-participant "C_Sinader" as C
+participant "C_Trazabilidad" as C
 participant ":recepcion_recepcion" as R
 participant ":mantenedores_cliente" as CL
 participant ":trazabilidad_declaracionsinader" as DS

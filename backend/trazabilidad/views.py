@@ -47,7 +47,7 @@ def _leer_periodo(datos):
 
 
 class CertificadoTrazabilidadViewSet(viewsets.ReadOnlyModelViewSet):
-    """C_Certificados: emitir por descarga (CU-65), consolidado (CU-66),
+    """C_Trazabilidad (docs/13), certificados: emitir por descarga (CU-65), consolidado (CU-66),
     historial y exportacion. Solo Administrador (spec M9, Parte A)."""
 
     queryset = CertificadoTrazabilidad.objects.select_related("cliente", "recepcion")
@@ -148,7 +148,7 @@ class CertificadoTrazabilidadViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class DeclaracionSinaderViewSet(viewsets.ReadOnlyModelViewSet):
-    """C_Sinader: generar y descargar la declaracion del periodo (CU-67).
+    """C_Trazabilidad (docs/13), SINADER: generar y descargar la declaracion del periodo (CU-67).
     Solo Administrador."""
 
     queryset = DeclaracionSinader.objects.select_related("usuario")
@@ -192,7 +192,7 @@ class DeclaracionSinaderViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class IndicadorAmbientalViewSet(viewsets.ReadOnlyModelViewSet):
-    """C_IndicadorAmbiental - acumulado, desglose y filtro de CU-71."""
+    """C_Ambiental (docs/13): acumulado, desglose y filtro de CU-71."""
 
     queryset = IndicadorAmbiental.objects.select_related(
         "recepcion__cliente", "pila"

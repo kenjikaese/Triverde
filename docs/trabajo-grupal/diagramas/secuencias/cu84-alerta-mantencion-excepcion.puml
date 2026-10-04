@@ -14,7 +14,7 @@ skinparam ArrowColor #4B7A46
 title CU-84 Generar la alerta (excepcion: sin umbral configurado, alerta existente o mantencion resuelta)
 
 actor Sistema
-participant "C_Mantencion" as C
+participant "C_Mantenimiento" as C
 participant ":configuracion_parametroconversion" as PC
 participant ":mezcla_alerta" as A
 

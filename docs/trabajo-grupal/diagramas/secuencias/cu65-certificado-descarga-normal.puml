@@ -15,7 +15,7 @@ title CU-65 Generando un certificado de trazabilidad por descarga (flujo normal)
 
 actor Administrador
 participant "V_Certificados" as V
-participant "C_Certificados" as C
+participant "C_Trazabilidad" as C
 participant ":recepcion_recepcion" as R
 participant ":recepcion_detallerecepcion" as DR
 participant ":trazabilidad_certificadotrazabilidad" as CT

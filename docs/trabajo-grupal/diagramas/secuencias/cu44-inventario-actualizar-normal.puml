@@ -14,7 +14,7 @@ skinparam ArrowColor #4B7A46
 title CU-44 Actualizando el inventario tras un proceso (flujo normal)
 
 actor Sistema
-participant "C_ProcesosPila" as C
+participant "C_Inventario" as C
 participant ":inventario_composicionpila" as CP
 participant ":inventario_procesopila" as PP
 participant ":inventario_inventario" as I

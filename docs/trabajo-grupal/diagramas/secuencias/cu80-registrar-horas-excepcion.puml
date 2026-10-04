@@ -15,7 +15,7 @@ title CU-80 Registrar horas (excepcion: activo fuera de servicio, lectura menor 
 
 actor Operador
 participant "V_RegistroUso" as V
-participant "C_RegistroUso" as C
+participant "C_Maquinaria" as C
 participant ":mantenimiento_registrouso" as RU
 participant ":mantenimiento_maquinaria" as MQ
 

@@ -15,12 +15,13 @@ title CU-68 Consultando el detalle trazable de un lote entregado (flujo normal)
 
 actor Administrador
 participant "V_TrazabilidadLote" as V
-participant "C_Ventas" as C
+participant "C_Trazabilidad" as C
 participant ":comercial_venta" as VT
 participant ":comercial_detalleventa" as DV
 participant ":inventario_pila" as PI
 participant ":inventario_composicionpila" as CP
-participant ":inventario_aporterecepcionpila" as AR
+participant ":inventario_aporterecepcionpila" as AP
+participant ":recepcion_detallerecepcion" as DR
 participant ":recepcion_recepcion" as R
 
 Administrador -> V : abre "Trazabilidad de lote"
@@ -39,13 +40,17 @@ loop por cada linea con pila de origen
   PI --> C : codigo, estado cerrada y fecha de inicio
   C -> CP : obtenerComposicion(pila)
   CP --> C : material y volumen incorporados
-  C -> AR : obtenerAportes(pila)
-  AR --> C : descargas de origen y volumen aportado por cada una
-  C -> R : obtener(recepciones de origen)
-  R --> C : cliente generador y fecha de cada descarga
+  C -> AP : obtenerAportes(pila)
+  AP --> C : descargas que alimentaron la pila y volumen aportado
+  loop por cada aporte
+    C -> DR : obtener(detalle_recepcion)
+    DR --> C : material descargado
+    C -> R : obtener(recepcion)
+    R --> C : fecha y cliente de origen
+  end
 end
-C -> C : armar la cadena venta, pila, descargas de origen y composicion
+C -> C : armar la cadena venta, pila, composicion y descargas de origen
 C --> V : cadena trazable del lote
-V --> Administrador : muestra la pila, las descargas que la alimentaron y su composicion
+V --> Administrador : muestra la pila de origen, su composicion y las descargas que la formaron
 
 @enduml

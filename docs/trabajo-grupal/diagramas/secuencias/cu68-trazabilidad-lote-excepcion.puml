@@ -11,15 +11,15 @@ skinparam ActorBorderColor #2E5E2A
 skinparam sequenceLifeLineBorderColor #9CC49A
 skinparam ArrowColor #4B7A46
 
-title CU-68 Consultando el detalle trazable de un lote entregado (excepcion: sin pila de origen o pila en proceso)
+title CU-68 Consultando el detalle trazable de un lote entregado (excepcion: sin pila de origen, pila en proceso o sin descargas registradas)
 
 actor Administrador
 participant "V_TrazabilidadLote" as V
-participant "C_Ventas" as C
+participant "C_Trazabilidad" as C
 participant ":comercial_detalleventa" as DV
 participant ":inventario_pila" as PI
 participant ":inventario_composicionpila" as CP
-participant ":inventario_aporterecepcionpila" as AR
+participant ":inventario_aporterecepcionpila" as AP
 
 Administrador -> V : selecciona la venta a trazar
 V -> C : trazabilidad(venta)
@@ -28,24 +28,22 @@ alt ninguna linea de la venta tiene pila de origen
   DV --> C : lineas sin pila
   C --> V : trazable = no; advertencia de lote sin trazabilidad
   V --> Administrador : informa que el lote no cuenta con trazabilidad de compostaje
-else la pila de origen sigue en proceso
+else la pila de origen sigue en proceso o no tiene descargas registradas
   DV --> C : linea con pila de origen
   C -> PI : obtener(pila)
-  PI --> C : pila en estado distinto de cerrada
+  PI --> C : pila (estado)
   C -> CP : obtenerComposicion(pila)
   CP --> C : composicion registrada hasta ahora
-  C --> V : cadena disponible y advertencia de composicion no definitiva
-  V --> Administrador : muestra el detalle disponible con la advertencia
-else la pila se compuso sin indicar las descargas de origen
-  DV --> C : linea con pila de origen
-  C -> PI : obtener(pila)
-  PI --> C : pila cerrada
-  C -> CP : obtenerComposicion(pila)
-  CP --> C : composicion total por material
-  C -> AR : obtenerAportes(pila)
-  AR --> C : sin aportes registrados
-  C --> V : composicion y advertencia: sin descargas de origen
-  V --> Administrador : muestra la composicion e indica que la cadena llega hasta ahi
+  C -> AP : obtenerAportes(pila)
+  AP --> C : aportes registrados (puede venir vacio)
+  opt pila en estado distinto de cerrada
+    C -> C : advertencia de composicion no definitiva
+  end
+  opt pila sin aportes registrados
+    C -> C : advertencia de cadena hasta la composicion
+  end
+  C --> V : cadena disponible con sus advertencias
+  V --> Administrador : muestra el detalle disponible con las advertencias
 end
 
 @enduml

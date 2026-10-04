@@ -15,7 +15,7 @@ title CU-83 Consultando el historial de mantenimiento de un equipo (flujo normal
 
 actor Operador
 participant "V_HistorialMantenimiento" as V
-participant "C_Mantencion" as C
+participant "C_Mantenimiento" as C
 participant ":mantenimiento_mantencion" as MNT
 participant ":mantenimiento_registrouso" as RU
 

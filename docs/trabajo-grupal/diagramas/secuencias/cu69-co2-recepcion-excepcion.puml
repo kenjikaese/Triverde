@@ -14,7 +14,7 @@ skinparam ArrowColor #4B7A46
 title CU-69 Calcular CO2 de recepcion (excepcion: peso o factor faltante, correccion o rechazo)
 
 actor Sistema
-participant "C_IndicadorAmbiental" as C
+participant "C_Ambiental" as C
 participant ":recepcion_recepcion" as R
 participant ":recepcion_detallerecepcion" as DR
 participant ":configuracion_parametroconversion" as PC

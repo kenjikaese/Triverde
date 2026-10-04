@@ -15,7 +15,7 @@ title CU-81 Programando una mantencion preventiva (flujo normal)
 
 actor Administrador
 participant "V_ProgramarMantencion" as V
-participant "C_Mantencion" as C
+participant "C_Mantenimiento" as C
 participant ":mantenimiento_mantencion" as MNT
 
 Administrador -> V : selecciona el activo y elige el criterio (por horas o por fecha)

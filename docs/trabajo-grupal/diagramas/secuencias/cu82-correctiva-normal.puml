@@ -15,7 +15,7 @@ title CU-82 Registrando una mantencion correctiva (flujo normal)
 
 actor Operador
 participant "V_ProgramarMantencion" as V
-participant "C_Mantencion" as C
+participant "C_Mantenimiento" as C
 participant ":mantenimiento_mantencion" as MNT
 participant ":mantenimiento_maquinaria" as MQ
 

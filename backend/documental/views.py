@@ -1,4 +1,4 @@
-"""C_DocumentosLegales (docs/13): gestion documental, Parte E (CU-86 a CU-89).
+"""C_Documentos (docs/13): gestion documental, Parte E (CU-86 a CU-89).
 
 La logica vive en `services.py`; aca se orquesta, se resuelven los permisos y
 se audita. Todo es de Administrador. Los documentos no se eliminan (son

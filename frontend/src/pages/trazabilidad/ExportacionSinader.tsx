@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { cantidad as formatoCantidad, fecha as formatoFecha, periodoVigente } from "@/lib/formato";
 import { mensajeDeError } from "@/lib/errores";
 
-// CU-67: genera la declaracion del periodo (C_Sinader). El servidor agrupa
+// CU-67: genera la declaracion del periodo (C_Trazabilidad). El servidor agrupa
 // por cliente, excluye a los que no tienen datos obligatorios y arma la
 // planilla XLSX; esta vista pide el periodo, muestra el resumen y descarga el
 // archivo para cargarlo a mano en la plataforma de la autoridad.

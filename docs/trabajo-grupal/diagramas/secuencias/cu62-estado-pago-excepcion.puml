@@ -15,7 +15,7 @@ title CU-62 Registrar el estado de pago (excepcion: cliente sin movimientos o si
 
 actor Administrador
 participant "V_CuentaCorriente" as V
-participant "C_CuentaCorriente" as C
+participant "C_Cobros" as C
 participant ":mantenedores_cliente" as CL
 
 alt el cliente no tiene ventas ni cobros asociados

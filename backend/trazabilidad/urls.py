@@ -12,7 +12,7 @@ router.register(
     IndicadorAmbientalViewSet,
     basename="indicador-ambiental",
 )
-# Parte A (CU-65 a CU-67): C_Certificados y C_Sinader.
+# Parte A (CU-65 a CU-67): C_Trazabilidad (certificados y SINADER).
 router.register(r"certificados", CertificadoTrazabilidadViewSet, basename="certificado")
 router.register(
     r"declaraciones-sinader", DeclaracionSinaderViewSet, basename="declaracion-sinader"

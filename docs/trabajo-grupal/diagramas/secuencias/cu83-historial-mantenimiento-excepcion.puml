@@ -15,7 +15,7 @@ title CU-83 Consultar el historial (excepcion: activo no disponible, sin registr
 
 actor Operador
 participant "V_HistorialMantenimiento" as V
-participant "C_Mantencion" as C
+participant "C_Mantenimiento" as C
 participant ":mantenimiento_mantencion" as MNT
 
 alt el activo no existe o fue dado de baja
