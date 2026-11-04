@@ -13,6 +13,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework import serializers, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -24,11 +25,11 @@ from acceso.models import Rol
 from mantenedores.models import Transportista
 
 from .models import Recepcion
-from .serializers import RecepcionSerializer
+from .serializers import MultaSerializer, RecepcionSerializer
 
 
 class RecepcionViewSet(FiltroEstadoMixin, viewsets.ModelViewSet):
-    """CRUD de recepciones (agregado con detalles, fotos y multas).
+    """C_Recepcion: recepciones (agregado con detalles, fotos y multas).
 
     Un transportista solo ve las recepciones cuyo `transportista.usuario` es
     el mismo (CU-28); al crear, se le fuerza su propio transportista.
@@ -99,6 +100,77 @@ class RecepcionViewSet(FiltroEstadoMixin, viewsets.ModelViewSet):
                 instancia.pk,
                 instancia.motivo_rechazo or "",
             )
+        return Response(serializer.data)
+
+    def _exigir_en_inspeccion(self, recepcion):
+        """Solo se inspecciona una carga que todavia no tiene resultado."""
+        if recepcion.estado in (Recepcion.RECIBIDA, Recepcion.RECHAZADA):
+            raise serializers.ValidationError(
+                {"detalle": f"La recepcion #{recepcion.pk} ya esta '{recepcion.estado}'."}
+            )
+
+    @action(detail=True, methods=["post"], permission_classes=[IsOperadorOAdministrador])
+    def aceptar(self, request, pk=None):
+        """Cierra la inspeccion con la carga aceptada: queda 'recibida'."""
+        recepcion = self.get_object()
+        self._exigir_en_inspeccion(recepcion)
+        recepcion.estado = Recepcion.RECIBIDA
+        recepcion.save(update_fields=["estado"])
+        registrar_auditoria(
+            request.user,
+            "Aceptacion de recepcion",
+            "Recepcion",
+            recepcion.pk,
+            "La carga paso la inspeccion y quedo recibida.",
+        )
+        return Response(self.get_serializer(recepcion).data)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsOperadorOAdministrador])
+    def multa(self, request, pk=None):
+        """CU-30: registra una multa y mantiene la recepcion en inspeccion."""
+        recepcion = self.get_object()
+        self._exigir_en_inspeccion(recepcion)
+        serializer = MultaSerializer(
+            data={
+                "cliente": recepcion.cliente_id,
+                "motivo": request.data.get("motivo"),
+                "monto": request.data.get("monto"),
+                "fecha": request.data.get("fecha") or timezone.localdate(),
+            }
+        )
+        serializer.is_valid(raise_exception=True)
+        multa = serializer.save(recepcion=recepcion)
+        registrar_auditoria(
+            request.user,
+            "Aplicacion de multa",
+            "Recepcion",
+            recepcion.pk,
+            f"Multa de {multa.monto}: {multa.motivo}",
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=["post"], permission_classes=[IsOperadorOAdministrador])
+    def rechazar(self, request, pk=None):
+        """CU-31: rechaza la carga con su motivo y la saca del inventario."""
+        recepcion = self.get_object()
+        self._exigir_en_inspeccion(recepcion)
+        serializer = self.get_serializer(
+            recepcion,
+            data={
+                "estado": Recepcion.RECHAZADA,
+                "motivo_rechazo": request.data.get("motivo_rechazo"),
+            },
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        registrar_auditoria(
+            request.user,
+            "Rechazo de recepcion",
+            "Recepcion",
+            recepcion.pk,
+            recepcion.motivo_rechazo or "",
+        )
         return Response(serializer.data)
 
     def destroy(self, request, *args, **kwargs):

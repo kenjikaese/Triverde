@@ -59,6 +59,7 @@ class DetalleRecepcionSerializer(serializers.ModelSerializer):
     """Linea material+volumen. Los derivados son de lectura (calculados)."""
 
     id_local = serializers.UUIDField(required=False)
+    material_nombre = serializers.CharField(source="material.nombre", read_only=True)
     peso_derivado_kg = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
@@ -72,6 +73,7 @@ class DetalleRecepcionSerializer(serializers.ModelSerializer):
             "id",
             "id_local",
             "material",
+            "material_nombre",
             "volumen_m3",
             "peso_derivado_kg",
             "chip_derivado_m3",
@@ -115,6 +117,12 @@ class MultaSerializer(serializers.ModelSerializer):
         model = Multa
         fields = ["id", "id_local", "cliente", "motivo", "monto", "fecha"]
 
+    def validate_monto(self, valor):
+        # CU-30 Excepcion 2.
+        if valor <= 0:
+            raise serializers.ValidationError("El monto debe ser mayor a cero.")
+        return valor
+
 
 class RecepcionSerializer(serializers.ModelSerializer):
     """Cabecera de recepcion con sus partes anidadas (agregado).
@@ -126,6 +134,15 @@ class RecepcionSerializer(serializers.ModelSerializer):
 
     id_local = serializers.UUIDField(required=False)
     estado_sincronizacion = serializers.CharField(read_only=True)
+    cliente_razon_social = serializers.CharField(
+        source="cliente.razon_social", read_only=True
+    )
+    transportista_nombre = serializers.CharField(
+        source="transportista.nombre", read_only=True, default=None
+    )
+    vehiculo_patente = serializers.CharField(
+        source="vehiculo.patente", read_only=True, default=None
+    )
     detalles = DetalleRecepcionSerializer(many=True, required=False)
     fotos = FotoRecepcionSerializer(many=True, required=False)
     multas = MultaSerializer(many=True, required=False)
@@ -137,8 +154,11 @@ class RecepcionSerializer(serializers.ModelSerializer):
             "id_local",
             "estado_sincronizacion",
             "cliente",
+            "cliente_razon_social",
             "transportista",
+            "transportista_nombre",
             "vehiculo",
+            "vehiculo_patente",
             "operador",
             "conductor",
             "fecha",
@@ -150,6 +170,29 @@ class RecepcionSerializer(serializers.ModelSerializer):
             "fotos",
             "multas",
         ]
+
+    def validate(self, attrs):
+        estado = attrs.get("estado")
+        if estado == Recepcion.RECHAZADA:
+            # CU-31 Excepcion 1: sin motivo no cambia el estado.
+            motivo = attrs.get(
+                "motivo_rechazo", getattr(self.instance, "motivo_rechazo", None)
+            )
+            if not (motivo or "").strip():
+                raise serializers.ValidationError(
+                    {"motivo_rechazo": "Indique el motivo del rechazo."}
+                )
+        if (
+            self.instance is not None
+            and estado
+            and estado != self.instance.estado
+            and self.instance.estado in (Recepcion.RECIBIDA, Recepcion.RECHAZADA)
+        ):
+            # La inspeccion ya termino: la recepcion queda como constancia.
+            raise serializers.ValidationError(
+                {"estado": f"La recepcion ya esta '{self.instance.estado}'."}
+            )
+        return attrs
 
     def _crear_detalles(self, recepcion, detalles_data):
         for detalle in detalles_data:
@@ -180,10 +223,19 @@ class RecepcionSerializer(serializers.ModelSerializer):
         detalles_data = validated_data.pop("detalles", None)
         fotos_data = validated_data.pop("fotos", None)
         multas_data = validated_data.pop("multas", None)
+        estado_anterior = instance.estado
         with transaction.atomic():
             for atributo, valor in validated_data.items():
                 setattr(instance, atributo, valor)
             instance.save()
+            if (
+                instance.estado == Recepcion.RECHAZADA
+                and estado_anterior != Recepcion.RECHAZADA
+            ):
+                # CU-31: lo rechazado sale del inventario.
+                from inventario.services import revertir_ingreso_recepcion
+
+                revertir_ingreso_recepcion(instance)
             if detalles_data is not None:
                 instance.detalles.all().delete()
                 self._crear_detalles(instance, detalles_data)

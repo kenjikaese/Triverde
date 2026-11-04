@@ -90,6 +90,22 @@ def descontar(material, etapa, volumen):
     return saldo
 
 
+def revertir_ingreso_recepcion(recepcion):
+    """CU-31: descarta del inventario lo que una carga rechazada alcanzo a ingresar.
+
+    Es la operacion inversa de `signals.ingresar_material_recibido`. Si parte de
+    ese material ya se proceso, el saldo no alcanza y el rechazo completo se
+    impide: no se deja el inventario en negativo (CU-44 Excepcion 2).
+    """
+    from mezcla.services import recalcular_para_material
+
+    for detalle in recepcion.detalles.select_related("material"):
+        if detalle.destino_sugerido == "a venta directa" or detalle.volumen_m3 <= CERO:
+            continue
+        descontar(detalle.material, Inventario.POR_TRITURAR, detalle.volumen_m3)
+        recalcular_para_material(detalle.material)
+
+
 def aplicar_movimiento(material, origen, destino, volumen_origen, volumen_destino=None):
     """Mueve material de una etapa a otra (CU-44).
 
