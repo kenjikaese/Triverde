@@ -10,6 +10,7 @@ from rest_framework.test import APITestCase
 from acceso.models import BitacoraAuditoria, Rol, Usuario
 
 from .models import (
+    TarifaRecepcion,
     CostoOperativo,
     CostoTransporte,
     HistorialCambioParametro,
@@ -216,3 +217,33 @@ class PermisosM2Tests(ConfiguracionTestBase):
     def test_sin_token_es_401(self):
         self.client.force_authenticate(None)
         self.assertEqual(self.client.get(reverse("receta-list")).status_code, status.HTTP_401_UNAUTHORIZED)
+
+
+class TarifaValidacionTests(ConfiguracionTestBase):
+    """CU-11: rango valido, sin superposicion y con precio mayor a cero."""
+
+    def setUp(self):
+        self.autenticar(self.admin)
+        self.base = TarifaRecepcion.objects.create(
+            tramo_min_m3=Decimal("100"), tramo_max_m3=Decimal("110"), monto=Decimal("1000")
+        )
+
+    def _crear(self, minimo, maximo, monto="5000"):
+        return self.client.post(
+            reverse("tarifa-list"), {"tramo_min_m3": minimo, "tramo_max_m3": maximo, "monto": monto},
+            format="json",
+        )
+
+    def test_rango_superpuesto_se_rechaza(self):
+        self.assertEqual(self._crear("105", "115").status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_tramo_contiguo_es_valido(self):
+        self.assertEqual(self._crear("110", "120").status_code, status.HTTP_201_CREATED)
+
+    def test_precio_cero_se_rechaza(self):
+        self.assertEqual(self._crear("200", "210", "0").status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_editar_un_tramo_no_choca_consigo_mismo(self):
+        respuesta = self.client.patch(reverse("tarifa-detail", args=[self.base.pk]), {"monto": "2000"}, format="json")
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK, respuesta.data)
+

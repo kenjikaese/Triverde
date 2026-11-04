@@ -51,6 +51,30 @@ class TarifaRecepcionSerializer(serializers.ModelSerializer):
         model = TarifaRecepcion
         fields = ["id", "tramo_min_m3", "tramo_max_m3", "monto", "vigente"]
 
+    validate_monto = staticmethod(positivo)
+
+    def validate(self, attrs):
+        """CU-11: el rango debe ser valido y no superponerse con otro tramo vigente."""
+        minimo = attrs.get("tramo_min_m3", getattr(self.instance, "tramo_min_m3", None))
+        maximo = attrs.get("tramo_max_m3", getattr(self.instance, "tramo_max_m3", None))
+        vigente = attrs.get("vigente", getattr(self.instance, "vigente", True))
+        if minimo is not None and maximo is not None:
+            if minimo >= maximo:
+                raise serializers.ValidationError(
+                    {"tramo_max_m3": "El volumen máximo debe ser mayor que el mínimo."}
+                )
+            if vigente:
+                otros = TarifaRecepcion.objects.filter(
+                    vigente=True, tramo_min_m3__lt=maximo, tramo_max_m3__gt=minimo
+                )
+                if self.instance:
+                    otros = otros.exclude(pk=self.instance.pk)
+                if otros.exists():
+                    raise serializers.ValidationError(
+                        {"tramo_min_m3": "El rango se superpone con otro tramo vigente."}
+                    )
+        return attrs
+
 
 class HistorialCambioParametroSerializer(serializers.ModelSerializer):
     """Historial de cambios de parametro (solo lectura via API)."""

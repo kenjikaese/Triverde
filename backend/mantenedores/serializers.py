@@ -25,6 +25,13 @@ class TransportistaSerializer(serializers.ModelSerializer):
         model = Transportista
         fields = ["id", "nombre", "rut", "telefono", "cliente", "usuario", "estado"]
 
+    def validate_cliente(self, value):
+        """CU-18 Excepcion 2: no se asocia a un cliente inactivo."""
+        sin_cambio = self.instance is not None and self.instance.cliente_id == value.pk
+        if value.estado != Cliente.ACTIVO and not sin_cambio:
+            raise serializers.ValidationError("El cliente seleccionado no está activo.")
+        return value
+
 
 class VehiculoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -64,8 +71,30 @@ class MaterialSerializer(serializers.ModelSerializer):
             "estado",
         ]
 
+    def validate_densidad_kg_m3(self, value):
+        """CU-20 Excepcion 1: al editar, la densidad sigue siendo obligatoria."""
+        if value is None and self.instance is not None:
+            raise serializers.ValidationError("Ingresa una densidad mayor a cero.")
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("Ingresa una densidad mayor a cero.")
+        return value
+
+    def validate_factor_reduccion_chip(self, value):
+        if value is not None and value <= 0:
+            raise serializers.ValidationError("El factor debe ser mayor a cero.")
+        return value
+
 
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Producto
         fields = ["id", "nombre", "tipo", "precio", "unidad_de_venta", "estado"]
+
+    def validate_nombre(self, value):
+        """CU-22 Excepcion 2: el nombre no puede repetir el de otro producto."""
+        otros = Producto.objects.filter(nombre__iexact=value)
+        if self.instance is not None:
+            otros = otros.exclude(pk=self.instance.pk)
+        if otros.exists():
+            raise serializers.ValidationError("Ya existe un producto con ese nombre.")
+        return value

@@ -1,11 +1,13 @@
 """Tests del modulo de mantenedores: CRUD, baja logica y permisos por rol."""
+from decimal import Decimal
+
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from acceso.models import Rol, Usuario
 
-from .models import Cliente
+from .models import Cliente, Material, Producto, Transportista
 
 
 class MantenedoresTestBase(APITestCase):
@@ -68,3 +70,63 @@ class ClienteTests(MantenedoresTestBase):
         self.autenticar(self.camionero)
         respuesta = self.client.get(reverse("cliente-list"))
         self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class ValidacionesEdicionTests(APITestCase):
+    """Excepciones de CU-18 y CU-20 que revisa el servidor."""
+
+    @classmethod
+    def setUpTestData(cls):
+        rol, _ = Rol.objects.get_or_create(nombre=Rol.ADMINISTRADOR, defaults={"descripcion": "a"})
+        cls.admin = Usuario.objects.create_user(
+            username="admin-edicion", password="clave-12345", nombre_completo="Admin", rol=rol
+        )
+        cls.activo = Cliente.objects.create(razon_social="Cliente activo")
+        cls.inactivo = Cliente.objects.create(razon_social="Cliente inactivo", estado=Cliente.INACTIVO)
+        cls.transportista = Transportista.objects.create(nombre="Transportista", cliente=cls.activo)
+        cls.material = Material.objects.create(
+            nombre="Material", categoria=Material.SECA, densidad_kg_m3=Decimal("200.00")
+        )
+
+    def setUp(self):
+        self.client.force_authenticate(self.admin)
+
+    def test_no_asocia_transportista_a_cliente_inactivo(self):
+        respuesta = self.client.patch(
+            f"/api/v1/transportistas/{self.transportista.pk}/", {"cliente": self.inactivo.pk}, format="json"
+        )
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn("no está activo", str(respuesta.data))
+
+    def test_conserva_cliente_ya_inactivo_si_no_cambia(self):
+        Cliente.objects.filter(pk=self.activo.pk).update(estado=Cliente.INACTIVO)
+        respuesta = self.client.patch(
+            f"/api/v1/transportistas/{self.transportista.pk}/",
+            {"cliente": self.activo.pk, "telefono": "123"},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+
+    def test_densidad_vacia_o_cero_se_rechaza_al_editar(self):
+        for valor in (None, "0"):
+            respuesta = self.client.patch(
+                f"/api/v1/materiales/{self.material.pk}/", {"densidad_kg_m3": valor}, format="json"
+            )
+            self.assertEqual(respuesta.status_code, 400, valor)
+
+    def test_nombre_de_producto_repetido_se_rechaza(self):
+        Producto.objects.create(nombre="Compost", tipo=Producto.COMPOST, precio=Decimal("100"))
+        otro = Producto.objects.create(nombre="Mulch", tipo=Producto.COMPOST, precio=Decimal("100"))
+        respuesta = self.client.patch(f"/api/v1/productos/{otro.pk}/", {"nombre": "compost"}, format="json")
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertIn("Ya existe", str(respuesta.data))
+        otro.refresh_from_db()
+        self.assertEqual(otro.nombre, "Mulch")
+
+    def test_editar_producto_sin_cambiar_el_nombre_es_valido(self):
+        producto = Producto.objects.create(nombre="Sacos", tipo=Producto.COMPOST, precio=Decimal("100"))
+        respuesta = self.client.patch(
+            f"/api/v1/productos/{producto.pk}/", {"nombre": "Sacos", "precio": "150"}, format="json"
+        )
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+
