@@ -197,7 +197,7 @@ export function RegistroRechazo() {
                 </Td>
                 <Td>
                   {enInspeccion(r) ? (
-                    <div className="flex flex-col gap-2 whitespace-nowrap xl:flex-row">
+                    <div className="flex min-w-56 flex-wrap gap-2">
                       {r.detalles.length > 0 ? (
                         <Button tamano="sm" onClick={() => aceptar(r)}><CheckCircle2 className="h-4 w-4" /> Aceptar carga</Button>
                       ) : (
