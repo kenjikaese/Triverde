@@ -429,12 +429,15 @@ class PermisosTransportistaTests(RecepcionTestBase):
         )
         self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_transportista_no_puede_sincronizar(self):
+    def test_transportista_no_sincroniza_una_recepcion_completa(self):
+        """Su cola solo admite descargas (CU-28): sin volumen aproximado, se rechaza."""
         self.autenticar(self.camionero)
         respuesta = self.client.post(
             reverse("sincronizacion"), self._lote_valido(), format="json"
         )
-        self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertEqual(respuesta.data["resultados"][0]["estado"], "rechazada")
+        self.assertEqual(Recepcion.objects.count(), 0)
 
 
 class InspeccionTests(RecepcionTestBase):

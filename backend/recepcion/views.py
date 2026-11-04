@@ -14,6 +14,7 @@ from django.db import IntegrityError, transaction
 from django.utils import timezone
 from rest_framework import serializers, status, viewsets
 from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -25,7 +26,12 @@ from acceso.models import Rol
 from mantenedores.models import Transportista
 
 from .models import Recepcion
-from .serializers import MultaSerializer, RecepcionSerializer
+from .serializers import (
+    DescargaTransportistaSerializer,
+    FotoRecepcionSerializer,
+    MultaSerializer,
+    RecepcionSerializer,
+)
 
 
 class RecepcionViewSet(FiltroEstadoMixin, viewsets.ModelViewSet):
@@ -114,6 +120,11 @@ class RecepcionViewSet(FiltroEstadoMixin, viewsets.ModelViewSet):
         """Cierra la inspeccion con la carga aceptada: queda 'recibida'."""
         recepcion = self.get_object()
         self._exigir_en_inspeccion(recepcion)
+        if not recepcion.detalles.exists():
+            # CU-28: la descarga del transportista llega sin detalle de material.
+            raise serializers.ValidationError(
+                {"detalle": "Completa el material de la carga antes de aceptarla."}
+            )
         recepcion.estado = Recepcion.RECIBIDA
         recepcion.save(update_fields=["estado"])
         registrar_auditoria(
@@ -173,6 +184,50 @@ class RecepcionViewSet(FiltroEstadoMixin, viewsets.ModelViewSet):
         )
         return Response(serializer.data)
 
+    @action(detail=True, methods=["post"], url_path="foto")
+    def guardar_foto(self, request, pk=None):
+        """CU-27: adjunta una foto a la recepcion, que sigue en inspeccion.
+
+        El transportista solo llega a las suyas: `get_object` usa el queryset ya
+        filtrado por cuenta.
+        """
+        recepcion = self.get_object()
+        self._exigir_en_inspeccion(recepcion)
+        serializer = FotoRecepcionSerializer(
+            data=request.data, context=self.get_serializer_context()
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save(recepcion=recepcion, autor=request.user)
+        registrar_auditoria(
+            request.user,
+            "Adjuntar foto",
+            "Recepcion",
+            recepcion.pk,
+            "Se adjunto una foto del material recibido.",
+        )
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=["post"], url_path="mi-descarga")
+    def confirmar_descarga(self, request):
+        """CU-28: el transportista registra su descarga desde su propia cuenta."""
+        if request.user.rol.nombre != Rol.TRANSPORTISTA:
+            raise PermissionDenied("Solo un transportista registra su propia descarga.")
+        serializer = DescargaTransportistaSerializer(
+            data=request.data, context=self.get_serializer_context()
+        )
+        serializer.is_valid(raise_exception=True)
+        recepcion = serializer.save()
+        registrar_auditoria(
+            request.user,
+            "Descarga de transportista",
+            "Recepcion",
+            recepcion.pk,
+            f"Volumen aproximado: {recepcion.volumen_aproximado_m3} m3.",
+        )
+        return Response(
+            self.get_serializer(recepcion).data, status=status.HTTP_201_CREATED
+        )
+
     def destroy(self, request, *args, **kwargs):
         return Response(
             {
@@ -205,7 +260,10 @@ class SincronizacionView(APIView):
     y reporta el resultado por operacion.
     """
 
-    permission_classes = [IsOperadorOAdministrador]
+    permission_classes = [EsOperadorOAdministradorOTransportista]
+
+    def _es_transportista(self):
+        return self.request.user.rol.nombre == Rol.TRANSPORTISTA
 
     def post(self, request, *args, **kwargs):
         operaciones = request.data.get("operaciones")
@@ -267,6 +325,12 @@ class SincronizacionView(APIView):
                 "estado": "rechazada",
                 "motivo": f"Tipo de operacion '{tipo}' no soportado.",
             }
+        if tipo != "recepcion" and self._es_transportista():
+            return {
+                "id_local": str(id_local),
+                "estado": "rechazada",
+                "motivo": "El transportista solo sincroniza sus descargas.",
+            }
         datos = operacion.get("datos") or {}
         if not isinstance(datos, dict):
             return {
@@ -317,9 +381,13 @@ class SincronizacionView(APIView):
             }
         datos_serializer = dict(datos)
         datos_serializer.setdefault("id_local", str(id_local))
-        serializer = RecepcionSerializer(
-            data=datos_serializer, context={"request": self.request}
+        # CU-28 sin senal: el cliente y el transportista salen de la cuenta, no del lote.
+        clase = (
+            DescargaTransportistaSerializer
+            if self._es_transportista()
+            else RecepcionSerializer
         )
+        serializer = clase(data=datos_serializer, context={"request": self.request})
         serializer.is_valid(raise_exception=True)
         recepcion = serializer.save()
         self._marcar_sincronizada(recepcion)

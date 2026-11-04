@@ -166,7 +166,24 @@ class CostoOperativoTests(ConfiguracionTestBase):
             reverse("costo-operativo-list"), {"concepto": "combustible", "monto": "1300", "unidad": "litro"}
         )
         self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("concepto", respuesta.data)
+        self.assertIn("Edita ese concepto", str(respuesta.data["concepto"]))
+
+    def test_nombre_identico_tambien_sugiere_editar(self):
+        self.autenticar(self.admin)
+        datos = {"concepto": "Retroexcavadora", "monto": "1200", "unidad": "hora"}
+        self.client.post(reverse("costo-operativo-list"), datos)
+        respuesta = self.client.post(reverse("costo-operativo-list"), datos)
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Edita ese concepto", str(respuesta.data["concepto"]))
+
+    def test_editar_sin_cambiar_el_nombre_es_valido(self):
+        self.autenticar(self.admin)
+        costo = CostoOperativo.objects.create(concepto="Diesel", monto=1000, unidad="litro")
+        respuesta = self.client.patch(
+            reverse("costo-operativo-detail", args=[costo.pk]),
+            {"concepto": "Diesel", "monto": "1100"},
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK, respuesta.data)
 
     def test_concepto_dado_de_baja_se_puede_recrear(self):
         self.autenticar(self.admin)

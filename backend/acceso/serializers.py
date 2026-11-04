@@ -1,5 +1,7 @@
 """Serializers del modulo de acceso (Rol, Usuario, login, auditoria)."""
 from django.contrib.auth import authenticate, get_user_model
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 
 from .models import BitacoraAuditoria, Rol
@@ -47,6 +49,60 @@ class UsuarioSerializer(serializers.ModelSerializer):
             )
         usuario = Usuario.objects.create_user(password=password, **validated_data)
         return usuario
+
+    def update(self, instance, validated_data):
+        password = validated_data.pop("password", None)
+        for atributo, valor in validated_data.items():
+            setattr(instance, atributo, valor)
+        if password:
+            instance.set_password(password)
+        instance.save()
+        return instance
+
+
+class PerfilSerializer(serializers.ModelSerializer):
+    """CU-04: lo que cada usuario puede cambiar de su propia cuenta.
+
+    El rol y el estado son de solo lectura: su control corresponde al administrador.
+    """
+
+    nombre_completo = serializers.CharField(
+        max_length=150,
+        error_messages={"blank": "Ingresa tu nombre.", "required": "Ingresa tu nombre."},
+    )
+    email = serializers.EmailField(
+        error_messages={"blank": "Ingresa tu correo.", "required": "Ingresa tu correo."},
+    )
+    password = serializers.CharField(
+        write_only=True, required=False, style={"input_type": "password"}
+    )
+    rol_nombre = serializers.CharField(source="rol.nombre", read_only=True)
+
+    class Meta:
+        model = Usuario
+        fields = [
+            "id",
+            "username",
+            "email",
+            "nombre_completo",
+            "rol",
+            "rol_nombre",
+            "estado",
+            "password",
+        ]
+        read_only_fields = ["username", "rol", "estado"]
+
+    def validate_email(self, valor):
+        if Usuario.objects.exclude(pk=self.instance.pk).filter(email__iexact=valor).exists():
+            raise serializers.ValidationError("Ese correo ya pertenece a otro usuario.")
+        return valor
+
+    def validate_password(self, valor):
+        try:
+            validate_password(valor, user=self.instance)
+        except DjangoValidationError as error:
+            raise serializers.ValidationError(list(error.messages))
+        return valor
 
     def update(self, instance, validated_data):
         password = validated_data.pop("password", None)

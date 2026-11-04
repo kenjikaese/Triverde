@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { useOnline } from "@/lib/useOnline";
 import { encolarRecepcion } from "@/lib/sync";
+import { CapturaFoto, MiniaturasFoto } from "@/components/CapturaFoto";
 
 interface LineaForm {
   material: string;
@@ -35,6 +36,7 @@ export function RegistroRecepcion() {
   const [hora, setHora] = useState(ahora);
   const [observaciones, setObservaciones] = useState("");
   const [lineas, setLineas] = useState<LineaForm[]>([{ ...lineaVacia }]);
+  const [fotos, setFotos] = useState<string[]>([]);
 
   const [error, setError] = useState<string | null>(null);
   const [exito, setExito] = useState<Recepcion | null>(null);
@@ -71,6 +73,7 @@ export function RegistroRecepcion() {
     setConductor("");
     setObservaciones("");
     setLineas([{ ...lineaVacia }]);
+    setFotos([]);
   }
 
   async function onSubmit(e: FormEvent) {
@@ -95,6 +98,7 @@ export function RegistroRecepcion() {
           volumen_m3: l.volumen_m3,
           destino_sugerido: l.destino_sugerido || null,
         })),
+      fotos: fotos.map((archivo) => ({ archivo })),
     };
 
     // Sin senal: se guarda en la cola local y se enviara al reconectar (CU-32).
@@ -157,7 +161,8 @@ export function RegistroRecepcion() {
           <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
           <div>
             <p className="font-medium">
-              Recepcion #{exito.id} registrada ({exito.detalles.length} linea/s).
+              Recepcion #{exito.id} registrada ({exito.detalles.length} linea/s
+              {exito.fotos.length > 0 ? `, ${exito.fotos.length} foto/s` : ""}).
             </p>
             {exito.detalles.map((d, i) => (
               <p key={i} className="text-brand-700">
@@ -321,6 +326,14 @@ export function RegistroRecepcion() {
               El peso en kilos lo calcula el servidor con la densidad de cada
               material; no hay balanza en terreno.
             </p>
+          </CardBody>
+        </Card>
+
+        <Card>
+          <CardHeader titulo="Foto del material" descripcion="Respaldo de lo que efectivamente llegó. Se guarda aunque no haya señal." />
+          <CardBody className="space-y-3">
+            {fotos.length > 0 && <MiniaturasFoto fotos={fotos.map((archivo) => ({ archivo }))} />}
+            <CapturaFoto alGuardar={(archivo) => setFotos((previas) => [...previas, archivo])} />
           </CardBody>
         </Card>
 

@@ -56,6 +56,7 @@ class HistorialCambioParametroSerializer(serializers.ModelSerializer):
     """Historial de cambios de parametro (solo lectura via API)."""
 
     parametro_clave = serializers.CharField(source="parametro.clave", read_only=True)
+    parametro_nombre = serializers.CharField(source="parametro.nombre", read_only=True)
     usuario_username = serializers.CharField(source="usuario.username", read_only=True)
 
     class Meta:
@@ -64,6 +65,7 @@ class HistorialCambioParametroSerializer(serializers.ModelSerializer):
             "id",
             "parametro",
             "parametro_clave",
+            "parametro_nombre",
             "usuario",
             "usuario_username",
             "valor_anterior",
@@ -110,6 +112,9 @@ class CostoOperativoSerializer(serializers.ModelSerializer):
         model = CostoOperativo
         fields = ["id", "concepto", "monto", "unidad", "unidad_display", "vigente", "actualizado_en"]
         read_only_fields = ["vigente", "actualizado_en"]
+        # El nombre repetido lo revisa validate(): sin esto DRF responde antes con un
+        # mensaje generico, sin distinguir mayusculas ni sugerir editar (CU-13 Excepcion 1).
+        extra_kwargs = {"concepto": {"validators": []}}
 
     validate_monto = staticmethod(positivo)
 
@@ -126,6 +131,6 @@ class CostoOperativoSerializer(serializers.ModelSerializer):
                 duplicados = duplicados.exclude(pk=self.instance.pk)
             if duplicados.exists():
                 raise serializers.ValidationError(
-                    {"concepto": f'Ya existe un costo operativo vigente llamado "{concepto}".'}
+                    {"concepto": f'Ya existe un costo operativo vigente llamado "{concepto}". Edita ese concepto en su lugar.'}
                 )
         return data

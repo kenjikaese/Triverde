@@ -4,6 +4,7 @@ import type { Page } from "@playwright/test";
 export const CUENTAS = {
   admin: { usuario: "admin", clave: "triverde-e2e-2026" },
   operador: { usuario: "operador", clave: "triverde-e2e-2026" },
+  transportista: { usuario: "transportista", clave: "triverde-e2e-2026" },
 };
 
 /** Entra por la pantalla de login y espera a llegar al panel de control. */

@@ -32,7 +32,9 @@ y los apaga al terminar.
 | `08-trazabilidad-lote.spec.ts` | CU-68 (sobre el enlace Venta → Pila del CU-58) |
 | `09-reportes-panel.spec.ts` | CU-73, CU-76, CU-72, CU-77 y permisos del panel |
 | `10-documentos.spec.ts` | CU-86, CU-87, CU-88, CU-91 y permisos del tablero |
-| `11-inspeccion-pilas.spec.ts` | CU-30, CU-31 y CU-35 a CU-43 (ciclo de la carga a la pila cerrada) |
+| `11-inspeccion-pilas.spec.ts` | CU-30, CU-31 y CU-35 a CU-43 (ciclo de la carga a la pila cerrada), hasta CU-58 y CU-68 |
+| `12-foto-transportista.spec.ts` | CU-27, CU-28 y CU-32 (foto, descarga del transportista y cola sin señal) |
+| `13-configuracion-perfil.spec.ts` | CU-04, CU-10, CU-12, CU-13 y CU-14 (perfil y configuración) |
 
 ## Las tres capas de evidencia
 
@@ -69,7 +71,7 @@ Está comprobado: al desactivar la traza del cálculo dejando la vista intacta,
 
 - Base propia: `backend/db.e2e.sqlite3`, nunca la de desarrollo.
 - `manage.py seed_e2e` corre antes de cada sesión y deja el mismo estado
-  inicial: usuarios `admin` y `operador` (clave `triverde-e2e-2026`), un
+  inicial: usuarios `admin`, `operador` y `transportista` (clave `triverde-e2e-2026`), un
   cliente con datos completos y otro sin ellos, dos productos con precio, un
   vehículo de 25 m³, una recepción recibida lista para cobrar (con 20 m³ de
   rama verde y su peso derivado, certificable por el CU-65) y una pila cerrada

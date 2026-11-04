@@ -13,6 +13,10 @@ import {
   Sliders,
   Users,
   UserCog,
+  UserCircle,
+  History,
+  BookOpenCheck,
+  Coins,
   Package,
   Leaf,
   Car,
@@ -61,11 +65,13 @@ export const navegacion: SeccionNav[] = [
         icono: LayoutDashboard,
         roles: TODOS,
       },
+      { etiqueta: "Mi perfil", ruta: "/perfil", icono: UserCircle, roles: TODOS },
     ],
   },
   {
     titulo: "Operacion",
     items: [
+      { etiqueta: "Registrar mi descarga", ruta: "/mi-descarga", icono: Truck, roles: ["Transportista"] },
       { etiqueta: "Recepcion de camiones", ruta: "/recepcion", icono: Truck, roles: INTERNO, inc1: true },
       { etiqueta: "Inspeccion de cargas", ruta: "/inspeccion", icono: ClipboardCheck, roles: INTERNO },
       { etiqueta: "Cola de sincronizacion", ruta: "/sincronizacion", icono: RefreshCw, roles: INTERNO, inc1: true },
@@ -96,7 +102,10 @@ export const navegacion: SeccionNav[] = [
     titulo: "Configuracion",
     items: [
       { etiqueta: "Parametros", ruta: "/parametros", icono: Sliders, roles: ADMIN, inc1: true },
-      { etiqueta: "Tarifas de recepcion", ruta: "/tarifas", icono: Calculator, roles: ADMIN, inc1: true },
+      { etiqueta: "Historial de parametros", ruta: "/parametros/historial", icono: History, roles: ADMIN },
+      { etiqueta: "Recetas de mezcla", ruta: "/recetas", icono: BookOpenCheck, roles: ADMIN },
+      { etiqueta: "Tarifas y costo por km", ruta: "/tarifas", icono: Calculator, roles: ADMIN, inc1: true },
+      { etiqueta: "Costos operativos", ruta: "/costos-operativos", icono: Coins, roles: ADMIN },
     ],
   },
   {

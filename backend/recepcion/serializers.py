@@ -12,6 +12,7 @@ from django.db import transaction
 from rest_framework import serializers
 
 from common.fields import Base64ImageField
+from mantenedores.models import Transportista, Vehiculo
 
 from .models import DetalleRecepcion, FotoRecepcion, Multa, Recepcion
 
@@ -104,8 +105,8 @@ class FotoRecepcionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FotoRecepcion
-        fields = ["id", "id_local", "archivo", "fecha"]
-        read_only_fields = ["fecha"]
+        fields = ["id", "id_local", "archivo", "fecha", "autor"]
+        read_only_fields = ["fecha", "autor"]
 
 
 class MultaSerializer(serializers.ModelSerializer):
@@ -166,6 +167,7 @@ class RecepcionSerializer(serializers.ModelSerializer):
             "estado",
             "motivo_rechazo",
             "observaciones",
+            "volumen_aproximado_m3",
             "detalles",
             "fotos",
             "multas",
@@ -194,6 +196,11 @@ class RecepcionSerializer(serializers.ModelSerializer):
             )
         return attrs
 
+    def _autor(self):
+        """Quien adjunta la foto (CU-27); tambien cuando llega por la cola local."""
+        request = self.context.get("request")
+        return request.user if request else None
+
     def _crear_detalles(self, recepcion, detalles_data):
         for detalle in detalles_data:
             peso = detalle.pop("_peso")
@@ -213,7 +220,7 @@ class RecepcionSerializer(serializers.ModelSerializer):
             recepcion = Recepcion.objects.create(**validated_data)
             self._crear_detalles(recepcion, detalles_data)
             for foto in fotos_data:
-                FotoRecepcion.objects.create(recepcion=recepcion, **foto)
+                FotoRecepcion.objects.create(recepcion=recepcion, autor=self._autor(), **foto)
             for multa in multas_data:
                 Multa.objects.create(recepcion=recepcion, **multa)
         return recepcion
@@ -242,9 +249,70 @@ class RecepcionSerializer(serializers.ModelSerializer):
             if fotos_data is not None:
                 instance.fotos.all().delete()
                 for foto in fotos_data:
-                    FotoRecepcion.objects.create(recepcion=instance, **foto)
+                    FotoRecepcion.objects.create(recepcion=instance, autor=self._autor(), **foto)
             if multas_data is not None:
                 instance.multas.all().delete()
                 for multa in multas_data:
                     Multa.objects.create(recepcion=instance, **multa)
         return instance
+
+
+class DescargaTransportistaSerializer(serializers.Serializer):
+    """CU-28: formulario reducido de la descarga que registra el transportista.
+
+    El cliente, el transportista y el vehiculo no se reciben: salen de la cuenta
+    autenticada, para que nadie registre una descarga a nombre de otra empresa.
+    """
+
+    id_local = serializers.UUIDField(required=False)
+    fecha = serializers.DateField()
+    hora = serializers.TimeField()
+    volumen_aproximado_m3 = serializers.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        error_messages={
+            "required": "Ingresa el volumen aproximado.",
+            "null": "Ingresa el volumen aproximado.",
+            "invalid": "Ingresa el volumen aproximado.",
+        },
+    )
+    fotos = FotoRecepcionSerializer(many=True, required=False)
+
+    def validate_volumen_aproximado_m3(self, valor):
+        if valor <= 0:
+            raise serializers.ValidationError("El volumen debe ser mayor a cero.")
+        return valor
+
+    def create(self, validated_data):
+        usuario = self.context["request"].user
+        try:
+            transportista = usuario.transportista
+        except Transportista.DoesNotExist:
+            raise serializers.ValidationError(
+                {"transportista": "La cuenta no tiene un transportista asociado."}
+            )
+        if transportista.estado != Transportista.ACTIVO:
+            raise serializers.ValidationError(
+                {"transportista": "El transportista de esta cuenta esta inactivo."}
+            )
+        # CU-28 Excepcion 1: si no se puede determinar el vehiculo, lo completa el
+        # operador. El vehiculo pertenece al cliente, asi que solo se asigna solo
+        # cuando el cliente tiene uno.
+        vehiculos = list(
+            Vehiculo.objects.filter(
+                cliente=transportista.cliente, estado=Vehiculo.ACTIVO
+            )[:2]
+        )
+        fotos = validated_data.pop("fotos", [])
+        with transaction.atomic():
+            recepcion = Recepcion.objects.create(
+                cliente=transportista.cliente,
+                transportista=transportista,
+                vehiculo=vehiculos[0] if len(vehiculos) == 1 else None,
+                estado=Recepcion.PENDIENTE_INSPECCION,
+                **validated_data,
+            )
+            for foto in fotos:
+                FotoRecepcion.objects.create(recepcion=recepcion, autor=usuario, **foto)
+        return recepcion
+

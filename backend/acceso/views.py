@@ -18,6 +18,7 @@ from .models import BitacoraAuditoria, Rol, Usuario
 from .serializers import (
     BitacoraAuditoriaSerializer,
     LoginSerializer,
+    PerfilSerializer,
     RolSerializer,
     UsuarioSerializer,
 )
@@ -61,9 +62,25 @@ class LogoutView(APIView):
 
 
 class PerfilView(APIView):
-    """GET: devuelve el usuario autenticado."""
+    """CU-04. GET: devuelve el usuario autenticado. PATCH: actualiza sus datos."""
 
     def get(self, request, *args, **kwargs):
+        return Response(UsuarioSerializer(request.user).data)
+
+    def patch(self, request, *args, **kwargs):
+        serializer = PerfilSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        cambio_clave = "password" in serializer.validated_data
+        serializer.save()
+        registrar_auditoria(
+            request.user,
+            "Edicion de perfil",
+            "Usuario",
+            request.user.pk,
+            "Datos del perfil actualizados, incluida la contrasena."
+            if cambio_clave
+            else "Datos del perfil actualizados.",
+        )
         return Response(UsuarioSerializer(request.user).data)
 
 

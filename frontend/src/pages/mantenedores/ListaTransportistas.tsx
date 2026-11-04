@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Plus, Search, UserX } from "lucide-react";
 import { api } from "@/lib/api";
-import type { Cliente, Transportista } from "@/lib/types";
+import type { Cliente, Transportista, Usuario } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Table, TBody, Td, Th, EmptyRow } from "@/components/ui/Table";
@@ -10,11 +10,12 @@ import { Button } from "@/components/ui/Button";
 import { Campo, Input, Select } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 
-const VACIO = { nombre: "", rut: "", telefono: "", cliente: "" };
+const VACIO = { nombre: "", rut: "", telefono: "", cliente: "", usuario: "" };
 
 export function ListaTransportistas() {
   const [transportistas, setTransportistas] = useState<Transportista[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,6 +39,22 @@ export function ListaTransportistas() {
   }
 
   useEffect(cargar, []);
+  // Aparte de la carga principal: sin estas cuentas la lista igual debe mostrarse.
+  useEffect(() => {
+    api.get<Usuario[]>("/usuarios/").then((r) => setUsuarios(r.data)).catch(() => setUsuarios([]));
+  }, []);
+
+  // CU-28: solo cuentas de rol Transportista que no esten ya vinculadas.
+  const cuentasLibres = useMemo(
+    () =>
+      usuarios.filter(
+        (usuario) =>
+          usuario.rol_nombre === "Transportista" &&
+          usuario.estado === "activo" &&
+          !transportistas.some((transportista) => transportista.usuario === usuario.id),
+      ),
+    [usuarios, transportistas],
+  );
 
   const nombresClientes = useMemo(
     () => new Map(clientes.map((cliente) => [cliente.id, cliente.razon_social])),
@@ -62,7 +79,7 @@ export function ListaTransportistas() {
         rut: form.rut || null,
         telefono: form.telefono || null,
         cliente: Number(form.cliente),
-        usuario: null,
+        usuario: form.usuario ? Number(form.usuario) : null,
       });
       setModal(false);
       setForm(VACIO);
@@ -159,6 +176,14 @@ export function ListaTransportistas() {
               <option value="">Selecciona...</option>
               {clientes.filter((cliente) => cliente.estado === "activo").map((cliente) => (
                 <option key={cliente.id} value={cliente.id}>{cliente.razon_social}</option>
+              ))}
+            </Select>
+          </Campo>
+          <Campo label="Cuenta de acceso" htmlFor="transportista_usuario" ayuda="Permite que registre sus descargas desde su propia cuenta. La cuenta se crea antes en Usuarios, con rol Transportista.">
+            <Select id="transportista_usuario" value={form.usuario} onChange={(e) => setForm({ ...form, usuario: e.target.value })}>
+              <option value="">Sin cuenta</option>
+              {cuentasLibres.map((usuario) => (
+                <option key={usuario.id} value={usuario.id}>{usuario.username} ({usuario.nombre_completo})</option>
               ))}
             </Select>
           </Campo>

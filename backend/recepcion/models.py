@@ -50,6 +50,10 @@ class Recepcion(SincronizableModel):
     )
     motivo_rechazo = models.CharField(max_length=200, null=True, blank=True)
     observaciones = models.TextField(null=True, blank=True)
+    volumen_aproximado_m3 = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True,
+        help_text="Informado por el transportista (CU-28); el operador completa el detalle.",
+    )
 
     class Meta:
         verbose_name = "Recepcion"
@@ -109,6 +113,10 @@ class FotoRecepcion(SincronizableModel):
     )
     archivo = models.ImageField(upload_to="recepciones/%Y/%m/")
     fecha = models.DateTimeField(auto_now_add=True)
+    autor = models.ForeignKey(
+        Usuario, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="fotos_recepcion",
+    )
 
     class Meta:
         verbose_name = "Foto de recepcion"
