@@ -435,3 +435,120 @@ class PermisosTransportistaTests(RecepcionTestBase):
             reverse("sincronizacion"), self._lote_valido(), format="json"
         )
         self.assertEqual(respuesta.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class InspeccionTests(RecepcionTestBase):
+    """Resultado de la inspeccion: aceptar, multar y rechazar (CU-30, CU-31)."""
+
+    def _recepcion_con_inventario(self, volumen="10.00"):
+        self.client.force_authenticate(self.operador)
+        respuesta = self.client.post(
+            "/api/v1/recepciones/",
+            {
+                "cliente": self.cliente.pk,
+                "fecha": "2026-11-03",
+                "hora": "10:00",
+                "estado": "pendiente de inspeccion",
+                "detalles": [{"material": self.material.pk, "volumen_m3": volumen}],
+            },
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        return Recepcion.objects.get(pk=respuesta.data["id"])
+
+    def _saldo_por_triturar(self):
+        from inventario.models import Inventario
+
+        fila = Inventario.objects.filter(
+            material=self.material, etapa=Inventario.POR_TRITURAR
+        ).first()
+        return fila.volumen_m3 if fila else Decimal("0.00")
+
+    def test_aceptar_deja_la_recepcion_recibida(self):
+        recepcion = self._recepcion_con_inventario()
+        respuesta = self.client.post(f"/api/v1/recepciones/{recepcion.pk}/aceptar/")
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        recepcion.refresh_from_db()
+        self.assertEqual(recepcion.estado, Recepcion.RECIBIDA)
+
+    def test_no_se_acepta_dos_veces(self):
+        recepcion = self._recepcion_con_inventario()
+        self.client.post(f"/api/v1/recepciones/{recepcion.pk}/aceptar/")
+        respuesta = self.client.post(f"/api/v1/recepciones/{recepcion.pk}/aceptar/")
+        self.assertEqual(respuesta.status_code, 400)
+
+    def test_multa_usa_el_cliente_de_la_recepcion(self):
+        recepcion = self._recepcion_con_inventario()
+        respuesta = self.client.post(
+            f"/api/v1/recepciones/{recepcion.pk}/multa/",
+            {"motivo": "Botellas mezcladas", "monto": "15000"},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 201, respuesta.data)
+        multa = recepcion.multas.get()
+        self.assertEqual(multa.cliente_id, self.cliente.pk)
+        recepcion.refresh_from_db()
+        self.assertEqual(recepcion.estado, "pendiente de inspeccion")
+
+    def test_multa_con_monto_cero_se_rechaza(self):
+        """CU-30 Excepcion 2."""
+        recepcion = self._recepcion_con_inventario()
+        respuesta = self.client.post(
+            f"/api/v1/recepciones/{recepcion.pk}/multa/",
+            {"motivo": "Botellas", "monto": "0"},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 400)
+        self.assertEqual(recepcion.multas.count(), 0)
+
+    def test_rechazo_sin_motivo_no_cambia_el_estado(self):
+        """CU-31 Excepcion 1."""
+        recepcion = self._recepcion_con_inventario()
+        respuesta = self.client.post(
+            f"/api/v1/recepciones/{recepcion.pk}/rechazar/", {}, format="json"
+        )
+        self.assertEqual(respuesta.status_code, 400)
+        recepcion.refresh_from_db()
+        self.assertEqual(recepcion.estado, "pendiente de inspeccion")
+
+    def test_rechazo_descarta_el_material_del_inventario(self):
+        """CU-31: lo rechazado sale del inventario."""
+        recepcion = self._recepcion_con_inventario("10.00")
+        self.assertEqual(self._saldo_por_triturar(), Decimal("10.00"))
+        respuesta = self.client.post(
+            f"/api/v1/recepciones/{recepcion.pk}/rechazar/",
+            {"motivo_rechazo": "Carga con basura"},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 200, respuesta.data)
+        self.assertEqual(self._saldo_por_triturar(), Decimal("0.00"))
+
+    def test_rechazo_conserva_la_multa_previa(self):
+        """CU-31 Excepcion 2."""
+        recepcion = self._recepcion_con_inventario()
+        self.client.post(
+            f"/api/v1/recepciones/{recepcion.pk}/multa/",
+            {"motivo": "Latas", "monto": "5000"},
+            format="json",
+        )
+        self.client.post(
+            f"/api/v1/recepciones/{recepcion.pk}/rechazar/",
+            {"motivo_rechazo": "Demasiada basura"},
+            format="json",
+        )
+        self.assertEqual(recepcion.multas.count(), 1)
+
+    def test_rechazo_impedido_si_el_material_ya_se_proceso(self):
+        recepcion = self._recepcion_con_inventario("10.00")
+        from inventario import services
+        from inventario.models import Inventario
+
+        services.descontar(self.material, Inventario.POR_TRITURAR, Decimal("6.00"))
+        respuesta = self.client.post(
+            f"/api/v1/recepciones/{recepcion.pk}/rechazar/",
+            {"motivo_rechazo": "Tarde"},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, 400)
+        recepcion.refresh_from_db()
+        self.assertEqual(recepcion.estado, "pendiente de inspeccion")

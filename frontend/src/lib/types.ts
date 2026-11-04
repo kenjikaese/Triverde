@@ -189,6 +189,7 @@ export interface DetalleRecepcion {
   id?: number;
   id_local?: string;
   material: number;
+  material_nombre?: string;
   volumen_m3: string;
   peso_derivado_kg?: string;
   chip_derivado_m3?: string | null;
@@ -200,8 +201,11 @@ export interface Recepcion {
   id_local: string;
   estado_sincronizacion: EstadoSincronizacion;
   cliente: number;
+  cliente_razon_social?: string;
   transportista: number | null;
+  transportista_nombre?: string | null;
   vehiculo: number | null;
+  vehiculo_patente?: string | null;
   operador: number | null;
   conductor: string | null;
   fecha: string;
@@ -210,6 +214,15 @@ export interface Recepcion {
   motivo_rechazo: string | null;
   observaciones: string | null;
   detalles: DetalleRecepcion[];
+  multas?: MultaRecepcion[];
+}
+
+export interface MultaRecepcion {
+  id: number;
+  cliente: number;
+  motivo: string;
+  monto: string;
+  fecha: string;
 }
 
 // --- Modulo 8: Comercial (CU-55 a CU-64) -----------------------------------
@@ -528,6 +541,36 @@ export interface PilaResumen {
   fecha_inicio: string;
   estado: string;
   volumen_total_m3: string;
+}
+
+export type TipoProcesoPila =
+  | "triturado"
+  | "volteo"
+  | "riego"
+  | "harneado"
+  | "reposo"
+  | "ensacado";
+
+export interface ProcesoPila {
+  id: number;
+  pila: number | null;
+  material: number | null;
+  material_nombre?: string;
+  tipo: TipoProcesoPila;
+  fecha: string;
+  temperatura: string | null;
+  humedad: string | null;
+  volumen_m3: string | null;
+  chip_pendiente: boolean;
+  advertencia: string | null;
+}
+
+export interface PilaFicha extends PilaResumen {
+  observaciones: string | null;
+  volumen_ensacado_m3: string;
+  volumen_curado_disponible_m3: string;
+  composiciones: { id: number; material: number; material_nombre: string; volumen_m3: string }[];
+  procesos: ProcesoPila[];
 }
 
 export interface Existencia {

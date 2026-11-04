@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Login } from "@/pages/Login";
 import { PanelControl } from "@/pages/PanelControl";
 import { RegistroRecepcion } from "@/pages/recepcion/RegistroRecepcion";
+import { RegistroRechazo } from "@/pages/recepcion/RegistroRechazo";
 import { ListaClientes } from "@/pages/mantenedores/ListaClientes";
 import { ListaTransportistas } from "@/pages/mantenedores/ListaTransportistas";
 import { ListaMateriales } from "@/pages/mantenedores/ListaMateriales";
@@ -16,6 +17,7 @@ import { BitacoraAuditoria } from "@/pages/gestion/BitacoraAuditoria";
 import { ColaSincronizacion } from "@/pages/operacion/ColaSincronizacion";
 import { Inventario } from "@/pages/operacion/Inventario";
 import { ListaPilas } from "@/pages/operacion/ListaPilas";
+import { TrazabilidadPila } from "@/pages/operacion/TrazabilidadPila";
 import { MezclaObjetivo } from "@/pages/operacion/MezclaObjetivo";
 import { Alertas } from "@/pages/operacion/Alertas";
 import { ListaMaquinaria } from "@/pages/mantenimiento/ListaMaquinaria";
@@ -51,6 +53,7 @@ export function App() {
         {/* Cableadas a la API (Inc 1) */}
         <Route path="/" element={<PanelControl />} />
         <Route path="/recepcion" element={<RegistroRecepcion />} />
+        <Route path="/inspeccion" element={<RegistroRechazo />} />
         <Route path="/clientes" element={<ListaClientes />} />
 
         {/* Vistas Inc 1 con backend real */}
@@ -75,6 +78,7 @@ export function App() {
         {/* Modulos del Incremento 2 (inventario, mezcla, mantenimiento) y mockups pendientes */}
         <Route path="/inventario" element={<Inventario />} />
         <Route path="/pilas" element={<ListaPilas />} />
+        <Route path="/pilas/:id" element={<TrazabilidadPila />} />
         <Route path="/mezcla" element={<MezclaObjetivo />} />
         <Route path="/alertas" element={<Alertas />} />
         <Route path="/maquinaria" element={<ListaMaquinaria />} />

@@ -32,6 +32,7 @@ y los apaga al terminar.
 | `08-trazabilidad-lote.spec.ts` | CU-68 (sobre el enlace Venta → Pila del CU-58) |
 | `09-reportes-panel.spec.ts` | CU-73, CU-76, CU-72, CU-77 y permisos del panel |
 | `10-documentos.spec.ts` | CU-86, CU-87, CU-88, CU-91 y permisos del tablero |
+| `11-inspeccion-pilas.spec.ts` | CU-30, CU-31 y CU-35 a CU-43 (ciclo de la carga a la pila cerrada) |
 
 ## Las tres capas de evidencia
 

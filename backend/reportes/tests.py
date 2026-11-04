@@ -72,7 +72,9 @@ class ReportesTests(APITestCase):
         self.assertEqual(fila["inventario_resultante_m3"], 20.0)
 
     def test_ventas_cobros_calcula_pendiente(self):
-        venta = Venta.objects.create(cliente=self.cliente, fecha=date(2026, 9, 10), total=Decimal("100"))
+        venta = Venta.objects.create(cliente=self.cliente, total=Decimal("100"))
+        # `fecha` se fija sola al crear; el reporte mira el periodo de septiembre.
+        Venta.objects.filter(pk=venta.pk).update(fecha=date(2026, 9, 10))
         DetalleVenta.objects.create(
             venta=venta, producto=self.producto, cantidad=Decimal("1"), unidad="m3",
             precio_unitario=Decimal("100"), subtotal=Decimal("100"),

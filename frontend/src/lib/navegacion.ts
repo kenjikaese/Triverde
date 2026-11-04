@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   Truck,
+  ClipboardCheck,
   RefreshCw,
   Boxes,
   Layers,
@@ -66,6 +67,7 @@ export const navegacion: SeccionNav[] = [
     titulo: "Operacion",
     items: [
       { etiqueta: "Recepcion de camiones", ruta: "/recepcion", icono: Truck, roles: INTERNO, inc1: true },
+      { etiqueta: "Inspeccion de cargas", ruta: "/inspeccion", icono: ClipboardCheck, roles: INTERNO },
       { etiqueta: "Cola de sincronizacion", ruta: "/sincronizacion", icono: RefreshCw, roles: INTERNO, inc1: true },
       { etiqueta: "Inventario", ruta: "/inventario", icono: Boxes, roles: INTERNO },
       { etiqueta: "Pilas de compostaje", ruta: "/pilas", icono: Layers, roles: INTERNO },

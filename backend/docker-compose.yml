@@ -30,6 +30,7 @@ services:
       DJANGO_SECRET_KEY: dev-insecure-key-cambiar-en-produccion
       DJANGO_DEBUG: "true"
       DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,web"
+      TRIVERDE_CONSOLA_SQL: "${TRIVERDE_CONSOLA_SQL:-0}"
     volumes:
       - .:/app
       - media:/app/media
