@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { LogOut, Menu, X, Leaf, Wifi, WifiOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useOnline } from "@/lib/useOnline";
@@ -129,9 +129,9 @@ export function AppShell() {
               {online ? "En linea" : "Sin conexion"}
             </span>
             <div className="text-right">
-              <p className="text-sm font-medium text-slate-800">
+              <Link to="/perfil" className="text-sm font-medium text-slate-800 hover:text-brand-700">
                 {usuario?.nombre_completo}
-              </p>
+              </Link>
               <div className="flex justify-end">
                 <Badge tono="verde">{rol}</Badge>
               </div>

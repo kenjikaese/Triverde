@@ -83,6 +83,7 @@ test.describe("Inspeccion de cargas y ciclo de la pila", () => {
     // CU-35: nueva pila con el codigo propuesto.
     await page.getByRole("button", { name: "Nueva pila" }).click();
     await expect(page.getByLabel(/Código/)).not.toHaveValue("");
+    const codigoPila = await page.getByLabel(/Código/).inputValue();
     await page.getByLabel(/Observaciones/).fill("Pila del ciclo e2e");
     await page.getByRole("button", { name: "Crear pila" }).click();
     await page.waitForURL(/\/pilas\/\d+$/);
@@ -135,5 +136,26 @@ test.describe("Inspeccion de cargas y ciclo de la pila", () => {
     await page.getByRole("button", { name: "Confirmar ensacado" }).click();
     await expect(page.getByText("cerrada", { exact: true })).toBeVisible();
     await expect(page.getByTestId("fila-proceso")).toHaveCount(5);
+
+    // CU-58 y CU-68: la pila creada por pantalla se vende y la cadena llega
+    // hasta el camion de origen, sin datos sembrados de por medio.
+    await entrar(page, "admin");
+    await page.goto("/ventas/nueva");
+    await page.getByLabel("Cliente").selectOption({ label: CLIENTE });
+    await elegirOpcion(page, "Producto", "Compost premium");
+    await page.getByLabel("Cantidad").fill("1");
+    await elegirOpcion(page, "Pila de origen", codigoPila);
+    await page.getByRole("button", { name: "Agregar" }).click();
+    await page.getByRole("button", { name: "Registrar venta" }).click();
+    await page.waitForURL(/\/ventas\?registrada=/);
+    const ventaId = new URL(page.url()).searchParams.get("registrada");
+
+    await page.goto(`/trazabilidad-lote?venta=${ventaId}`);
+    await expect(page.getByText(`Pila de origen ${codigoPila}`)).toBeVisible();
+    await expect(page.getByTestId("composicion-pila").first()).toContainText("10 m³");
+    const origen = page.getByTestId("recepcion-origen").first();
+    await expect(origen).toContainText(CLIENTE);
+    await expect(origen).toContainText(MATERIAL);
+    await expect(page.getByTestId("advertencia-trazabilidad")).toHaveCount(0);
   });
 });

@@ -5,6 +5,11 @@ import { Login } from "@/pages/Login";
 import { PanelControl } from "@/pages/PanelControl";
 import { RegistroRecepcion } from "@/pages/recepcion/RegistroRecepcion";
 import { RegistroRechazo } from "@/pages/recepcion/RegistroRechazo";
+import { RecepcionTransportista } from "@/pages/recepcion/RecepcionTransportista";
+import { HistorialParametros } from "@/pages/configuracion/HistorialParametros";
+import { ListaRecetas } from "@/pages/configuracion/ListaRecetas";
+import { CostosOperativos } from "@/pages/configuracion/CostosOperativos";
+import { Perfil } from "@/pages/gestion/Perfil";
 import { ListaClientes } from "@/pages/mantenedores/ListaClientes";
 import { ListaTransportistas } from "@/pages/mantenedores/ListaTransportistas";
 import { ListaMateriales } from "@/pages/mantenedores/ListaMateriales";
@@ -54,6 +59,7 @@ export function App() {
         <Route path="/" element={<PanelControl />} />
         <Route path="/recepcion" element={<RegistroRecepcion />} />
         <Route path="/inspeccion" element={<RegistroRechazo />} />
+        <Route path="/mi-descarga" element={<RecepcionTransportista />} />
         <Route path="/clientes" element={<ListaClientes />} />
 
         {/* Vistas Inc 1 con backend real */}
@@ -63,7 +69,11 @@ export function App() {
         <Route path="/productos" element={<ListaProductos />} />
         <Route path="/vehiculos" element={<ListaVehiculos />} />
         <Route path="/parametros" element={<PanelParametros />} />
+        <Route path="/parametros/historial" element={<HistorialParametros />} />
         <Route path="/tarifas" element={<TablaTarifas />} />
+        <Route path="/recetas" element={<ListaRecetas />} />
+        <Route path="/costos-operativos" element={<CostosOperativos />} />
+        <Route path="/perfil" element={<Perfil />} />
         <Route path="/usuarios" element={<ListaUsuarios />} />
         <Route path="/auditoria" element={<BitacoraAuditoria />} />
 

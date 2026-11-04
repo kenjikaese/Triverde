@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Campo, Input, Select } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
+import { CostoPorKm } from "./CostoPorKm";
 
 const VACIO = { tramo_min_m3: "", tramo_max_m3: "", monto: "", vigente: true };
 const clp = (valor: string) => `$${Math.round(Number(valor)).toLocaleString("es-CL")}`;
@@ -43,6 +44,7 @@ export function TablaTarifas() {
           {cargando ? <EmptyRow colSpan={4} texto="Cargando..." /> : error && tarifas.length === 0 ? <EmptyRow colSpan={4} texto={error} /> : tarifas.length === 0 ? <EmptyRow colSpan={4} texto="No hay tarifas configuradas." /> : tarifas.map((tarifa) => <tr key={tarifa.id} className="hover:bg-slate-50"><Td>{tarifa.tramo_min_m3} m³</Td><Td>{tarifa.tramo_max_m3} m³</Td><Td className="font-medium text-slate-800">{clp(tarifa.monto)}</Td><Td><Badge tono={tarifa.vigente ? "verde" : "gris"}>{tarifa.vigente ? "Vigente" : "No vigente"}</Badge></Td></tr>)}
         </TBody></Table>
       </Card>
+      <CostoPorKm />
       <Modal abierto={modal} titulo="Nueva tarifa" onCerrar={() => setModal(false)}>
         <form onSubmit={crear} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2"><Campo label="Volumen mínimo (m³)" htmlFor="tarifa_min" requerido><Input id="tarifa_min" type="number" min="0" step="0.01" value={form.tramo_min_m3} onChange={(e) => setForm({ ...form, tramo_min_m3: e.target.value })} required /></Campo><Campo label="Volumen máximo (m³)" htmlFor="tarifa_max" requerido><Input id="tarifa_max" type="number" min="0" step="0.01" value={form.tramo_max_m3} onChange={(e) => setForm({ ...form, tramo_max_m3: e.target.value })} required /></Campo></div>

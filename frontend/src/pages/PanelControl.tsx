@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import {
   Truck,
   Users,
@@ -80,6 +80,10 @@ function VerMas({ a }: { a: string }) {
 export function PanelControl() {
   const { usuario } = useAuth();
   const nombre = usuario?.nombre_completo?.split(" ")[0] ?? "";
+
+  if (usuario?.rol_nombre === "Transportista") {
+    return <Navigate to="/mi-descarga" replace />;
+  }
 
   return usuario?.rol_nombre === "Administrador" ? (
     <PanelAdministrador nombre={nombre} />

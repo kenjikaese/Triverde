@@ -12,6 +12,7 @@ export interface Rol {
 export interface Usuario {
   id: number;
   username: string;
+  email?: string;
   nombre_completo: string;
   rol: number;
   rol_nombre?: RolNombre;
@@ -213,8 +214,17 @@ export interface Recepcion {
   estado: EstadoRecepcion;
   motivo_rechazo: string | null;
   observaciones: string | null;
+  volumen_aproximado_m3: string | null;
   detalles: DetalleRecepcion[];
+  fotos: FotoRecepcion[];
   multas?: MultaRecepcion[];
+}
+
+export interface FotoRecepcion {
+  id: number;
+  archivo: string;
+  fecha: string;
+  autor: number | null;
 }
 
 export interface MultaRecepcion {
@@ -726,4 +736,47 @@ export interface PreferenciasPanel {
   actualizado: string | null;
   disponibles: IndicadorPanel[];
   cambio?: boolean;
+}
+
+// Modulo 2: configuracion (CU-10, CU-12, CU-13, CU-14).
+export interface RecetaMezcla {
+  id: number;
+  nombre: string;
+  relacion_seca: string;
+  relacion_verde: string;
+  proporcion: string;
+  descripcion: string;
+  vigente: boolean;
+  actualizado_en: string;
+}
+
+export interface CostoTransporte {
+  id: number;
+  costo_por_km: string;
+  vigente: boolean;
+  fecha: string;
+}
+
+export type UnidadCostoOperativo = "litro" | "hora" | "dia" | "viaje" | "unidad";
+
+export interface CostoOperativo {
+  id: number;
+  concepto: string;
+  monto: string;
+  unidad: UnidadCostoOperativo;
+  unidad_display: string;
+  vigente: boolean;
+  actualizado_en: string;
+}
+
+export interface CambioParametro {
+  id: number;
+  parametro: number;
+  parametro_clave: string;
+  parametro_nombre: string;
+  usuario: number | null;
+  usuario_username?: string;
+  valor_anterior: string | null;
+  valor_nuevo: string;
+  fecha_hora: string;
 }
