@@ -30,7 +30,7 @@ from comercial.models import (
 )
 from documental.models import DocumentoLegal, VersionDocumento
 from inventario.models import AporteRecepcionPila, ComposicionPila, Pila
-from mantenedores.models import Cliente, Material, Producto, Vehiculo
+from mantenedores.models import Cliente, Material, Producto, Transportista, Vehiculo
 from mezcla.models import Alerta
 from recepcion.models import DetalleRecepcion, Recepcion
 from reportes.models import PanelControl
@@ -140,6 +140,20 @@ class Command(BaseCommand):
                 "capacidad_m3": Decimal("25.00"),
                 "descripcion": "Camion tolva de pruebas",
             },
+        )
+
+        # --- Transportista con cuenta propia (CU-28) ------------------------
+        rol_transportista = Rol.objects.get(nombre=Rol.TRANSPORTISTA)
+        cuenta_transportista, _ = Usuario.objects.get_or_create(
+            username="transportista",
+            defaults={"nombre_completo": "Pedro Rojas", "rol": rol_transportista},
+        )
+        cuenta_transportista.rol = rol_transportista
+        cuenta_transportista.set_password(CLAVE_E2E)
+        cuenta_transportista.save()
+        Transportista.objects.update_or_create(
+            nombre="Pedro Rojas",
+            defaults={"cliente": cliente, "usuario": cuenta_transportista},
         )
 
         # --- Material y recepcion recibida lista para cobrar ---------------
