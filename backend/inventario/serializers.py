@@ -371,6 +371,10 @@ class ProcesoPilaSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"material": "El triturado debe indicar el material procesado."}
             )
+        if not material.admite_chip:
+            raise serializers.ValidationError(
+                {"material": "El material no admite procesamiento a chip."}
+            )
         if attrs.get("pila") is not None:
             raise serializers.ValidationError(
                 {"pila": "El triturado ocurre antes de armar una pila; no lleva pila."}

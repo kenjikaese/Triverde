@@ -17,6 +17,10 @@ class ParametroFaltante(Exception):
     """Falta un parametro requerido para el calculo (no se inventan valores)."""
 
 
+class MaterialSinChip(Exception):
+    """El material no admite conversion a chip."""
+
+
 def _dec(valor, nombre):
     if valor is None or valor == "":
         raise ParametroFaltante(nombre)
@@ -46,6 +50,9 @@ class ProyeccionService:
         volumen = _dec(supuestos.get("volumen_entrada_m3"), "volumen_entrada_m3")
         if volumen <= 0:
             raise ParametroFaltante("volumen_entrada_m3 (debe ser mayor a 0)")
+
+        if tipo == Proyeccion.SEMANAL and material is not None and not material.admite_chip:
+            raise MaterialSinChip("El material no admite procesamiento a chip.")
 
         if tipo == Proyeccion.MENSUAL:
             valor = cls._mensual(volumen, supuestos)

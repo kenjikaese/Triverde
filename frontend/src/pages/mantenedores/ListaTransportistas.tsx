@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Plus, Search, UserX } from "lucide-react";
+import { Pencil, Plus, Search, UserX } from "lucide-react";
 import { api } from "@/lib/api";
+import { mensajeDeError } from "@/lib/errores";
 import type { Cliente, Transportista, Usuario } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -20,7 +21,10 @@ export function ListaTransportistas() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<Transportista | null>(null);
   const [form, setForm] = useState(VACIO);
+  const [errorCliente, setErrorCliente] = useState<string | null>(null);
+  const [errorModal, setErrorModal] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
   function cargar() {
@@ -51,9 +55,9 @@ export function ListaTransportistas() {
         (usuario) =>
           usuario.rol_nombre === "Transportista" &&
           usuario.estado === "activo" &&
-          !transportistas.some((transportista) => transportista.usuario === usuario.id),
+          !transportistas.some((transportista) => transportista.usuario === usuario.id && transportista.id !== editando?.id),
       ),
-    [usuarios, transportistas],
+    [usuarios, transportistas, editando],
   );
 
   const nombresClientes = useMemo(
@@ -69,23 +73,56 @@ export function ListaTransportistas() {
     );
   }, [transportistas, busqueda]);
 
-  async function crear(e: FormEvent) {
+  function abrir(transportista: Transportista | null) {
+    setEditando(transportista);
+    setForm(transportista ? {
+      nombre: transportista.nombre,
+      rut: transportista.rut ?? "",
+      telefono: transportista.telefono ?? "",
+      cliente: String(transportista.cliente),
+      usuario: transportista.usuario === null ? "" : String(transportista.usuario),
+    } : VACIO);
+    setErrorCliente(null);
+    setErrorModal(null);
+    setModal(true);
+  }
+
+  async function guardar(e: FormEvent) {
     e.preventDefault();
+    if (editando) {
+      const cliente = clientes.find((item) => String(item.id) === form.cliente);
+      if (!cliente) {
+        setErrorCliente("Selecciona un cliente.");
+        return;
+      }
+      if (cliente.estado !== "activo") {
+        setErrorCliente("El cliente seleccionado no está activo.");
+        return;
+      }
+    }
+    setErrorCliente(null);
     setGuardando(true);
-    setError(null);
+    setErrorModal(null);
     try {
-      await api.post("/transportistas/", {
-        nombre: form.nombre,
-        rut: form.rut || null,
-        telefono: form.telefono || null,
+      const asociacion = {
         cliente: Number(form.cliente),
         usuario: form.usuario ? Number(form.usuario) : null,
-      });
+      };
+      if (editando) {
+        await api.patch(`/transportistas/${editando.id}/`, asociacion);
+      } else {
+        await api.post("/transportistas/", {
+          nombre: form.nombre,
+          rut: form.rut || null,
+          telefono: form.telefono || null,
+          ...asociacion,
+        });
+      }
       setModal(false);
       setForm(VACIO);
       cargar();
-    } catch {
-      setError("No se pudo guardar el transportista. Revisa los datos ingresados.");
+    } catch (err) {
+      setErrorModal(mensajeDeError(err, "No se pudo guardar el transportista. Revisa los datos ingresados."));
     } finally {
       setGuardando(false);
     }
@@ -107,7 +144,7 @@ export function ListaTransportistas() {
         titulo="Transportistas"
         descripcion="Conductores y empresas asociados a los clientes de la planta."
         accion={
-          <Button onClick={() => setModal(true)}>
+          <Button onClick={() => abrir(null)}>
             <Plus className="h-4 w-4" />
             Nuevo transportista
           </Button>
@@ -145,11 +182,14 @@ export function ListaTransportistas() {
                   <Td>{nombresClientes.get(transportista.cliente) ?? `#${transportista.cliente}`}</Td>
                   <Td><Badge tono={tonoEstado(transportista.estado)}>{transportista.estado}</Badge></Td>
                   <Td>
+                    <Button variante="secundario" tamano="sm" onClick={() => abrir(transportista)}>
+                      <Pencil className="h-4 w-4" /> Editar
+                    </Button>{" "}
                     {transportista.estado === "activo" ? (
                       <Button variante="peligro" tamano="sm" onClick={() => desactivar(transportista)}>
                         <UserX className="h-4 w-4" /> Desactivar
                       </Button>
-                    ) : "—"}
+                    ) : null}
                   </Td>
                 </tr>
               ))
@@ -158,8 +198,10 @@ export function ListaTransportistas() {
         </Table>
       </Card>
 
-      <Modal abierto={modal} titulo="Nuevo transportista" onCerrar={() => setModal(false)}>
-        <form onSubmit={crear} className="space-y-4">
+      <Modal abierto={modal} titulo={editando ? "Editar transportista" : "Nuevo transportista"} onCerrar={() => setModal(false)}>
+        <form onSubmit={guardar} noValidate={!!editando} className="space-y-4">
+          {errorModal && <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{errorModal}</div>}
+          {!editando && <>
           <Campo label="Nombre" htmlFor="transportista_nombre" requerido>
             <Input id="transportista_nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required />
           </Campo>
@@ -171,17 +213,21 @@ export function ListaTransportistas() {
               <Input id="transportista_telefono" value={form.telefono} onChange={(e) => setForm({ ...form, telefono: e.target.value })} />
             </Campo>
           </div>
-          <Campo label="Cliente" htmlFor="transportista_cliente" requerido>
-            <Select id="transportista_cliente" value={form.cliente} onChange={(e) => setForm({ ...form, cliente: e.target.value })} required>
+          </>}
+          <Campo label="Cliente" htmlFor="transportista_cliente" requerido error={errorCliente ?? undefined}>
+            <Select id="transportista_cliente" value={form.cliente} onChange={(e) => { setForm({ ...form, cliente: e.target.value }); setErrorCliente(null); }} required aria-invalid={!!errorCliente}>
               <option value="">Selecciona...</option>
-              {clientes.filter((cliente) => cliente.estado === "activo").map((cliente) => (
-                <option key={cliente.id} value={cliente.id}>{cliente.razon_social}</option>
+              {clientes.filter((cliente) => editando || cliente.estado === "activo").map((cliente) => (
+                <option key={cliente.id} value={cliente.id}>{cliente.razon_social}{cliente.estado === "inactivo" ? " (inactivo)" : ""}</option>
               ))}
             </Select>
           </Campo>
           <Campo label="Cuenta de acceso" htmlFor="transportista_usuario" ayuda="Permite que registre sus descargas desde su propia cuenta. La cuenta se crea antes en Usuarios, con rol Transportista.">
             <Select id="transportista_usuario" value={form.usuario} onChange={(e) => setForm({ ...form, usuario: e.target.value })}>
               <option value="">Sin cuenta</option>
+              {editando?.usuario && !cuentasLibres.some((usuario) => usuario.id === editando.usuario) && (
+                <option value={editando.usuario}>{usuarios.find((usuario) => usuario.id === editando.usuario)?.username ?? `Cuenta #${editando.usuario}`}</option>
+              )}
               {cuentasLibres.map((usuario) => (
                 <option key={usuario.id} value={usuario.id}>{usuario.username} ({usuario.nombre_completo})</option>
               ))}
