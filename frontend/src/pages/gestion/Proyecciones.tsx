@@ -88,6 +88,7 @@ export function Proyecciones() {
   >(null);
   const [ajuste, setAjuste] = useState<Proyeccion | null>(null);
   const [ajusteSupuestos, setAjusteSupuestos] = useState<Record<string, string>>({});
+  const [errorAjuste, setErrorAjuste] = useState<string | null>(null);
 
   function cargar() {
     setCargando(true);
@@ -151,6 +152,7 @@ export function Proyecciones() {
   }
 
   function abrirAjuste(proyeccion: Proyeccion) {
+    setErrorAjuste(null);
     const supuestos: Record<string, string> = {};
     for (const [clave, valor] of Object.entries(proyeccion.supuestos)) {
       if (!clave.startsWith("_")) supuestos[clave] = String(valor);
@@ -163,12 +165,13 @@ export function Proyecciones() {
     e.preventDefault();
     if (!ajuste) return;
     setGuardando(true);
+    setErrorAjuste(null);
     try {
       await api.post(`/proyecciones/${ajuste.id}/ajustar/`, { supuestos: ajusteSupuestos });
       setAjuste(null);
       cargar();
     } catch (err) {
-      setError(mensajeError(err));
+      setErrorAjuste(mensajeError(err));
     } finally {
       setGuardando(false);
     }
@@ -402,6 +405,7 @@ export function Proyecciones() {
                 />
               </Campo>
             ))}
+            {errorAjuste && <p role="alert" className="text-sm text-red-600">{errorAjuste}</p>}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variante="secundario" onClick={() => setAjuste(null)}>
                 Cancelar
