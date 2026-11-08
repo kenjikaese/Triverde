@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { PackageMinus, Pencil, Plus, Search } from "lucide-react";
 import { api } from "@/lib/api";
+import { mensajeDeError } from "@/lib/errores";
 import type { Producto } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -19,7 +20,8 @@ export function ListaProductos() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
-  const [editandoId, setEditandoId] = useState<number | null>(null); // NUEVO: ID si estamos editando
+  const [editandoId, setEditandoId] = useState<number | null>(null); // producto en edición, null al crear
+  const [errorModal, setErrorModal] = useState<string | null>(null);
   const [form, setForm] = useState(VACIO);
   const [guardando, setGuardando] = useState(false);
 
@@ -41,6 +43,7 @@ export function ListaProductos() {
   function abrirCrear() {
     setEditandoId(null);
     setForm(VACIO);
+    setErrorModal(null);
     setModal(true);
   }
 
@@ -53,16 +56,17 @@ export function ListaProductos() {
       precio: producto.precio ? String(producto.precio) : "",
       unidad_de_venta: producto.unidad_de_venta,
     });
+    setErrorModal(null);
     setModal(true);
   }
 
   async function guardar(e: FormEvent) {
     e.preventDefault();
     setGuardando(true);
-    setError(null);
+    setErrorModal(null);
     try {
       const payload = { ...form, precio: form.precio || null };
-      
+
       if (editandoId) {
         // PATCH para editar
         await api.patch(`/productos/${editandoId}/`, payload);
@@ -70,18 +74,16 @@ export function ListaProductos() {
         // POST para crear
         await api.post("/productos/", payload);
       }
-      
+
       setModal(false);
       setForm(VACIO);
       setEditandoId(null);
       cargar();
-    } catch (err: any) {
-      // Manejo de excepciones de CU-22
-      if (err.response?.data?.nombre) {
-        setError("El nombre ya está en uso por otro producto (Excepción 2).");
-      } else {
-        setError("No se pudo guardar el producto. Revisa los datos ingresados.");
-      }
+    } catch (err) {
+      // CU-22 Excepción 2: el servidor rechaza un nombre que ya usa otro
+      // producto y explica por qué. El mensaje va dentro del formulario, que
+      // sigue abierto, para que se vea sobre el fondo oscurecido.
+      setErrorModal(mensajeDeError(err, "No se pudo guardar el producto. Revisa los datos ingresados."));
     } finally {
       setGuardando(false);
     }
@@ -130,6 +132,7 @@ export function ListaProductos() {
       </Card>
       <Modal abierto={modal} titulo={editandoId ? "Editar producto" : "Nuevo producto"} onCerrar={() => { setModal(false); setEditandoId(null); }}>
         <form onSubmit={guardar} className="space-y-4">
+          {errorModal && <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{errorModal}</div>}
           <Campo label="Nombre" htmlFor="producto_nombre" requerido><Input id="producto_nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required /></Campo>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Campo label="Tipo" htmlFor="producto_tipo" requerido><Select id="producto_tipo" value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} required><option value="chip">Chip</option><option value="mulch">Mulch</option><option value="compost">Compost</option><option value="lena">Leña</option></Select></Campo>
