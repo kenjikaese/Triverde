@@ -122,6 +122,29 @@ class CalculoTests(ProyeccionesTestBase):
         self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("material", respuesta.data)
 
+    def test_semanal_rechaza_material_que_no_admite_chip(self):
+        """CU-20 Excepcion 2: el factor guardado no entra a una proyeccion."""
+        sin_chip = Material.objects.create(
+            nombre="Rama sin chip", categoria=Material.VERDE,
+            densidad_kg_m3=Decimal("250.00"), factor_reduccion_chip=Decimal("5.00"),
+            admite_chip=False,
+        )
+        self.client.force_authenticate(self.admin)
+        respuesta = self.client.post(
+            reverse("proyeccion-list"),
+            {
+                "tipo": Proyeccion.SEMANAL,
+                "periodo_inicio": "2026-09-01",
+                "periodo_fin": "2026-09-07",
+                "material": sin_chip.pk,
+                "supuestos": {"volumen_entrada_m3": "50"},
+            },
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("material", respuesta.data)
+        self.assertEqual(Proyeccion.objects.count(), 0)
+
     def test_cada_proyeccion_queda_guardada(self):
         """Criterio 5: cada proyeccion calculada queda guardada para consultarse."""
         self.client.force_authenticate(self.admin)
