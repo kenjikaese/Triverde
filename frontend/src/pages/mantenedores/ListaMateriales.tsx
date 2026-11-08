@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Leaf, Plus, Search } from "lucide-react";
+import { Leaf, Pencil, Plus, Search } from "lucide-react";
 import { api } from "@/lib/api";
+import { mensajeDeError } from "@/lib/errores";
 import type { Material } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
@@ -18,7 +19,10 @@ export function ListaMateriales() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
+  const [editando, setEditando] = useState<Material | null>(null);
   const [form, setForm] = useState(VACIO);
+  const [errorDensidad, setErrorDensidad] = useState<string | null>(null);
+  const [errorModal, setErrorModal] = useState<string | null>(null);
   const [guardando, setGuardando] = useState(false);
 
   function cargar() {
@@ -36,23 +40,49 @@ export function ListaMateriales() {
     material.nombre.toLowerCase().includes(busqueda.toLowerCase()),
   ), [materiales, busqueda]);
 
-  async function crear(e: FormEvent) {
+  function abrir(material: Material | null) {
+    setEditando(material);
+    setForm(material ? {
+      nombre: material.nombre,
+      categoria: material.categoria ?? "",
+      densidad_kg_m3: material.densidad_kg_m3 ?? "",
+      factor_reduccion_chip: material.factor_reduccion_chip ?? "",
+      admite_chip: material.admite_chip,
+    } : VACIO);
+    setErrorDensidad(null);
+    setErrorModal(null);
+    setModal(true);
+  }
+
+  async function guardar(e: FormEvent) {
     e.preventDefault();
+    if (editando && (!form.densidad_kg_m3 || Number(form.densidad_kg_m3) <= 0)) {
+      setErrorDensidad("Ingresa una densidad mayor a cero.");
+      return;
+    }
+    setErrorDensidad(null);
     setGuardando(true);
-    setError(null);
+    setErrorModal(null);
     try {
-      await api.post("/materiales/", {
+      const datos = {
         nombre: form.nombre,
         categoria: form.categoria || null,
         densidad_kg_m3: form.densidad_kg_m3 || null,
-        factor_reduccion_chip: form.factor_reduccion_chip || null,
+        factor_reduccion_chip: editando?.admite_chip && !form.admite_chip
+          ? editando.factor_reduccion_chip
+          : form.factor_reduccion_chip || null,
         admite_chip: form.admite_chip,
-      });
+      };
+      if (editando) {
+        await api.patch(`/materiales/${editando.id}/`, datos);
+      } else {
+        await api.post("/materiales/", datos);
+      }
       setModal(false);
       setForm(VACIO);
       cargar();
-    } catch {
-      setError("No se pudo guardar el material. Revisa los datos ingresados.");
+    } catch (err) {
+      setErrorModal(mensajeDeError(err, "No se pudo guardar el material. Revisa los datos ingresados."));
     } finally {
       setGuardando(false);
     }
@@ -71,7 +101,7 @@ export function ListaMateriales() {
   return (
     <div>
       <PageHeader titulo="Materiales" descripcion="Catálogo de residuos recibidos y sus factores de conversión." accion={
-        <Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Nuevo material</Button>
+        <Button onClick={() => abrir(null)}><Plus className="h-4 w-4" /> Nuevo material</Button>
       } />
       {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       <div className="relative mb-4 max-w-xs">
@@ -90,19 +120,20 @@ export function ListaMateriales() {
                 <Td>{material.factor_reduccion_chip ?? "—"}</Td>
                 <Td><Badge tono={material.admite_chip ? "verde" : "gris"}>{material.admite_chip ? "Sí" : "No"}</Badge></Td>
                 <Td><Badge tono={tonoEstado(material.estado)}>{material.estado}</Badge></Td>
-                <Td>{material.estado === "activo" ? <Button variante="peligro" tamano="sm" onClick={() => desactivar(material)}><Leaf className="h-4 w-4" /> Desactivar</Button> : "—"}</Td>
+                <Td><Button variante="secundario" tamano="sm" onClick={() => abrir(material)}><Pencil className="h-4 w-4" /> Editar</Button>{" "}{material.estado === "activo" && <Button variante="peligro" tamano="sm" onClick={() => desactivar(material)}><Leaf className="h-4 w-4" /> Desactivar</Button>}</Td>
               </tr>
             ))}
           </TBody>
         </Table>
       </Card>
-      <Modal abierto={modal} titulo="Nuevo material" onCerrar={() => setModal(false)}>
-        <form onSubmit={crear} className="space-y-4">
+      <Modal abierto={modal} titulo={editando ? "Editar material" : "Nuevo material"} onCerrar={() => setModal(false)}>
+        <form onSubmit={guardar} className="space-y-4">
+          {errorModal && <div role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{errorModal}</div>}
           <Campo label="Nombre" htmlFor="material_nombre" requerido><Input id="material_nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required /></Campo>
           <Campo label="Categoría" htmlFor="material_categoria"><Select id="material_categoria" value={form.categoria} onChange={(e) => setForm({ ...form, categoria: e.target.value })}><option value="">Sin categoría</option><option value="seca">Seca</option><option value="verde">Verde</option></Select></Campo>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Campo label="Densidad (kg/m³)" htmlFor="material_densidad"><Input id="material_densidad" type="number" min="0" step="0.01" value={form.densidad_kg_m3} onChange={(e) => setForm({ ...form, densidad_kg_m3: e.target.value })} /></Campo>
-            <Campo label="Factor reducción chip" htmlFor="material_factor"><Input id="material_factor" type="number" min="0" step="0.01" value={form.factor_reduccion_chip} onChange={(e) => setForm({ ...form, factor_reduccion_chip: e.target.value })} /></Campo>
+            <Campo label="Densidad (kg/m³)" htmlFor="material_densidad" requerido={!!editando} error={errorDensidad ?? undefined}><Input id="material_densidad" type="number" min="0" step="0.01" value={form.densidad_kg_m3} onChange={(e) => { setForm({ ...form, densidad_kg_m3: e.target.value }); setErrorDensidad(null); }} aria-invalid={!!errorDensidad} /></Campo>
+            <Campo label="Factor reducción chip" htmlFor="material_factor"><Input id="material_factor" type="number" min="0" step="0.01" value={editando?.admite_chip && !form.admite_chip ? editando.factor_reduccion_chip ?? "" : form.factor_reduccion_chip} disabled={!!editando?.admite_chip && !form.admite_chip} onChange={(e) => setForm({ ...form, factor_reduccion_chip: e.target.value })} /></Campo>
           </div>
           <Campo label="Procesamiento a chip" htmlFor="material_admite_chip" requerido><Select id="material_admite_chip" value={form.admite_chip ? "si" : "no"} onChange={(e) => setForm({ ...form, admite_chip: e.target.value === "si" })}><option value="si">Sí, admite chip</option><option value="no">No admite chip</option></Select></Campo>
           <div className="flex justify-end gap-2 pt-2"><Button type="button" variante="secundario" onClick={() => setModal(false)}>Cancelar</Button><Button type="submit" disabled={guardando}>{guardando ? "Guardando..." : "Guardar material"}</Button></div>

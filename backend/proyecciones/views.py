@@ -7,7 +7,7 @@ from common.permissions import IsAdministrador
 
 from .models import Proyeccion
 from .serializers import ProyeccionSerializer
-from .services import ParametroFaltante, ProyeccionService
+from .services import MaterialSinChip, ParametroFaltante, ProyeccionService
 
 
 class ProyeccionViewSet(viewsets.ModelViewSet):
@@ -35,6 +35,8 @@ class ProyeccionViewSet(viewsets.ModelViewSet):
                 {"supuestos": f"Falta el parametro requerido: {exc}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except MaterialSinChip as exc:
+            return Response({"material": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         proyeccion = serializer.save(
             usuario=request.user, supuestos=supuestos, valor_proyectado=valor,
         )
@@ -68,5 +70,7 @@ class ProyeccionViewSet(viewsets.ModelViewSet):
                 {"supuestos": f"Falta el parametro requerido: {exc}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        except MaterialSinChip as exc:
+            return Response({"material": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         registrar_auditoria(request.user, "ajustar_proyeccion", "Proyeccion", proyeccion.pk)
         return Response(self.get_serializer(proyeccion).data)

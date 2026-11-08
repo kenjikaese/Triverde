@@ -152,11 +152,11 @@ class Material(models.Model):
         (`recepcion/serializers.py::derivar_peso_y_chip`): el chip sale de
         dividir el volumen por el factor de reduccion configurado.
 
-        Devuelve `None` cuando el material no tiene factor: el triturado se
+        Devuelve `None` cuando el material no admite chip o no tiene factor: el triturado se
         registra igual y el chip queda pendiente de conversion, sin inventar
         un valor (CU-37 Excepcion 3).
         """
-        if not self.factor_reduccion_chip or self.factor_reduccion_chip <= 0:
+        if not self.admite_chip or not self.factor_reduccion_chip or self.factor_reduccion_chip <= 0:
             return None
         chip = Decimal(str(volumen_m3)) / self.factor_reduccion_chip
         return chip.quantize(Decimal("0.01"))

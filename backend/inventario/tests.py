@@ -302,6 +302,32 @@ class TrituradoTests(InventarioTestBase):
         )
         self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_rechaza_material_que_no_admite_chip(self):
+        """CU-20 Excepcion 2: un material sin conversion a chip no se tritura."""
+        self.sembrar(self.pasto, Inventario.POR_TRITURAR, 10)
+        respuesta = self.registrar_proceso(
+            {
+                "tipo": ProcesoPila.TRITURADO,
+                "material": self.pasto.pk,
+                "volumen_m3": "4.00",
+            }
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("material", respuesta.data)
+        self.assertEqual(
+            self.saldo(self.pasto, Inventario.POR_TRITURAR), Decimal("10.00")
+        )
+
+    def test_factor_guardado_no_se_aplica_si_el_material_ya_no_admite_chip(self):
+        """CU-20 Excepcion 2: el factor se conserva, pero no se usa en calculos."""
+        material = Material(
+            nombre="Rama sin chip", densidad_kg_m3=Decimal("200.00"),
+            factor_reduccion_chip=Decimal("4.00"), admite_chip=False,
+        )
+        self.assertIsNone(material.derivar_chip(Decimal("8.00")))
+        material.admite_chip = True
+        self.assertEqual(material.derivar_chip(Decimal("8.00")), Decimal("2.00"))
+
 
 # --- CU-38, CU-39, CU-40: volteo, riego y harneado --------------------------
 
