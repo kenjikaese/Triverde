@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { PackageMinus, Plus, Search } from "lucide-react";
+import { PackageMinus, Pencil, Plus, Search } from "lucide-react";
 import { api } from "@/lib/api";
 import type { Producto } from "@/lib/types";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -19,6 +19,7 @@ export function ListaProductos() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [modal, setModal] = useState(false);
+  const [editandoId, setEditandoId] = useState<number | null>(null); // NUEVO: ID si estamos editando
   const [form, setForm] = useState(VACIO);
   const [guardando, setGuardando] = useState(false);
 
@@ -36,17 +37,51 @@ export function ListaProductos() {
     producto.nombre.toLowerCase().includes(busqueda.toLowerCase()),
   ), [productos, busqueda]);
 
-  async function crear(e: FormEvent) {
+  // Abrir modal para CREAR
+  function abrirCrear() {
+    setEditandoId(null);
+    setForm(VACIO);
+    setModal(true);
+  }
+
+  // Abrir modal para EDITAR
+  function abrirEditar(producto: Producto) {
+    setEditandoId(producto.id);
+    setForm({
+      nombre: producto.nombre,
+      tipo: producto.tipo,
+      precio: producto.precio ? String(producto.precio) : "",
+      unidad_de_venta: producto.unidad_de_venta,
+    });
+    setModal(true);
+  }
+
+  async function guardar(e: FormEvent) {
     e.preventDefault();
     setGuardando(true);
     setError(null);
     try {
-      await api.post("/productos/", { ...form, precio: form.precio || null });
+      const payload = { ...form, precio: form.precio || null };
+      
+      if (editandoId) {
+        // PATCH para editar
+        await api.patch(`/productos/${editandoId}/`, payload);
+      } else {
+        // POST para crear
+        await api.post("/productos/", payload);
+      }
+      
       setModal(false);
       setForm(VACIO);
+      setEditandoId(null);
       cargar();
-    } catch {
-      setError("No se pudo guardar el producto. Revisa los datos ingresados.");
+    } catch (err: any) {
+      // Manejo de excepciones de CU-22
+      if (err.response?.data?.nombre) {
+        setError("El nombre ya está en uso por otro producto (Excepción 2).");
+      } else {
+        setError("No se pudo guardar el producto. Revisa los datos ingresados.");
+      }
     } finally {
       setGuardando(false);
     }
@@ -64,7 +99,7 @@ export function ListaProductos() {
 
   return (
     <div>
-      <PageHeader titulo="Productos" descripcion="Productos terminados disponibles para venta." accion={<Button onClick={() => setModal(true)}><Plus className="h-4 w-4" /> Nuevo producto</Button>} />
+      <PageHeader titulo="Productos" descripcion="Productos terminados disponibles para venta." accion={<Button onClick={abrirCrear}><Plus className="h-4 w-4" /> Nuevo producto</Button>} />
       {error && <div className="mb-4 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
       <div className="relative mb-4 max-w-xs"><Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" /><Input placeholder="Buscar producto" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="pl-9" /></div>
       <Card>
@@ -74,21 +109,37 @@ export function ListaProductos() {
             {cargando ? <EmptyRow colSpan={6} texto="Cargando..." /> : error && productos.length === 0 ? <EmptyRow colSpan={6} texto={error} /> : filtrados.length === 0 ? <EmptyRow colSpan={6} texto="Sin productos que coincidan." /> : filtrados.map((producto) => (
               <tr key={producto.id} className="hover:bg-slate-50">
                 <Td className="font-medium text-slate-800">{producto.nombre}</Td><Td className="capitalize">{producto.tipo}</Td><Td>{producto.precio ? clp(producto.precio) : "—"}</Td><Td>{producto.unidad_de_venta === "m3" ? "m³" : "saco"}</Td><Td><Badge tono={tonoEstado(producto.estado)}>{producto.estado}</Badge></Td>
-                <Td>{producto.estado === "activo" ? <Button variante="peligro" tamano="sm" onClick={() => desactivar(producto)}><PackageMinus className="h-4 w-4" /> Desactivar</Button> : "—"}</Td>
+                <Td>
+                  <div className="flex gap-2">
+                    {producto.estado === "activo" && (
+                      <>
+                        <Button variante="secundario" tamano="sm" onClick={() => abrirEditar(producto)}>
+                          <Pencil className="h-4 w-4" /> Editar
+                        </Button>
+                        <Button variante="peligro" tamano="sm" onClick={() => desactivar(producto)}>
+                          <PackageMinus className="h-4 w-4" /> Desactivar
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                </Td>
               </tr>
             ))}
           </TBody>
         </Table>
       </Card>
-      <Modal abierto={modal} titulo="Nuevo producto" onCerrar={() => setModal(false)}>
-        <form onSubmit={crear} className="space-y-4">
+      <Modal abierto={modal} titulo={editandoId ? "Editar producto" : "Nuevo producto"} onCerrar={() => { setModal(false); setEditandoId(null); }}>
+        <form onSubmit={guardar} className="space-y-4">
           <Campo label="Nombre" htmlFor="producto_nombre" requerido><Input id="producto_nombre" value={form.nombre} onChange={(e) => setForm({ ...form, nombre: e.target.value })} required /></Campo>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Campo label="Tipo" htmlFor="producto_tipo" requerido><Select id="producto_tipo" value={form.tipo} onChange={(e) => setForm({ ...form, tipo: e.target.value })} required><option value="chip">Chip</option><option value="mulch">Mulch</option><option value="compost">Compost</option><option value="lena">Leña</option></Select></Campo>
             <Campo label="Unidad de venta" htmlFor="producto_unidad" requerido><Select id="producto_unidad" value={form.unidad_de_venta} onChange={(e) => setForm({ ...form, unidad_de_venta: e.target.value })} required><option value="saco">Saco</option><option value="m3">Metro cúbico</option></Select></Campo>
           </div>
           <Campo label="Precio (CLP)" htmlFor="producto_precio"><Input id="producto_precio" type="number" min="0" step="1" value={form.precio} onChange={(e) => setForm({ ...form, precio: e.target.value })} /></Campo>
-          <div className="flex justify-end gap-2 pt-2"><Button type="button" variante="secundario" onClick={() => setModal(false)}>Cancelar</Button><Button type="submit" disabled={guardando}>{guardando ? "Guardando..." : "Guardar producto"}</Button></div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variante="secundario" onClick={() => { setModal(false); setEditandoId(null); }}>Cancelar</Button>
+            <Button type="submit" disabled={guardando}>{guardando ? "Guardando..." : "Guardar producto"}</Button>
+          </div>
         </form>
       </Modal>
     </div>
