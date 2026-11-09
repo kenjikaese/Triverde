@@ -69,6 +69,30 @@ class AutenticacionTests(AccesoTestBase):
         self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
         self.assertFalse(Token.objects.filter(pk=token.pk).exists())
 
+    def test_login_y_logout_quedan_en_la_bitacora(self):
+        respuesta = self.client.post(
+            reverse("auth-login"),
+            {"username": "operador", "password": "operador12345"},
+            format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        self.assertTrue(
+            BitacoraAuditoria.objects.filter(usuario=self.operador, accion="Inicio de sesion", entidad_afectada="Usuario").exists()
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {respuesta.data['token']}")
+        self.client.post(reverse("auth-logout"))
+        self.assertTrue(
+            BitacoraAuditoria.objects.filter(usuario=self.operador, accion="Cierre de sesion", entidad_afectada="Usuario").exists()
+        )
+
+    def test_login_fallido_no_queda_en_la_bitacora(self):
+        self.client.post(
+            reverse("auth-login"),
+            {"username": "operador", "password": "clave-equivocada"},
+            format="json",
+        )
+        self.assertFalse(BitacoraAuditoria.objects.filter(accion="Inicio de sesion").exists())
+
     def test_sin_token_da_401(self):
         respuesta = self.client.get(reverse("usuario-list"))
         self.assertEqual(respuesta.status_code, status.HTTP_401_UNAUTHORIZED)

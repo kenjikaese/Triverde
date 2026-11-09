@@ -35,6 +35,8 @@ class LoginView(APIView):
         serializer.is_valid(raise_exception=True)
         usuario = serializer.validated_data["usuario"]
         token, _ = Token.objects.get_or_create(user=usuario)
+        # CU-01: el inicio de sesion queda en la bitacora (poscondicion del caso de uso).
+        registrar_auditoria(usuario, "Inicio de sesion", "Usuario", usuario.id)
         return Response(
             {
                 "token": token.key,
@@ -58,6 +60,8 @@ class LogoutView(APIView):
     def post(self, request, *args, **kwargs):
         if request.auth:
             request.auth.delete()
+        # CU-02: el cierre de sesion queda en la bitacora.
+        registrar_auditoria(request.user, "Cierre de sesion", "Usuario", request.user.id)
         return Response({"detalle": "Sesion cerrada."})
 
 
