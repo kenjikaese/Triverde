@@ -51,6 +51,8 @@ INSERT INTO public.configuracion_parametroconversion (id, clave, nombre, valor, 
 INSERT INTO public.configuracion_parametroconversion (id, clave, nombre, valor, unidad, descripcion) VALUES (3, 'factor_reduccion_rama', 'Factor de reduccion al triturar rama', 5.0000, ':1', 'Volumenes de rama que se necesitan para obtener 1 volumen de chip al triturar.');
 INSERT INTO public.configuracion_parametroconversion (id, clave, nombre, valor, unidad, descripcion) VALUES (4, 'factor_reduccion_tronco', 'Factor de reduccion al triturar tronco', 2.0000, ':1', 'Volumenes de tronco que se necesitan para obtener 1 volumen de chip al triturar.');
 INSERT INTO public.configuracion_parametroconversion (id, clave, nombre, valor, unidad, descripcion) VALUES (5, 'factor_multa', 'Factor de multa por material contaminado', 1.0000, ':1', 'Multa proporcional al volumen de material contaminado.');
+INSERT INTO public.configuracion_parametroconversion (id, clave, nombre, valor, unidad, descripcion) VALUES (6, 'co2_evitado_camion', 'CO2 evitado por material recibido', 0.0000, 'kg CO2/kg', 'Por definir con el cliente: kg de CO2 que se evitan por cada kg de material recibido.');
+INSERT INTO public.configuracion_parametroconversion (id, clave, nombre, valor, unidad, descripcion) VALUES (7, 'co2_evitado_compostaje', 'CO2 evitado por material compostado', 0.0000, 'kg CO2/kg', 'Por definir con el cliente: kg de CO2 que se evitan por cada kg de material compostado.');
 
 
 --
@@ -88,7 +90,7 @@ SELECT pg_catalog.setval('public.configuracion_costotransporte_id_seq', 1, true)
 -- Name: configuracion_parametroconversion_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.configuracion_parametroconversion_id_seq', 5, true);
+SELECT pg_catalog.setval('public.configuracion_parametroconversion_id_seq', 7, true);
 
 
 --

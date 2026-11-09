@@ -1,7 +1,10 @@
 from datetime import date, timedelta
 from decimal import Decimal
+from io import StringIO
 
 from django.core.exceptions import ValidationError
+from django.core.management import call_command
+from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework import status
@@ -14,7 +17,7 @@ from mantenedores.models import Cliente, Material
 from recepcion.models import DetalleRecepcion, Recepcion
 
 from .models import IndicadorAmbiental
-from .services import CLAVE_CO2_CAMION, CLAVE_CO2_COMPOSTAJE
+from .services import CLAVE_CO2_CAMION, CLAVE_CO2_COMPOSTAJE, _factor
 
 
 class IndicadorAmbientalTestBase(APITestCase):
@@ -263,4 +266,27 @@ class ConsultaIndicadorTests(IndicadorAmbientalTestBase):
         )
         with self.assertRaises(ValidationError):
             indicador.full_clean()
+
+
+class FactoresInicialesTests(TestCase):
+    """Una instalacion nueva trae los factores de CO2 visibles y por definir."""
+
+    def sembrar(self):
+        call_command("seed_inicial", stdout=StringIO())
+
+    def test_instalacion_nueva_trae_los_factores_en_cero(self):
+        self.sembrar()
+        for clave in (CLAVE_CO2_CAMION, CLAVE_CO2_COMPOSTAJE):
+            parametro = ParametroConversion.objects.get(clave=clave)
+            self.assertEqual(parametro.valor, Decimal("0"))
+        # En cero no se calcula nada: el indicador queda pendiente (CU-69).
+        self.assertIsNone(_factor(CLAVE_CO2_CAMION))
+
+    def test_volver_a_sembrar_no_pisa_el_valor_del_cliente(self):
+        self.sembrar()
+        ParametroConversion.objects.filter(clave=CLAVE_CO2_CAMION).update(valor=Decimal("0.5"))
+        self.sembrar()
+        self.assertEqual(
+            ParametroConversion.objects.get(clave=CLAVE_CO2_CAMION).valor, Decimal("0.5")
+        )
 
