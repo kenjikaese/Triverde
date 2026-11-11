@@ -63,6 +63,14 @@ class Command(BaseCommand):
              "Valor predeterminado acordado para M11; editable por el administrador."),
             ("alerta_mantenimiento_horas", "Anticipacion de mantenimiento por horometro", Decimal("50"), "horas",
              "Valor predeterminado acordado para M11; editable por el administrador."),
+            # CU-69 y CU-70: el factor lo define el cliente (docs/02, P12) y no se
+            # inventa. Se crean en cero para que el administrador los vea en el
+            # panel y los complete; mientras esten en cero el indicador ambiental
+            # queda pendiente, y al guardarlos se recalcula lo ya registrado.
+            ("co2_evitado_camion", "CO2 evitado por material recibido", Decimal("0"), "kg CO2/kg",
+             "Por definir con el cliente: kg de CO2 que se evitan por cada kg de material recibido."),
+            ("co2_evitado_compostaje", "CO2 evitado por material compostado", Decimal("0"), "kg CO2/kg",
+             "Por definir con el cliente: kg de CO2 que se evitan por cada kg de material compostado."),
         ]
         for clave, nombre, valor, unidad, desc in parametros:
             ParametroConversion.objects.get_or_create(
