@@ -56,6 +56,26 @@ class ClienteTests(MantenedoresTestBase):
         self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
         self.assertNotIn(pk, [item["id"] for item in respuesta.data])
 
+        # CU-16: el cliente inactivo se reactiva desde la misma ficha.
+        respuesta = self.client.patch(
+            reverse("cliente-detail", args=[pk]), {"estado": "activo"}, format="json",
+        )
+        self.assertEqual(respuesta.status_code, status.HTTP_200_OK)
+        cliente.refresh_from_db()
+        self.assertEqual(cliente.estado, Cliente.ACTIVO)
+
+    def test_varios_clientes_sin_rut(self):
+        """El RUT es unico, pero un RUT vacio se guarda como nulo y no choca con otro vacio."""
+        self.autenticar(self.admin)
+        for nombre in ("Sin RUT uno", "Sin RUT dos"):
+            respuesta = self.client.post(
+                reverse("cliente-list"),
+                {"razon_social": nombre, "rut": "", "direccion": "Colina"},
+                format="json",
+            )
+            self.assertEqual(respuesta.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Cliente.objects.filter(rut__isnull=True, razon_social__startswith="Sin RUT").count(), 2)
+
     def test_operador_lee_pero_no_escribe(self):
         self.autenticar(self.operador)
         respuesta = self.client.get(reverse("cliente-list"))

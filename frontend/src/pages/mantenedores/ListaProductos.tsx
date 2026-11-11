@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { PackageMinus, Pencil, Plus, Search } from "lucide-react";
+import { PackageMinus, Pencil, Plus, Power, Search } from "lucide-react";
 import { api } from "@/lib/api";
 import { mensajeDeError } from "@/lib/errores";
 import type { Producto } from "@/lib/types";
@@ -99,6 +99,16 @@ export function ListaProductos() {
     }
   }
 
+  // Reactiva un producto dado de baja: vuelve a ofrecerse en cotizaciones y ventas.
+  async function activar(producto: Producto) {
+    try {
+      await api.patch(`/productos/${producto.id}/`, { estado: "activo" });
+      cargar();
+    } catch (err) {
+      setError(mensajeDeError(err, "No se pudo activar el producto."));
+    }
+  }
+
   return (
     <div>
       <PageHeader titulo="Productos" descripcion="Productos terminados disponibles para venta." accion={<Button onClick={abrirCrear}><Plus className="h-4 w-4" /> Nuevo producto</Button>} />
@@ -113,7 +123,7 @@ export function ListaProductos() {
                 <Td className="font-medium text-slate-800">{producto.nombre}</Td><Td className="capitalize">{producto.tipo}</Td><Td>{producto.precio ? clp(producto.precio) : "—"}</Td><Td>{producto.unidad_de_venta === "m3" ? "m³" : "saco"}</Td><Td><Badge tono={tonoEstado(producto.estado)}>{producto.estado}</Badge></Td>
                 <Td>
                   <div className="flex gap-2">
-                    {producto.estado === "activo" && (
+                    {producto.estado === "activo" ? (
                       <>
                         <Button variante="secundario" tamano="sm" onClick={() => abrirEditar(producto)}>
                           <Pencil className="h-4 w-4" /> Editar
@@ -122,6 +132,10 @@ export function ListaProductos() {
                           <PackageMinus className="h-4 w-4" /> Desactivar
                         </Button>
                       </>
+                    ) : (
+                      <Button variante="secundario" tamano="sm" onClick={() => activar(producto)}>
+                        <Power className="h-4 w-4" /> Activar
+                      </Button>
                     )}
                   </div>
                 </Td>
