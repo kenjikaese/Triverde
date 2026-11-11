@@ -17,7 +17,7 @@ from . import cumplimiento
 
 
 class CumplimientoDocumentalViewSet(viewsets.ViewSet):
-    """Tablero de cumplimiento documental."""
+    """C_Documentos: Tablero de cumplimiento documental."""
 
     permission_classes = [IsAdministrador]
 

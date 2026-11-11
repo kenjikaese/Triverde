@@ -18,7 +18,7 @@ from .services import calcular_mezcla, resolver_alerta
 
 
 class MezclaObjetivoViewSet(viewsets.ViewSet):
-    """Expone CU-45 en `/mezcla-objetivo/<pila>/`."""
+    """C_Mezcla: Expone CU-45 en `/mezcla-objetivo/<pila>/`."""
 
     permission_classes = [IsOperadorOAdministrador]
 
@@ -28,7 +28,7 @@ class MezclaObjetivoViewSet(viewsets.ViewSet):
 
 
 class AlertaViewSet(viewsets.ReadOnlyModelViewSet):
-    """Consulta CU-47 y resolucion CU-49 para operadores y administradores."""
+    """C_Alertas: Consulta CU-47 y resolucion CU-49 para operadores y administradores."""
 
     queryset = Alerta.objects.select_related(
         "pila", "resuelta_por",

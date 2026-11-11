@@ -31,6 +31,7 @@ def _error_regla(error):
 
 
 class DocumentoLegalViewSet(viewsets.ModelViewSet):
+    """C_Documentos: documentos legales y sus versiones (CU-86 a CU-89, CU-92)."""
     queryset = DocumentoLegal.objects.prefetch_related("versiones__usuario").all()
     serializer_class = DocumentoLegalSerializer
     permission_classes = [IsAdministrador]

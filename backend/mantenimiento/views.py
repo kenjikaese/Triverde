@@ -20,6 +20,7 @@ def _es_admin(request):
 
 
 class MaquinariaViewSet(FiltroEstadoMixin, viewsets.ModelViewSet):
+    """C_Maquinaria: activos mantenibles y estado de la flota."""
     queryset = Maquinaria.objects.all()
     serializer_class = MaquinariaSerializer
     permission_classes = [EsAdministradorOOperadorLectura]
@@ -79,6 +80,7 @@ class MaquinariaViewSet(FiltroEstadoMixin, viewsets.ModelViewSet):
 
 
 class RegistroUsoViewSet(viewsets.ModelViewSet):
+    """C_Maquinaria: registro de uso y horometro."""
     queryset = RegistroUso.objects.select_related("maquinaria", "vehiculo", "operador")
     serializer_class = RegistroUsoSerializer
     permission_classes = [IsOperadorOAdministrador]
@@ -103,6 +105,7 @@ class RegistroUsoViewSet(viewsets.ModelViewSet):
 
 
 class MantencionViewSet(viewsets.ModelViewSet):
+    """C_Mantenimiento: mantenciones preventivas y correctivas."""
     queryset = Mantencion.objects.select_related("maquinaria", "vehiculo")
     serializer_class = MantencionSerializer
     permission_classes = [IsOperadorOAdministrador]

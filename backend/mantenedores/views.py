@@ -21,6 +21,7 @@ from .serializers import (
 
 
 class ClienteViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet):
+    """C_Clientes: CRUD de clientes (CU-15, CU-16)."""
     queryset = Cliente.objects.all()
     serializer_class = ClienteSerializer
     permission_classes = [EsAdministradorOOperadorLectura]
@@ -29,6 +30,7 @@ class ClienteViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet):
 
 
 class TransportistaViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet):
+    """C_Transportistas: CRUD de transportistas (CU-17, CU-18)."""
     queryset = Transportista.objects.select_related("cliente", "usuario").all()
     serializer_class = TransportistaSerializer
     permission_classes = [EsAdministradorOOperadorLectura]
@@ -37,6 +39,7 @@ class TransportistaViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelVie
 
 
 class VehiculoViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet):
+    """C_Vehiculos: CRUD de vehiculos (CU-23)."""
     queryset = Vehiculo.objects.select_related("cliente").all()
     serializer_class = VehiculoSerializer
     permission_classes = [EsAdministradorOOperadorLectura]
@@ -76,6 +79,7 @@ class VehiculoViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet)
 
 
 class MaterialViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet):
+    """C_Materiales: CRUD de materiales (CU-19, CU-20)."""
     queryset = Material.objects.all()
     serializer_class = MaterialSerializer
     permission_classes = [EsAdministradorOOperadorLectura]
@@ -84,6 +88,7 @@ class MaterialViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet)
 
 
 class ProductoViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet):
+    """C_Productos: CRUD de productos (CU-21, CU-22)."""
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
     permission_classes = [EsAdministradorOOperadorLectura]
