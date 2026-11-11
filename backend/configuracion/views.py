@@ -39,7 +39,7 @@ from .serializers import (
 
 
 class ParametroConversionViewSet(viewsets.ModelViewSet):
-    """CRUD de parametros de conversion."""
+    """C_Configuracion: CRUD de parametros de conversion."""
 
     queryset = ParametroConversion.objects.all()
     serializer_class = ParametroConversionSerializer
@@ -73,7 +73,7 @@ class ParametroConversionViewSet(viewsets.ModelViewSet):
 
 
 class TarifaRecepcionViewSet(viewsets.ModelViewSet):
-    """CRUD de tarifas de recepcion."""
+    """C_Configuracion: CRUD de tarifas de recepcion."""
 
     queryset = TarifaRecepcion.objects.all()
     serializer_class = TarifaRecepcionSerializer
@@ -83,7 +83,7 @@ class TarifaRecepcionViewSet(viewsets.ModelViewSet):
 
 
 class HistorialCambioParametroViewSet(viewsets.ReadOnlyModelViewSet):
-    """Historial de cambios de parametro: solo lectura, filtrable por
+    """C_Configuracion: Historial de cambios de parametro: solo lectura, filtrable por
     parametro (id o clave) y rango de fechas (`desde`/`hasta`)."""
 
     serializer_class = HistorialCambioParametroSerializer
@@ -108,7 +108,7 @@ class HistorialCambioParametroViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class RecetaMezclaViewSet(FiltroVigenteMixin, BajaLogicaVigenteMixin, viewsets.ModelViewSet):
-    """CRUD de recetas de mezcla seca/verde."""
+    """C_Configuracion: CRUD de recetas de mezcla seca/verde."""
 
     queryset = RecetaMezcla.objects.all()
     serializer_class = RecetaMezclaSerializer
@@ -135,7 +135,7 @@ class RecetaMezclaViewSet(FiltroVigenteMixin, BajaLogicaVigenteMixin, viewsets.M
 
 
 class CostoTransporteViewSet(viewsets.GenericViewSet):
-    """Costo de transporte por km: valor vigente + historico versionado."""
+    """C_Configuracion: Costo de transporte por km: valor vigente + historico versionado."""
 
     queryset = CostoTransporte.objects.all()
     serializer_class = CostoTransporteSerializer
@@ -166,7 +166,7 @@ class CostoTransporteViewSet(viewsets.GenericViewSet):
 
 
 class CostoOperativoViewSet(FiltroVigenteMixin, BajaLogicaVigenteMixin, viewsets.ModelViewSet):
-    """CRUD de costos operativos (combustible, mano de obra, etc.)."""
+    """C_Configuracion: CRUD de costos operativos (combustible, mano de obra, etc.)."""
 
     queryset = CostoOperativo.objects.all()
     serializer_class = CostoOperativoSerializer

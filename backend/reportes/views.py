@@ -20,7 +20,7 @@ from .services import exportar_reporte, generar_reporte
 
 
 class ReporteViewSet(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet):
-    """Genera, consulta y exporta reportes para administradores."""
+    """C_Reportes: Genera, consulta y exporta reportes para administradores."""
     queryset = Reporte.objects.select_related("usuario").all()
     serializer_class = ReporteSerializer
     permission_classes = [IsAdministrador]

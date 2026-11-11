@@ -341,7 +341,7 @@ class CobroViewSet(RangoFechaMixin, viewsets.ModelViewSet):
 
 
 class DocumentoTributarioViewSet(RangoFechaMixin, viewsets.ModelViewSet):
-    """Documentos tributarios pendientes (CU-63): seguimiento, no emision."""
+    """C_Cobros: Documentos tributarios pendientes (CU-63): seguimiento, no emision."""
 
     queryset = DocumentoTributario.objects.select_related(
         "cliente", "venta", "cobro"
@@ -366,7 +366,7 @@ class DocumentoTributarioViewSet(RangoFechaMixin, viewsets.ModelViewSet):
 
 
 class CuentaCorrienteView(APIView):
-    """CU-64: saldo y movimientos de un cliente. CU-62: su estado de pago.
+    """C_Cobros: CU-64: saldo y movimientos de un cliente. CU-62: su estado de pago.
 
     El saldo es calculado (ventas - cobros), no almacenado. El PATCH actualiza
     `Cliente.estado_pago`, que es el indicador manual complementario.

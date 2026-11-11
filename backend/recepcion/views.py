@@ -253,7 +253,7 @@ def _aplanar_errores(detalle, prefijo=""):
 
 
 class SincronizacionView(APIView):
-    """Endpoint de sincronizacion (CU-33).
+    """C_Sincronizacion: Endpoint de sincronizacion (CU-33).
 
     POST /api/v1/sincronizacion/ con la cola local del dispositivo. Aplica las
     operaciones en orden de `capturado_en`, cada una en su propia transaccion,

@@ -25,7 +25,7 @@ from .serializers import (
 
 
 class LoginView(APIView):
-    """POST: intercambia username+password por un token de DRF."""
+    """C_Autenticacion: POST: intercambia username+password por un token de DRF."""
 
     authentication_classes = []
     permission_classes = [AllowAny]
@@ -52,7 +52,7 @@ class LoginView(APIView):
 
 
 class LogoutView(APIView):
-    """POST: invalida el token con el que se viene autenticando."""
+    """C_Autenticacion: POST: invalida el token con el que se viene autenticando."""
 
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -66,7 +66,7 @@ class LogoutView(APIView):
 
 
 class PerfilView(APIView):
-    """CU-04. GET: devuelve el usuario autenticado. PATCH: actualiza sus datos."""
+    """C_Autenticacion: CU-04. GET: devuelve el usuario autenticado. PATCH: actualiza sus datos."""
 
     def get(self, request, *args, **kwargs):
         return Response(UsuarioSerializer(request.user).data)
@@ -201,7 +201,7 @@ class UsuarioViewSet(FiltroEstadoMixin, BajaLogicaMixin, viewsets.ModelViewSet):
 
 
 class RolViewSet(viewsets.ReadOnlyModelViewSet):
-    """Roles del sistema (catalogo cerrado)."""
+    """C_Usuarios: Roles del sistema (catalogo cerrado)."""
 
     queryset = Rol.objects.all()
     serializer_class = RolSerializer
