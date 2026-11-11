@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Pencil, Plus, Search, UserX } from "lucide-react";
+import { Pencil, Plus, Power, Search, UserX } from "lucide-react";
 import { api } from "@/lib/api";
 import { mensajeDeError } from "@/lib/errores";
 import type { Cliente, Transportista, Usuario } from "@/lib/types";
@@ -138,6 +138,22 @@ export function ListaTransportistas() {
     }
   }
 
+  // Reactiva un transportista dado de baja. Si su cliente sigue inactivo, primero hay que activar el cliente.
+  async function activar(transportista: Transportista) {
+    const cliente = clientes.find((item) => item.id === transportista.cliente);
+    if (cliente && cliente.estado !== "activo") {
+      setError(`Para activar a ${transportista.nombre}, primero activa su cliente (${cliente.razon_social}).`);
+      return;
+    }
+    setError(null);
+    try {
+      await api.patch(`/transportistas/${transportista.id}/`, { estado: "activo" });
+      cargar();
+    } catch (err) {
+      setError(mensajeDeError(err, "No se pudo activar el transportista."));
+    }
+  }
+
   return (
     <div>
       <PageHeader
@@ -189,7 +205,11 @@ export function ListaTransportistas() {
                       <Button variante="peligro" tamano="sm" onClick={() => desactivar(transportista)}>
                         <UserX className="h-4 w-4" /> Desactivar
                       </Button>
-                    ) : null}
+                    ) : (
+                      <Button variante="secundario" tamano="sm" onClick={() => activar(transportista)}>
+                        <Power className="h-4 w-4" /> Activar
+                      </Button>
+                    )}
                   </Td>
                 </tr>
               ))

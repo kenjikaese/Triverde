@@ -19,6 +19,10 @@ class ClienteSerializer(serializers.ModelSerializer):
             "estado",
         ]
 
+    def validate_rut(self, value):
+        """El RUT es unico: si viene vacio se guarda como nulo, para que varios clientes puedan no tenerlo."""
+        return value.strip() if value and value.strip() else None
+
 
 class TransportistaSerializer(serializers.ModelSerializer):
     class Meta:

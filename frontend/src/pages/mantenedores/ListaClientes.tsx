@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/Button";
 import { Campo, Input } from "@/components/ui/Field";
 import { Modal } from "@/components/ui/Modal";
 
-const VACIO = { razon_social: "", rut: "", nombre_contacto: "", telefono: "", email: "" };
+const VACIO = { razon_social: "", rut: "", nombre_contacto: "", telefono: "", email: "", direccion: "" };
 
 const NOMBRES_CAMPO: Record<string, string> = {
   razon_social: "Razón social",
@@ -18,6 +18,7 @@ const NOMBRES_CAMPO: Record<string, string> = {
   nombre_contacto: "Nombre de contacto",
   telefono: "Teléfono",
   email: "Email",
+  direccion: "Dirección",
 };
 
 // Convierte la respuesta de error del servidor (formato DRF) en un texto legible.
@@ -95,6 +96,7 @@ export function ListaClientes() {
       nombre_contacto: datos.nombre_contacto ?? "",
       telefono: datos.telefono ?? "",
       email: datos.email ?? "",
+      direccion: datos.direccion ?? "",
     });
     setErrorForm(null);
     setModal(true);
@@ -131,6 +133,17 @@ export function ListaClientes() {
       );
     } finally {
       setGuardando(false);
+    }
+  }
+
+  // Reactiva un cliente inactivo: vuelve a quedar disponible para recepciones y ventas.
+  async function activar(c: Cliente) {
+    setErrorAccion(null);
+    try {
+      await api.patch(`/clientes/${c.id}/`, { estado: "activo" });
+      cargar();
+    } catch (err) {
+      setErrorAccion(mensajeDeError(err, "No se pudo activar el cliente."));
     }
   }
 
@@ -220,15 +233,17 @@ export function ListaClientes() {
                         <Pencil className="h-4 w-4" />
                         Editar
                       </Button>
-                      <Button
-                        type="button"
-                        variante="secundario"
-                        disabled={estaInactivo(c)}
-                        onClick={() => pedirDesactivar(c)}
-                      >
-                        <Power className="h-4 w-4" />
-                        Desactivar
-                      </Button>
+                      {estaInactivo(c) ? (
+                        <Button type="button" variante="secundario" onClick={() => activar(c)}>
+                          <Power className="h-4 w-4" />
+                          Activar
+                        </Button>
+                      ) : (
+                        <Button type="button" variante="secundario" onClick={() => pedirDesactivar(c)}>
+                          <Power className="h-4 w-4" />
+                          Desactivar
+                        </Button>
+                      )}
                     </div>
                   </Td>
                 </tr>
@@ -280,6 +295,17 @@ export function ListaClientes() {
               type="email"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+          </Campo>
+          <Campo
+            label="Dirección"
+            htmlFor="direccion"
+            ayuda="Se usa en las cotizaciones, los certificados y la declaración SINADER."
+          >
+            <Input
+              id="direccion"
+              value={form.direccion}
+              onChange={(e) => setForm({ ...form, direccion: e.target.value })}
             />
           </Campo>
           <div className="flex justify-end gap-2 pt-2">

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Leaf, Pencil, Plus, Search } from "lucide-react";
+import { Leaf, Pencil, Plus, Power, Search } from "lucide-react";
 import { api } from "@/lib/api";
 import { mensajeDeError } from "@/lib/errores";
 import type { Material } from "@/lib/types";
@@ -98,6 +98,16 @@ export function ListaMateriales() {
     }
   }
 
+  // Reactiva un material dado de baja: vuelve a estar disponible en las recepciones.
+  async function activar(material: Material) {
+    try {
+      await api.patch(`/materiales/${material.id}/`, { estado: "activo" });
+      cargar();
+    } catch (err) {
+      setError(mensajeDeError(err, "No se pudo activar el material."));
+    }
+  }
+
   return (
     <div>
       <PageHeader titulo="Materiales" descripcion="Catálogo de residuos recibidos y sus factores de conversión." accion={
@@ -120,7 +130,7 @@ export function ListaMateriales() {
                 <Td>{material.factor_reduccion_chip ?? "—"}</Td>
                 <Td><Badge tono={material.admite_chip ? "verde" : "gris"}>{material.admite_chip ? "Sí" : "No"}</Badge></Td>
                 <Td><Badge tono={tonoEstado(material.estado)}>{material.estado}</Badge></Td>
-                <Td><Button variante="secundario" tamano="sm" onClick={() => abrir(material)}><Pencil className="h-4 w-4" /> Editar</Button>{" "}{material.estado === "activo" && <Button variante="peligro" tamano="sm" onClick={() => desactivar(material)}><Leaf className="h-4 w-4" /> Desactivar</Button>}</Td>
+                <Td><Button variante="secundario" tamano="sm" onClick={() => abrir(material)}><Pencil className="h-4 w-4" /> Editar</Button>{" "}{material.estado === "activo" ? <Button variante="peligro" tamano="sm" onClick={() => desactivar(material)}><Leaf className="h-4 w-4" /> Desactivar</Button> : <Button variante="secundario" tamano="sm" onClick={() => activar(material)}><Power className="h-4 w-4" /> Activar</Button>}</Td>
               </tr>
             ))}
           </TBody>
